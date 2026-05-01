@@ -1,0 +1,271 @@
+      section h3 {
+        font-size: 28px;
+      }
+
+      section p {
+        opacity: 0.85;
+      }
+
+      section button {
+        border-radius: 30px;
+      }
+
+        /* .home-hero {
+          padding: 70px 0;
+          background: linear-gradient(135deg, #1e3c72, #2a5298);
+          color: white;
+          height:370px;
+        } */
+        .home-hero {
+  min-height: 65vh;
+  padding: 80px 0;
+    color: white; 
+     background: linear-gradient(135deg, #1e3c72, #2a5298);
+  display: flex;
+  align-items: center;
+}
+        .btn-main {
+          background: white;
+          color: #2563eb;
+          padding: 10px 20px;
+          border-radius: 30px;
+          border: none;
+        }
+
+        .home-about {
+          padding: 100px 0;
+          background: #f4f8ff;
+        }
+
+        .about-img {
+          width: 250px;
+        }
+
+        .float {
+          position: absolute;
+          background: white;
+          padding: 10px;
+          border-radius: 10px;
+        }
+
+        .f1 { top: 10%; left: 10%; }
+        .f2 { top: 0%; right: 10%; }
+        .f3 { bottom: 10%; left: 20%; }
+
+        .home-services {
+          padding: 100px 0;
+          background: #fff;
+        }
+
+        .card-box {
+          background: white;
+          padding: 25px;
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .home-cta {
+          padding: 100px 0;
+          background: linear-gradient(135deg,#7f1d1d,#dc2626,#facc15);
+          color: white;
+        }
+
+        .btn-cta {
+          background: white;
+          color: #2563eb;
+          padding: 10px 25px;
+          border-radius: 30px;
+          border: none;
+        }
+
+        .btn-primary {
+        background: #2563eb;
+        border: none;
+      }
+
+      .btn-outline-primary {
+        border-color: #2563eb;
+        color: #2563eb;
+      }
+
+        .home-about {
+        padding: 120px 0;
+        background: linear-gradient(135deg,#fff,#fff7ed);
+      }
+
+      /* IMAGE BOX */
+      .img-box {
+        background: white;
+        padding: 40px;
+        border-radius: 30px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+      }
+      .home-img {
+        width: 100%;
+      }
+      .about-img {
+        width: 100%;
+        max-width: 320px;
+      }
+
+      /* TEXT */
+      .about-tag {
+        color: #2563eb;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .about-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #111;
+      }
+
+      .about-desc {
+        margin-top: 15px;
+        color: #555;
+        line-height: 1.7;
+      }
+
+      /* POINTS */
+      .about-points {
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-weight: 500;
+      }
+
+      /* BUTTON */
+      .about-btn {
+        margin-top: 25px;
+        background: linear-gradient(135deg,#2563eb,#3b82f6);
+        color: white;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 30px;
+        transition: 0.3s;
+      }
+
+      .about-btn:hover {
+        transform: scale(1.05);
+      }
+
+      /* FLOATING CARDS 🔥 */
+      .float-card {
+        position: absolute;
+        background: white;
+        padding: 12px 15px;
+        border-radius: 15px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        font-size: 20px;
+      }
+
+      /* animation */
+      @keyframes float {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-15px); }
+        100% { transform: translateY(0); }
+      }
+
+      .f1 { top: 10%; left: 5%; animation: float 4s infinite; }
+      .f2 { top: 0%; right: 10%; animation: float 6s infinite; }
+      .f3 { bottom: 10%; left: 15%; animation: float 5s infinite; }
+      .f4 { bottom: 20%; right: 10%; animation: float 7s infinite; }
+
+      .home-services {
+        padding: 0px 0;
+        background: linear-gradient(135deg,#fff,#fff7ed);
+      }
+
+      /* TITLE */
+      /* .service-tag {
+        color: #dc2626;
+        font-weight: 700;
+        letter-spacing: 1px;
+      } */
+
+      .service-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        /* margin-top: 10px; */
+      }
+
+      /* CARD */
+      .service-card {
+        background: white;
+        padding: 40px 25px;
+        border-radius: 20px;
+        text-align: center;
+        transition: 0.4s;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+        position: relative;
+        overflow: hidden;
+         height: 100%;
+      }
+
+      /* ICON */
+      .service-card .icon {
+        font-size: 45px;
+        margin-bottom: 15px;
+      }
+
+      /* HOVER EFFECT 🔥 */
+      .service-card:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+      }
+
+      /* GRADIENT BORDER EFFECT */
+      .service-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 20px;
+        padding: 2px;
+        background: linear-gradient(135deg,#2563eb,#60a5fa);
+        -webkit-mask: 
+          linear-gradient(#fff 0 0) content-box, 
+          linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+      }
+
+         .testimonial-card {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      transition: all 0.3s ease;
+      position: relative;
+      height: 100%;
+    }
+
+    .testimonial-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+    }
+
+    .quote-icon {
+      font-size: 40px;
+      color: #0d6efd;
+      margin-bottom: 10px;
+    }
+
+    .testimonial-card p {
+      font-size: 15px;
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+
+    .testimonial-card h6 {
+      font-weight: 600;
+      color: #222;
+      margin: 0;
+    }
+    .divider-line {
+  width: 100%;
+  height: 1px;
+  background: #e5e7eb; /* soft gray */
+}

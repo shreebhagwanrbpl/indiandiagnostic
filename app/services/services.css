@@ -1,0 +1,49 @@
+     /* BANNER */
+        .services-banner {
+           background: linear-gradient(135deg, #1e3c72, #2a5298);
+          color: white;
+          padding: 140px 0 80px;
+          height:370px;
+        }
+
+        .services-banner h1 {
+          font-size: 3rem;
+          font-weight: 800;
+        }
+
+        /* SERVICES */
+        .services-section {
+          padding: 100px 0;
+          background: #fff;
+        }
+
+        .service-card {
+          background: white;
+          padding: 30px;
+          border-radius: 15px;
+          text-align: center;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+          transition: 0.3s;
+        }
+
+        .service-card:hover {
+          transform: translateY(-10px);
+        }
+
+        .icon {
+          font-size: 40px;
+          margin-bottom: 15px;
+        }
+
+        /* WHY */
+        .why-service {
+          padding: 80px 0;
+          background: #fff7ed;
+        }
+
+        .why-box {
+          background: white;
+          padding: 20px;
+          border-radius: 10px;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }

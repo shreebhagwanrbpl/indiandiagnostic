@@ -1,0 +1,19 @@
+   .about-banner {
+              background: linear-gradient(135deg, #1e3c72, #2a5298);
+              color: white;
+              height: 370px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              text-align: center;
+              position: relative;
+            }
+
+            .about-banner h1 {
+              font-size: 3rem;
+              font-weight: 800;
+            }
+
+            .about-banner p {
+              opacity: 0.9;
+            }

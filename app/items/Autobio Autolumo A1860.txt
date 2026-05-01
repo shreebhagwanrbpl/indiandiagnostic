@@ -1,0 +1,66 @@
+Autobio Autolumo A1860
+₹ 12,00,000
+
+Capacity
+100 Samples
+Throughput
+180T/h
+Instrument Name
+immunoassay analyzer
+Model Name/Number
+Autolumo A1860
+Usage/Application
+Hospital
+Brand
+Chemiluminescence Immunoassay Analyze
+Parameters
+Blood Alcohol Content
+Automation
+Fully Automatic
+Dimensions
+1200 x 736 x 635 mm
+Time To First Result
+21 mins
+Weight
+183 kg
+Availability
+In Stock
+AUTOLUMO A1860 is the new generation of Autobio AutoLumo Series with compact structure and innovative design, providing simpler, smarter and better user experience for small and medium size labs.
+ 
+SPECIFICATIONS
+
+Throughput : 180T/h
+
+Time to 1st Result : 21 mins
+
+RV Loading Capacity : 80 * 2 pcs
+
+Sample Loading Capacity : 60 samples with 1 STAT channel
+
+Sample Pipette Volume : 8 - 150 μL
+
+Sample Dilution Factor : up to 2601-fold
+
+Liquid Level Detection and Clot Detection
+
+Onboard Reagent Capacity : 25 racks
+
+Onboard Reagent Storage : independent refrigerating system
+
+Real-time Replacement of Reagent by Appointment
+
+Consumables Residue Calculation (LED Monitor and Software Monitor)
+
+Substrate : Substrate A+B
+
+Substrate Volume : 100 mL for each
+
+Substrate Switching :2 sets of substrates available on board by automatic switching
+
+Carry-over : < 1 ppm
+
+Reaction mode : 1 step and 2 steps
+
+Size (W*D*H, mm) : 1200 x 736 x 635 mm
+
+Weight : 183 kg

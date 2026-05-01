@@ -1,0 +1,142 @@
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+.float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.float2 {
+  animation: float 6s ease-in-out infinite;
+}
+
+.float3 {
+  animation: float 5s ease-in-out infinite;
+}
+
+.big-circle {
+  width: 200px;
+  height: 200px;
+  background: #fde68a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+}
+
+.float-card,
+.float-card2,
+.float-card3 {
+  position: absolute;
+  background: white;
+  padding: 15px;
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.float-card {
+  animation: float 4s infinite;
+}
+
+.float-card2 {
+  animation: float 6s infinite;
+}
+
+.float-card3 {
+  animation: float 5s infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+/* .hero-section {
+  position: relative;
+  background: linear-gradient(135deg, #7f1d1d, #dc2626, #facc15);
+  color: white;
+  padding: 170px 0;
+  overflow: hidden;
+}
+
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+}
+
+.hero-desc {
+  font-size: 1.1rem;
+  opacity: 0.9;
+} */
+
+/* GLOW EFFECT 🔥 */
+.glow {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  filter: blur(100px);
+}
+
+.glow1 {
+  top: -50px;
+  left: -50px;
+}
+
+.glow2 {
+  bottom: -50px;
+  right: -50px;
+}
+
+/* BUTTON PREMIUM */
+.btn-light {
+  border-radius: 30px;
+}
+
+.btn-outline-light {
+  border-radius: 30px;
+}
+
+.why-section {
+  background: #fff7ed;
+  padding: 100px 0;
+}
+
+.main-circle {
+  width: 200px;
+  height: 200px;
+  background: #fde68a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  font-size: 40px;
+}
+
+.floating {
+  position: absolute;
+  background: white;
+  padding: 15px;
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* animation */
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0); }
+}
+
+.f1 { top: 10%; left: 10%; animation: float 4s infinite; }
+.f2 { top: 0%; right: 10%; animation: float 6s infinite; }
+.f3 { bottom: 10%; left: 20%; animation: float 5s infinite; }
+.f4 { bottom: 20%; right: 15%; animation: float 7s infinite; }
+

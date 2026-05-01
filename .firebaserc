@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "rajbiosis-central"
+  },
+  "targets": {
+    "rajbiosis-central": {
+      "hosting": {
+        "indiandiagnostic": [
+          "indiandiagnostic"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
