@@ -9,7 +9,7 @@ export default function ServicesPage() {
   const icons = ["🧪", "💊", "⚙️", "🔧", "🌍", "📊"];
     useEffect(() => {
     const unsub = onSnapshot(
-      doc(db, "websites", "webfirst", "pages", "services"),
+      doc(db, "websites", "indiandiagnostic", "pages", "services"),
       (snap) => {
         if (snap.exists()) {
           setServices(snap.data().services || []);

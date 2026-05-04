@@ -25,7 +25,7 @@ export default function Home() {
   useEffect(() => {
   const fetchProducts = async () => {
     const snap = await getDoc(
-      doc(db, "websites", "webfirst", "pages", "products")
+      doc(db, "websites", "indiandiagnostic", "pages", "products")
     );
 
     if (snap.exists()) {
@@ -72,7 +72,7 @@ const icons = ["🧪", "💊", "⚙️", "🔧", "🌍", "📊"];
 
 useEffect(() => {
   const unsub = onSnapshot(
-    doc(db, "websites", "webfirst", "pages", "services"),
+    doc(db, "websites", "indiandiagnostic", "pages", "services"),
     (snap) => {
       if (snap.exists()) {
         setServices(snap.data().services || []);
@@ -84,7 +84,7 @@ useEffect(() => {
 }, []);
   useEffect(() =>{
     const unsub = onSnapshot(
-      doc(db, "websites", "webfirst", "pages", "home"),
+      doc(db, "websites", "indiandiagnostic", "pages", "home"),
       (docSnap) =>{
         if (docSnap.exists()){
           setData(docSnap.data());
@@ -242,6 +242,8 @@ useEffect(() => {
           <p>Quick supply across India</p>
         </div>
       </div>
+
+
 
       <div className="col-md-4">
         <div className="p-4 shadow-sm rounded">

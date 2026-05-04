@@ -33,32 +33,73 @@
           border-radius: 20px;
         }
 
-        .drawer {
-          position: fixed;
-          top: 0;
-          right: -400px;
-          width: 350px;
-          height: 100%;
-          background: white;
-          padding: 20px;
-          box-shadow: -5px 0 20px rgba(0,0,0,0.1);
-          transition: 0.3s;
-          z-index: 1000;
-        }
+            .drawer {
+              position: fixed;
+              top: 0;
+              right: -400px;
+              width: 350px;
+              height: 100vh;
+              background: white;
+              box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+              transition: 0.3s;
+              z-index: 1000;
 
-        .drawer.open {
-          right: 0;
-        }
+              display: flex;
+              flex-direction: column;   /* ✅ layout fix */
+            }
 
-        .drawer-header {
-          display: flex;
-          justify-content: space-between;
-        }
+            .drawer.open {
+              right: 0;
+            }
 
-        .drawer-img {
-          width: 100%;
-          margin: 15px 0;
-        }
+            /* HEADER */
+            .drawer-header {
+              display: flex;
+              align-items: flex-start;
+              justify-content: space-between;
+              gap: 10px;
+              padding: 15px;
+              border-bottom: 1px solid #eee;
+            }
+
+            /* SCROLL AREA */
+            .drawer-content {
+              flex: 1;
+              overflow-y: auto;   
+              padding: 15px;
+            }
+            .drawer-header h4 {
+              flex: 1;                 
+              font-size: 18px;
+              font-weight: 600;
+              margin: 0;
+
+              word-break: break-word;
+              line-height: 1.3;
+            }
+            .drawer-header button {
+              flex-shrink: 0;  
+              width: 35px;
+              height: 35px;
+              border: 1px solid #ccc;
+              background: white;
+              cursor: pointer;
+            }
+            /* FOOTER FIXED */
+            .drawer-footer {
+              padding: 15px;
+              border-top: 1px solid #eee;
+              background: white;
+            }
+
+            /* Optional smooth scroll */
+            .drawer-content::-webkit-scrollbar {
+              width: 6px;
+            }
+            .drawer-content::-webkit-scrollbar-thumb {
+              background: #ccc;
+              border-radius: 10px;
+            }
 
           .btn-main {
           width: 100%;
@@ -119,7 +160,7 @@
         }
         .drawer-img {
           width: 100%;
-          height: 220px; /* fixed height */
+          height: 300px; /* fixed height */
           object-fit: cover;
           background: #f3f4f6; /* fallback bg */
           border-radius: 10px;

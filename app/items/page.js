@@ -59,7 +59,7 @@ useEffect(() => {
 // data fatch 
 useEffect(() => {
   const unsub = onSnapshot(
-    doc(db, "websites", "webfirst", "pages", "products"),
+    doc(db, "websites", "indiandiagnostic", "pages", "products"),
     (snap) => {
       if (snap.exists()) {
         setProducts(snap.data().products || []);
@@ -105,7 +105,7 @@ const handleSubmitQuery = async () => {
 
     const loading = toast.loading("Submitting...");
 
-    await addDoc(collection(db, "productQueries"), {
+    await addDoc(collection(db, "websitesQueries", "indiandiagnostic","productQueries"), {
       productName: selectedProduct.title || "",
       email,
       phone,
@@ -239,9 +239,11 @@ const handleSubmitQuery = async () => {
 
                     <div className="product-info">
                       <h5>{item.title}</h5>
-                      <p><b>Brand:</b> {item.brand || "-"}</p>
+                          <p className="text-muted small">
+                       <p><b>Brand:</b> {item.brand || "-"}</p>
                       <p><b>Size:</b> {item.size || "-"}</p>
                       <p><b>Usage:</b> {item.usage || "-"}</p>
+                    </p>
                     </div>
 
                     <button
@@ -322,77 +324,74 @@ const handleSubmitQuery = async () => {
 
         </div>
       </section>
-        <div className={`drawer ${selectedProduct ? "open" : ""}`}>
+<div className={`drawer ${selectedProduct ? "open" : ""}`}>
 
-        {selectedProduct && (
-          <>
-            <div className="drawer-header">
-             <h4>{selectedProduct.title}</h4>
-              <button onClick={() => setSelectedProduct(null)}>✖</button>
-            </div>
-
-           <img
-              src={selectedProduct.image || "/no-image.png"}
-              className="drawer-img"
-            />
-            <div className="drawer-details">
-            <p><b>Description:</b> {selectedProduct.desc}</p>
-            <p><b>Brand:</b> {selectedProduct.brand}</p>
-            <p><b>Size:</b> {selectedProduct.size}</p>
-            <p><b>Usage:</b> {selectedProduct.usage}</p>
-            <p><b>Model:</b> {selectedProduct.model}</p>
-            <p><b>Instrument:</b> {selectedProduct.instrument}</p>
-            <p><b>Automation:</b> {selectedProduct.automation}</p>
-            <p><b>Availability:</b> {selectedProduct.availability}</p>
-            <p><b>Usage:</b> {selectedProduct.usage}</p>
-            <p><b>Model:</b> {selectedProduct.model}</p>
-            <p><b>Instrument:</b> {selectedProduct.instrument}</p>
-            <p><b>Automation:</b> {selectedProduct.automation}</p>
-            <p><b>Availability:</b> {selectedProduct.availability}</p>
-            <p><b>Usage:</b> {selectedProduct.usage}</p>
-            <p><b>Model:</b> {selectedProduct.model}</p>
-            <p><b>Instrument:</b> {selectedProduct.instrument}</p>
-            <p><b>Automation:</b> {selectedProduct.automation}</p>
-            <p><b>Availability:</b> {selectedProduct.availability}</p>
-          </div>
-
-            {!showForm ? (
-              <button 
-                className="btn-main"
-                onClick={() => setShowForm(true)}
-              >
-                Get Details
-              </button>
-            ) : (
-              <div className="form-box">
-                <input
-                type="email"
-                name="email"
-                placeholder="Enter your email"
-                value={queryForm.email}
-                onChange={handleFormChange}
-                required
-              />
-
-              <input
-                type="tel"
-                name="phone"
-                placeholder="Contact number"
-                value={queryForm.phone}
-                onChange={handleFormChange}
-                required
-                inputMode="numeric"
-              />
-
-                <button className="btn-main" onClick={handleSubmitQuery}>
-                  Submit
-                </button>
-              </div>
-            )}
-          </>
-        )}
-
+  {selectedProduct && (
+    <>
+      {/* HEADER */}
+      <div className="drawer-header">
+        <h4>{selectedProduct.title}</h4>
+        <button onClick={() => setSelectedProduct(null)}>✖</button>
       </div>
+
+      {/* SCROLLABLE CONTENT */}
+      <div className="drawer-content">
+        <img
+          src={selectedProduct.image || "/no-image.png"}
+          className="drawer-img"
+        />
+
+        <div className="drawer-details">
+          <p><b>Description:</b> {selectedProduct.desc}</p>
+          <p><b>Brand:</b> {selectedProduct.brand}</p>
+          <p><b>Size:</b> {selectedProduct.size}</p>
+          <p><b>Usage:</b> {selectedProduct.usage}</p>
+          <p><b>Model:</b> {selectedProduct.model}</p>
+          <p><b>Instrument:</b> {selectedProduct.instrument}</p>
+          <p><b>Automation:</b> {selectedProduct.automation}</p>
+          <p><b>Availability:</b> {selectedProduct.availability}</p>
+        </div>
+      </div>
+
+      {/* FIXED FOOTER */}
+      <div className="drawer-footer">
+        {!showForm ? (
+          <button
+            className="btn-main"
+            onClick={() => setShowForm(true)}
+          >
+            Get Details
+          </button>
+        ) : (
+          <div className="form-box">
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              value={queryForm.email}
+              onChange={handleFormChange}
+              required
+            />
+
+            <input
+              type="tel"
+              name="phone"
+              placeholder="Contact number"
+              value={queryForm.phone}
+              onChange={handleFormChange}
+              required
+            />
+
+            <button className="btn-main" onClick={handleSubmitQuery}>
+              Submit
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  )}
+
+</div>
 
       {/* 🔥 OVERLAY */}
       {selectedProduct && (
@@ -402,213 +401,3 @@ const handleSubmitQuery = async () => {
     </>
   );
 }
-
-//   .items-banner {
-//          background: linear-gradient(135deg, #1e3c72, #2a5298);
-//           color: white;
-//           padding: 140px 0 80px;
-//          height:370px;
-//         }
-
-//         .items-section {
-//           padding: 80px 0;
-//           background: #fffaf3;
-//         }
-// .product-card {
-//   background: white;
-//   padding: 20px;
-//   border-radius: 15px;
-//   text-align: center;
-//   box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-//   transition: 0.3s;
-
-//   height: 100%;              
-//   display: flex;            
-//   flex-direction: column;
-//   justify-content: space-between;
-// }
-
-//         .product-card:hover {
-//           transform: translateY(-10px);
-//         }
-
-//         .product-img {
-//           height: 120px;
-//           margin-bottom: 15px;
-//         }
-
-//         .price {
-//           font-weight: 600;
-//           color: #dc2626;
-//         }
-
-//         .btn-view {
-//           background: linear-gradient(135deg,#dc2626,#f97316);
-//           border: none;
-//           color: white;
-//           padding: 8px 20px;
-//           border-radius: 20px;
-//         }
-
-//         .drawer {
-//           position: fixed;
-//           top: 0;
-//           right: -400px;
-//           width: 350px;
-//           height: 100%;
-//           background: white;
-//           padding: 20px;
-//           box-shadow: -5px 0 20px rgba(0,0,0,0.1);
-//           transition: 0.3s;
-//           z-index: 1000;
-//         }
-
-//         .drawer.open {
-//           right: 0;
-//         }
-
-//         .drawer-header {
-//           display: flex;
-//           justify-content: space-between;
-//         }
-
-//         .drawer-img {
-//           width: 100%;
-//           margin: 15px 0;
-//         }
-
-//   .btn-main {
-//   width: 100%;
-//   background: linear-gradient(135deg,#dc2626,#f97316) !important;
-//   color: white !important;
-//   border: none !important;
-//   padding: 12px;
-//   border-radius: 25px;
-//   font-weight: 600;
-//   cursor: pointer;
-//   display: block;
-// }
-// .drawer-footer .btn-main {
-//   background: linear-gradient(135deg,#dc2626,#f97316) !important;
-//   color: #fff !important;
-// }
-//         .form-box input {
-//           width: 100%;
-//           margin: 8px 0;
-//           padding: 8px;
-//           border: 1px solid #ccc;
-//           border-radius: 8px;
-//         }
-
-//         /* 🔥 OVERLAY */
-//         .overlay {
-//           position: fixed;
-//           top: 0;
-//           left: 0;
-//           width: 100%;
-//           height: 100%;
-//           background: rgba(0,0,0,0.4);
-//           z-index: 999;
-//         }
-// .product-img {
-//   width: 100%;
-//   height: 180px; /* fixed height */
-//   /* object-fit: cover; */
-//   background: #f3f4f6; /* fallback background */
-//   border-radius: 10px;
-// }
-// .drawer-img {
-//   width: 100%;
-//   height: 220px; /* fixed height */
-//   object-fit: cover;
-//   background: #f3f4f6; /* fallback bg */
-//   border-radius: 10px;
-// }
-// .product-info {
-//   padding: 10px 5px;
-//   text-align: left;
-// }
-
-// .product-info h5 {
-//   font-size: 16px;
-//   font-weight: 600;
-//   margin-bottom: 6px;
-// }
-
-// .product-info p {
-//   font-size: 13px;
-//   margin: 2px 0;
-//   color: #555;
-// }
-// .drawer-details {
-//   margin-top: 10px;
-// }
-
-// .drawer-details p {
-//   font-size: 14px;
-//   margin: 4px 0;
-//   color: #444;
-// }
-// .img-box {
-//   width: 100%;
-//   height: 180px;
-//   background: #f3f4f6;
-//   border-radius: 10px;
-
-//   display: flex;
-//   align-items: center;
-//   justify-content: center;
-//   overflow: hidden;
-// }
-
-// .product-img {
-//   max-width: 100%;
-//   max-height: 100%;
-//   object-fit: contain; 
-// }
-
-// .form-control, .form-select {
-//   border-radius: 8px;
-// }
-
-// .btn-secondary {
-//   border-radius: 8px;
-// }
-// .filter-row {
-//   flex-wrap: nowrap;
-//   overflow-x: auto;
-// }
-
-// /* toggle button */
-// .filter-toggle {
-//   min-width: 40px;
-//   height: 40px;
-//   display: flex;
-//   align-items: center;
-//   justify-content: center;
-//   border: 1px solid #ddd;
-//   border-radius: 8px;
-//   cursor: pointer;
-// }
-
-// /* input sizes */
-// .filter-input {
-//   width: 180px;
-//   min-width: 140px;
-// }
-
-// .filter-select {
-//   width: auto;
-//   min-width: 120px;
-// }
-
-// @keyframes fadeIn {
-//   from {
-//     opacity: 0;
-//     transform: translateY(-5px);
-//   }
-//   to {
-//     opacity: 1;
-//     transform: translateY(0);
-//   }
-// }

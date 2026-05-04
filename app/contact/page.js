@@ -24,7 +24,7 @@ useEffect(() => {
   const load = async () => {
     try {
       const snap = await getDoc(
-        doc(db, "websites", "webfirst", "pages", "contact")
+        doc(db, "websites", "indiandiagnostic", "pages", "contact")
       );
 
       if (snap.exists()) {
@@ -80,7 +80,7 @@ if (!phoneRegex.test(form.phone)) {
 }
     const loadingToast = toast.loading("Sending message...");
 
-    await addDoc(collection(db, "contactQueries"), {
+    await addDoc(collection(db, "websitesQueries","indiandiagnostic", "contactQueries"), {
       name: form.name || "",
       email: form.email || "",
       phone: form.phone || "",
