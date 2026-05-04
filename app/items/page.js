@@ -13,7 +13,7 @@ export default function ItemsPage() {
 const [showFilters, setShowFilters] = useState(false);
 const [selectedProduct, setSelectedProduct] = useState(null);
 const [showForm, setShowForm] = useState(false);
-const [products, setProducts] = useState([]);
+const [products, setProducts] = useState([]); 
 const [loadingProducts, setLoadingProducts] = useState(true);
 const [search, setSearch] = useState("");
 const [selectedBrand, setSelectedBrand] = useState("");
@@ -62,7 +62,15 @@ useEffect(() => {
     doc(db, "websites", "webfirst", "pages", "products"),
     (snap) => {
       if (snap.exists()) {
-        setProducts(snap.data().products || []);
+        // setProducts(snap.data().products || []);
+        const rawProducts = snap.data().products || [];
+
+const productsWithSEO = rawProducts.map(p => ({
+  ...p,
+  seoKeywords: generateKeywords(p.title)
+}));
+
+setProducts(productsWithSEO);
       }
       setLoadingProducts(false);
     },
@@ -123,6 +131,68 @@ const handleSubmitQuery = async () => {
     toast.error("Something went wrong");
   }
 };
+
+
+const generateKeywords = (productName = "") => {
+  const base = productName.toLowerCase();
+
+  const prefixes = [
+    "best", "cheap", "affordable", "top", "near me",
+    "online", "trusted", "fast", "certified"
+  ];
+
+  const suffixes = [
+    "lab", "test", "diagnostic", "center",
+    "price", "booking", "home collection",
+    "report", "clinic"
+  ];
+
+  const locations = ["india", "jaipur", "delhi"];
+
+  let keywords = new Set();
+
+  keywords.add(base);
+  keywords.add(`${base} test`);
+  keywords.add(`${base} lab`);
+  keywords.add(`${base} near me`);
+
+  prefixes.forEach(p => keywords.add(`${p} ${base}`));
+  suffixes.forEach(s => keywords.add(`${base} ${s}`));
+
+  prefixes.forEach(p => {
+    suffixes.forEach(s => {
+      keywords.add(`${p} ${base} ${s}`);
+    });
+  });
+
+  locations.forEach(loc => {
+    keywords.add(`${base} in ${loc}`);
+    keywords.add(`${base} test in ${loc}`);
+  });
+
+  return Array.from(keywords).slice(0, 35);
+};
+
+
+useEffect(() => {
+  if (selectedProduct?.title) {
+    const keywords = generateKeywords(selectedProduct.title);
+    console.log("SEO KEYWORDS 👉", keywords);
+    document.title = selectedProduct.title;
+
+    let meta = document.querySelector('meta[name="keywords"]');
+
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "keywords";
+      document.head.appendChild(meta);
+    }
+
+    meta.content = keywords.join(", ");
+  }
+}, [selectedProduct]);
+
+
   return (
     <>
 
@@ -228,8 +298,17 @@ const handleSubmitQuery = async () => {
                   key={`${item.title}-${item.brand}-${item.size}-${item.usage}`}
                 >
                   <div className="product-card">
-
-                    <div className="img-box">
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: "-9999px",
+                      height: "1px",
+                      overflow: "hidden"
+                    }}
+                  >
+                    {item.seoKeywords?.join(", ")}
+                  </div>
+                      <div className="img-box">
                       <img
                         src={item.image || "/no-image.png"}
                         className="product-img"
@@ -326,6 +405,18 @@ const handleSubmitQuery = async () => {
 
         {selectedProduct && (
           <>
+           <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: selectedProduct.title,
+          description: selectedProduct.desc,
+          keywords: generateKeywords(selectedProduct.title).join(", "),
+        }),
+      }}
+    />
             <div className="drawer-header">
              <h4>{selectedProduct.title}</h4>
               <button onClick={() => setSelectedProduct(null)}>✖</button>
