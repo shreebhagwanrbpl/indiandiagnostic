@@ -86,10 +86,6 @@ useEffect(() => {
 // }, []);
 
 
-
-
-
-
 useEffect(() => {
   const unsub = onSnapshot(
     doc(db, "websites", "indiandiagnostic", "pages", "products"),
@@ -252,7 +248,6 @@ useEffect(() => {
       {/* 🔥 PRODUCTS GRID */}
       <section className="items-section">
         <div className="container">
-
           {/* 🔥 FILTERS */}
           <div className="filter-card mb-4 px-3 py-2 rounded shadow-sm bg-white">
             <div className="d-flex align-items-center justify-content-between flex-wrap gap-3">
@@ -521,10 +516,6 @@ useEffect(() => {
               required
             />
 
-
-
-            
-
             <button className="btn-main" onClick={handleSubmitQuery}>
               Submit
             </button>
@@ -533,7 +524,6 @@ useEffect(() => {
       </div>
     </>
   )}
-
 </div>
 
       {/* 🔥 OVERLAY */}

@@ -198,9 +198,7 @@ useEffect(() => {
                     Learn More →
                 </button>
               </Link>
-
       </div>
-
     </div>
   </div>
 </section>

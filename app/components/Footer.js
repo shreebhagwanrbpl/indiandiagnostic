@@ -6,7 +6,6 @@ import "./comp.css";
 
 export default function Footer() {
   const pathname = usePathname();
-
   // "/dausa" → "dausa"
   const citySlug = pathname.replace("/", "") || "jaipur";
 
