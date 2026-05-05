@@ -7,8 +7,8 @@ import toast, { Toaster } from "react-hot-toast";
 import "./items.css"
 import { doc, getDoc, collection, addDoc,onSnapshot  } from "firebase/firestore";
 import { FiFilter } from "react-icons/fi";
-
-
+import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 export default function ItemsPage({ city }) {
 const [showFilters, setShowFilters] = useState(false);
 const [selectedProduct, setSelectedProduct] = useState(null);
@@ -25,7 +25,7 @@ const [queryForm, setQueryForm] = useState({
   email: "",
   phone: ""
 });
-
+const pathname = usePathname();
 const brands = [...new Set(products.map(p => p.brand).filter(Boolean))];
 const usages = [...new Set(products.map(p => p.usage).filter(Boolean))];
 
@@ -40,7 +40,7 @@ const filteredProducts = products
   });
 const totalItems = products.length;            
 const filteredCount = filteredProducts.length; 
-
+const router = useRouter();
 const totalPages =
   itemsPerPage === "all"
     ? 1
@@ -53,7 +53,17 @@ const paginatedProducts =
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
       );
+useEffect(() => {
+  const slug = pathname.split("/").pop();
 
+  if (!slug) return;
+
+  const foundProduct = products.find(p => p.slug === slug);
+
+  if (foundProduct) {
+    setSelectedProduct(foundProduct);
+  }
+}, [pathname, products]);
 useEffect(() => {
   setCurrentPage(1);
 }, [search, selectedBrand, selectedUsage]);
@@ -85,6 +95,16 @@ useEffect(() => {
 //   return () => unsub();
 // }, []);
 
+
+
+
+// const handleCloseDrawer = () => {
+//   setSelectedProduct(null);
+
+//   router.push(`/${currentCity}`, {
+//     scroll: false,
+//   });
+// };
 
 useEffect(() => {
   const unsub = onSnapshot(
@@ -332,69 +352,42 @@ useEffect(() => {
 
             ) : (
               paginatedProducts.map((item) => (
-                <div
-                  className="col-md-3"
-                  key={`${item.title}-${item.brand}-${item.size}-${item.usage}`}
-                >
-                  <div className="product-card">
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: "-9999px",
-                      height: "1px",
-                      overflow: "hidden"
-                    }}
-                  >
-                    {item.seoKeywords?.join(", ")}
-                  </div>
-                      <div className="img-box">
-                      <img
-                        src={item.image || "/no-image.png"}
-                        className="product-img"
-                        loading="lazy"
-                      />
-                    </div>
+<div className="col-md-3">
+  <div
+    className="product-card"
+    onClick={() => {
+      setSelectedProduct(item);
+      setShowForm(false);
+      // window.history.pushState({}, "", `/${currentCity}/${item.slug}`);
+    }}
+  >
+    <div className="img-box">
+      <img
+        src={item.image || "/no-image.png"}
+        className="product-img"
+      />
+    </div>
 
-                    <div className="product-info">
-                      <h5>{item.title}</h5>
-                          <p className="text-muted small">
-                       <p><b>Brand:</b> {item.brand || "-"}</p>
-                      <p><b>Size:</b> {item.size || "-"}</p>
-                      <p><b>Usage:</b> {item.usage || "-"}</p>
-                    </p>
-                    </div>
+    <div className="product-info">
+      <h5>{item.title}</h5>
+      <p><b>Brand:</b> {item.brand || "-"}</p>
+      <p><b>Size:</b> {item.size || "-"}</p>
+      <p><b>Usage:</b> {item.usage || "-"}</p>
+    </div>
 
-                    {/* <button
-                      className="btn-view"
-                      onClick={() => {
-                        setSelectedProduct(item);
-                        setShowForm(false);
-                      }}
-                    >
-                      More Info
-                    </button> */}
-                    <div
-                      className="product-card"
-                      onClick={() => {
-                        setSelectedProduct(item); // modal
-                        setShowForm(false);
-                      }}
-                    >
-                      {/* IMAGE + INFO */}
-
-                      <Link
-                        // href={`/${city}/${item.slug}`}
-                        // onClick={(e) => e.stopPropagation()} 
-                         href={`/${currentCity}/${item.slug}`}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <button className="btn-view">
-                          View Details
-                        </button>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+    <button
+      className="btn-view"
+      onClick={(e) => {
+        e.stopPropagation();
+        setSelectedProduct(item);
+        setShowForm(false);
+        window.history.pushState({}, "", `/${currentCity}/${item.slug}`);
+      }}
+    >
+      View Details
+    </button>
+  </div>
+</div>
               ))
             )}
 
@@ -465,7 +458,7 @@ useEffect(() => {
           <>
             <div className="drawer-header">
              <h4>{selectedProduct.title}</h4>
-              <button onClick={() => setSelectedProduct(null)}>✖</button>
+              {/* <button onClick={handleCloseDrawer}>✖</button> */}
             </div>
 
       {/* SCROLLABLE CONTENT */}
