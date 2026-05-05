@@ -1,12 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import "./comp.css"
+import { usePathname } from "next/navigation";
+import "./comp.css";
+
 export default function Footer() {
+  const pathname = usePathname();
+
+  // "/dausa" → "dausa"
+  const citySlug = pathname.replace("/", "") || "jaipur";
+
+  // format: dausa → Dausa
+  const formatCity = (name) =>
+    name
+      .split("-")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+
+  const city = formatCity(citySlug);
+
   return (
     <footer className="footer-main">
       <div className="footer-container">
-
         <div className="row">
 
           {/* COMPANY */}
@@ -48,20 +63,24 @@ export default function Footer() {
           {/* CONTACT */}
           <div className="col-md-3">
             <h6>Contact</h6>
-            <p>📍 Jaipur, Rajasthan</p>
+            <p>📍 {city}, Rajasthan</p>
             <p>📞 +91 9876543210</p>
             <p>📧 info@rajbiosis.com</p>
+
+            {/* 🔥 Dynamic Map */}
+            <iframe
+              src={`https://maps.google.com/maps?q=${city},Rajasthan&output=embed`}
+              width="100%"
+              height="200"
+            />
           </div>
 
         </div>
 
-        {/* BOTTOM */}
         <div className="footer-bottom">
           © {new Date().getFullYear()} Raj Biosis Pvt. Ltd.
         </div>
-
       </div>
-
     </footer>
   );
 }

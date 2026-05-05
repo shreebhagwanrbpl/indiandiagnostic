@@ -9,7 +9,7 @@ import { doc, getDoc, collection, addDoc,onSnapshot  } from "firebase/firestore"
 import { FiFilter } from "react-icons/fi";
 
 
-export default function ItemsPage() {
+export default function ItemsPage({ city }) {
 const [showFilters, setShowFilters] = useState(false);
 const [selectedProduct, setSelectedProduct] = useState(null);
 const [showForm, setShowForm] = useState(false);
@@ -20,7 +20,7 @@ const [selectedBrand, setSelectedBrand] = useState("");
 const [selectedUsage, setSelectedUsage] = useState("");
 const [currentPage, setCurrentPage] = useState(1);
 const [itemsPerPage, setItemsPerPage] = useState(25);
-
+const currentCity = city || "jaipur";
 const [queryForm, setQueryForm] = useState({
   email: "",
   phone: ""
@@ -58,21 +58,60 @@ useEffect(() => {
   setCurrentPage(1);
 }, [search, selectedBrand, selectedUsage]);
 // data fatch 
+// useEffect(() => {
+//   const unsub = onSnapshot(
+//     doc(db, "websites", "indiandiagnostic", "pages", "products"),
+//     (snap) => {
+//       if (snap.exists()) {
+//         // setProducts(snap.data().products || []);
+//         const rawProducts = snap.data().products || [];
+
+// const productsWithSEO = rawProducts.map(p => ({
+//   ...p,
+//   seoKeywords: generateKeywords(p.title)
+// }));
+
+// setProducts(productsWithSEO);
+//       }
+//       setLoadingProducts(false);
+//     },
+//     (error) => {
+//       console.error(error);
+//       toast.error("Failed to load products");
+//       setLoadingProducts(false);
+//     }
+//   );
+
+//   return () => unsub();
+// }, []);
+
+
+
+
+
+
 useEffect(() => {
   const unsub = onSnapshot(
     doc(db, "websites", "indiandiagnostic", "pages", "products"),
     (snap) => {
       if (snap.exists()) {
-        // setProducts(snap.data().products || []);
+
         const rawProducts = snap.data().products || [];
 
-const productsWithSEO = rawProducts.map(p => ({
-  ...p,
-  seoKeywords: generateKeywords(p.title)
-}));
+        // 🔥 slug function
+        const slugify = (text = "") =>
+          text.toLowerCase().replace(/\s+/g, "-");
 
-setProducts(productsWithSEO);
+        // 🔥 SEO + slug add
+        const productsWithSEO = rawProducts.map((p) => ({
+          ...p,
+          slug: slugify(p.title), // ✅ ADD THIS
+          seoKeywords: generateKeywords(p.title),
+        }));
+
+        setProducts(productsWithSEO);
       }
+
       setLoadingProducts(false);
     },
     (error) => {
@@ -84,6 +123,9 @@ setProducts(productsWithSEO);
 
   return () => unsub();
 }, []);
+
+
+
 const handleFormChange = (e) => {
   setQueryForm({
     ...queryForm,
@@ -192,6 +234,7 @@ useEffect(() => {
     meta.content = keywords.join(", ");
   }
 }, [selectedProduct]);
+
 
 
   return (
@@ -326,7 +369,7 @@ useEffect(() => {
                     </p>
                     </div>
 
-                    <button
+                    {/* <button
                       className="btn-view"
                       onClick={() => {
                         setSelectedProduct(item);
@@ -334,7 +377,27 @@ useEffect(() => {
                       }}
                     >
                       More Info
-                    </button>
+                    </button> */}
+                    <div
+                      className="product-card"
+                      onClick={() => {
+                        setSelectedProduct(item); // modal
+                        setShowForm(false);
+                      }}
+                    >
+                      {/* IMAGE + INFO */}
+
+                      <Link
+                        // href={`/${city}/${item.slug}`}
+                        // onClick={(e) => e.stopPropagation()} 
+                         href={`/${currentCity}/${item.slug}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button className="btn-view">
+                          View Details
+                        </button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))
