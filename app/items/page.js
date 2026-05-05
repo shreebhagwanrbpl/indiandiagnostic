@@ -25,6 +25,7 @@ const [queryForm, setQueryForm] = useState({
   email: "",
   phone: ""
 });
+
 const brands = [...new Set(products.map(p => p.brand).filter(Boolean))];
 const usages = [...new Set(products.map(p => p.usage).filter(Boolean))];
 
@@ -334,7 +335,6 @@ useEffect(() => {
                     >
                       More Info
                     </button>
-
                   </div>
                 </div>
               ))
@@ -395,15 +395,13 @@ useEffect(() => {
                     ▶
                   </button>
                 </div>
-
               </div>
-
             </div>
           </div>
 
         </div>
       </section>
-<div className={`drawer ${selectedProduct ? "open" : ""}`}>
+    <div className={`drawer ${selectedProduct ? "open" : ""}`}>
 
         {selectedProduct && (
           <>
@@ -459,6 +457,10 @@ useEffect(() => {
               onChange={handleFormChange}
               required
             />
+
+
+
+            
 
             <button className="btn-main" onClick={handleSubmitQuery}>
               Submit
