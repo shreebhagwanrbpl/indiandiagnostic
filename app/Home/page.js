@@ -7,7 +7,7 @@ import Link from "next/link";
 import "./home.css"
 import toast from "react-hot-toast";
 
-export default function Home() {
+export default function Home({ city }) {
   const [animationData, setAnimationData] = useState(null);
   const [products, setProducts] = useState([]);
   const [data, setData] = useState({
@@ -16,6 +16,15 @@ export default function Home() {
   button1Text: "Explore Items",
   button2Text: "Get Quote",
 });
+
+
+const formatCity = (name) =>
+  name
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+
+
   useEffect(() => {
     fetch("https://assets10.lottiefiles.com/packages/lf20_jcikwtux.json")
       .then(res => res.json())
@@ -106,12 +115,12 @@ useEffect(() => {
               <div className="col-md-6">
             <h1 className="hero-title">
               {/* Trusted Diagnostic <br /> Solutions */}
-              {data.title}
+               {data.title} {city && `in ${formatCity(city)}`}
             </h1>
 
             <p className="hero-desc">
               {/* Premium medical equipment & lab solutions for modern healthcare. */}
-              {data.description }
+               {data.description} {city && `available in ${formatCity(city)}`}
             </p>
 
             <div className="mt-4">
@@ -173,7 +182,7 @@ useEffect(() => {
         </h2>
 
         <p className="about-desc">
-          Raj Biosis Pvt. Ltd., established in 2009, is a trusted name in the healthcare industry. 
+          Raj Biosis Pvt. Ltd., established in 2009, is a trusted name in the healthcare industry in {city || "India"}.
           We provide high-quality diagnostic instruments, reagents, and medical consumables 
           used in hospitals, laboratories, and clinics.
         </p>
