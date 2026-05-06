@@ -347,42 +347,42 @@ useEffect(() => {
 
             ) : (
               paginatedProducts.map((item) => (
-<div className="col-md-3">
-  <div
-    className="product-card"
-    onClick={() => {
-      setSelectedProduct(item);
-      setShowForm(false);
-      // window.history.pushState({}, "", `/${currentCity}/${item.slug}`);
-    }}
-  >
-    <div className="img-box">
-      <img
-        src={item.image || "/no-image.png"}
-        className="product-img"
-      />
-    </div>
+                    <div className="col-md-3">
+                      <div
+                        className="product-card"
+                        onClick={() => {
+                          setSelectedProduct(item);
+                          setShowForm(false);
+                          // window.history.pushState({}, "", `/${currentCity}/${item.slug}`);
+                        }}
+                      >
+                        <div className="img-box">
+                          <img
+                            src={item.image || "/no-image.png"}
+                            className="product-img"
+                          />
+                        </div>
 
-    <div className="product-info">
-      <h5>{item.title}</h5>
-      <p><b>Brand:</b> {item.brand || "-"}</p>
-      <p><b>Size:</b> {item.size || "-"}</p>
-      <p><b>Usage:</b> {item.usage || "-"}</p>
-    </div>
+                        <div className="product-info">
+                          <h5>{item.title}</h5>
+                          <p><b>Brand:</b> {item.brand || "-"}</p>
+                          <p><b>Size:</b> {item.size || "-"}</p>
+                          <p><b>Usage:</b> {item.usage || "-"}</p>
+                        </div>
 
-    <button
-      className="btn-view"
-      onClick={(e) => {
-        e.stopPropagation();
-        setSelectedProduct(item);
-        setShowForm(false);
-        window.history.pushState({}, "", `/${currentCity}/${item.slug}`);
-      }}
-    >
-      View Details
-    </button>
-  </div>
-</div>
+                        <button
+                          className="btn-view"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedProduct(item);
+                            setShowForm(false);
+                            window.history.pushState({}, "", `/${currentCity}/${item.slug}`);
+                          }}
+                        >
+                          View Details
+                        </button>
+                      </div>
+                    </div>
               ))
             )}
 
@@ -428,7 +428,7 @@ useEffect(() => {
                   >
                     ◀
                   </button>
-
+                  
                   <button className="btn btn-sm btn-primary px-3">
                     {currentPage}
                   </button>
