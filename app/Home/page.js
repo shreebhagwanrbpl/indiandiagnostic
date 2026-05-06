@@ -131,8 +131,6 @@ useEffect(() => {
                 </button>
               </Link>
 
-             
-
               <Link href="/contact">
                 <button className="btn btn-outline-light px-4">
                   {/* Get Quote */}
@@ -197,10 +195,10 @@ useEffect(() => {
                 <button className="about-btn">
                     Learn More →
                 </button>
-              </Link>
+          </Link>
+        </div>
       </div>
     </div>
-  </div>
 </section>
 
       {/* 🔥 SECTION 3: SERVICES */}

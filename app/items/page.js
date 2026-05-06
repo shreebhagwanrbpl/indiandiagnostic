@@ -91,13 +91,8 @@ useEffect(() => {
 //       setLoadingProducts(false);
 //     }
 //   );
-
 //   return () => unsub();
 // }, []);
-
-
-
-
 // const handleCloseDrawer = () => {
 //   setSelectedProduct(null);
 
