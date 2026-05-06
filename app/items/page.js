@@ -20,7 +20,7 @@ const [selectedBrand, setSelectedBrand] = useState("");
 const [selectedUsage, setSelectedUsage] = useState("");
 const [currentPage, setCurrentPage] = useState(1);
 const [itemsPerPage, setItemsPerPage] = useState(25);
-const currentCity = city || "jaipur";
+const currentCity = city || "";
 const [queryForm, setQueryForm] = useState({
   email: "",
   phone: ""
@@ -345,9 +345,11 @@ useEffect(() => {
                 <p>No products found</p>
               </div>
 
-            ) : (
-              paginatedProducts.map((item) => (
-                    <div className="col-md-3">
+            ) : ( 
+              paginatedProducts.map((item, index) => (
+                    <div 
+                       key={item.slug || index}
+                    className="col-md-3">
                       <div
                         className="product-card"
                         onClick={() => {
@@ -376,7 +378,13 @@ useEffect(() => {
                             e.stopPropagation();
                             setSelectedProduct(item);
                             setShowForm(false);
-                            window.history.pushState({}, "", `/${currentCity}/${item.slug}`);
+                            window.history.pushState(
+                            {},
+                            "",
+                            currentCity
+                              ? `/${currentCity}/${item.slug}`
+                              : `/${item.slug}`
+                          );
                           }}
                         >
                           View Details
@@ -516,7 +524,18 @@ useEffect(() => {
 
       {/* 🔥 OVERLAY */}
       {selectedProduct && (
-        <div className="overlay" onClick={() => setSelectedProduct(null)}></div>
+        <div
+          className="overlay"
+          onClick={() => {
+            setSelectedProduct(null);
+
+            const basePath =
+              sessionStorage.getItem("basePath") ||
+              (currentCity ? `/${currentCity}/items` : "/items");
+
+            window.history.pushState({}, "", basePath);
+          }}
+        ></div>
       )}
 
     </>

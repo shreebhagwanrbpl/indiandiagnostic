@@ -3,13 +3,23 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import "./comp.css";
+import districts from "@/lib/districts.json";
+
 
 export default function Footer() {
   const pathname = usePathname();
-  // "/dausa" → "dausa"
-  const citySlug = pathname.replace("/", "") || "jaipur";
+const pathParts = pathname.split("/").filter(Boolean);
 
-  // format: dausa → Dausa
+const firstPart = pathParts[0];
+
+const districtExists = districts.some(
+  (item) => item.slug === firstPart
+);
+
+const citySlug = districtExists
+  ? firstPart
+  : "jaipur";
+  
   const formatCity = (name) =>
     name
       .split("-")
@@ -40,12 +50,12 @@ export default function Footer() {
           <div className="col-md-2">
             <h6>Quick Links</h6>
             <ul className="footer-links">
-              <li><Link href="/">Home</Link></li>
-              <li><Link href="/about">About</Link></li>
-              <li><Link href="/services">Services</Link></li>
-              <li><Link href="/items">Products</Link></li>
-              <li><Link href="/contact">Contact</Link></li>
-            </ul>
+           <li><Link href={`/${citySlug}`}>Home</Link></li>
+          <li><Link href={`/${citySlug}/about`}>About</Link></li>
+          <li><Link href={`/${citySlug}/services`}>Services</Link></li>
+          <li><Link href={`/${citySlug}/items`}>Products</Link></li>
+          <li><Link href={`/${citySlug}/contact`}>Contact</Link></li>
+      </ul>
           </div>
 
           {/* PRODUCTS */}

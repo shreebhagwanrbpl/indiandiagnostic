@@ -5,8 +5,9 @@ import "./contact.css";
 import { db } from "@/lib/firebase";
 import toast, { Toaster } from "react-hot-toast";
 import { doc, getDoc, collection, addDoc } from "firebase/firestore";
+import districts from "@/lib/districts.json";
 
-export default function Contact() {
+export default function Contact({ city }) {
 
   const [form, setForm] = useState({
     name: "",
@@ -18,6 +19,10 @@ export default function Contact() {
 
   const [contactInfo, setContactInfo] = useState([]);
   const [loading, setLoading] = useState(true);
+  const currentCity = city || "jaipur";
+  const districtData = districts.find(
+  (d) => d.slug === currentCity
+);
 
   // LOAD CONTACT INFO
 useEffect(() => {
@@ -144,7 +149,9 @@ if (!phoneRegex.test(form.phone)) {
           <p key={i}>
             <strong>{icon} {item.label}:</strong>
             <br />
-            {item.value}
+           {label?.includes("address")
+        ? districtData?.address || `${currentCity}, Rajasthan`
+        : item.value}
           </p>
         );
       })
@@ -186,15 +193,15 @@ if (!phoneRegex.test(form.phone)) {
 
                   <div className="col-md-6">
                 <input
-  type="text"
-  name="phone"
-  placeholder="Phone Number"
-  className="form-control"
-  value={form.phone}
-  onChange={handleChange}
-  required
-  pattern="[0-9]{10}"
-/>
+                  type="text"
+                  name="phone"
+                  placeholder="Phone Number"
+                  className="form-control"
+                  value={form.phone}
+                  onChange={handleChange}
+                  required
+                  pattern="[0-9]{10}"
+                />
                   </div>
 
                   <div className="col-md-6">
@@ -240,7 +247,9 @@ if (!phoneRegex.test(form.phone)) {
         {/* MAP */}
         <div className="mt-5">
           <iframe
-            src="https://www.google.com/maps?q=Raj+Biosis+Pvt+Ltd,+Jaipur&output=embed"
+            src={`https://www.google.com/maps?q=${
+              districtData?.map || `${currentCity},Rajasthan`
+            }&output=embed`}
             width="100%"
             height="300"
             style={{ border: 0, borderRadius: "15px" }}
