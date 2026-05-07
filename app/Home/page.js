@@ -13,6 +13,8 @@ export default function Home({ city }) {
   const [products, setProducts] = useState([]);
   const [data, setData] = useState({
   title: "Advanced Diagnostic & Laboratory Equipment",
+
+  
   description: "Reliable medical devices and innovative lab technology for modern healthcare",
   button1Text: "Explore Items",
   button2Text: "Get Quote",
