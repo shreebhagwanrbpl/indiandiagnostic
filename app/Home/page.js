@@ -12,7 +12,7 @@ export default function Home({ city }) {
   const [products, setProducts] = useState([]);
   const [data, setData] = useState({
   title: "Trusted Diagnostic Solutions",
-  description: "Premium medical equipment & lab solutions for modern healthcare.",
+  description: "Premium medical equipment & lab solutions for modern healthcare",
   button1Text: "Explore Items",
   button2Text: "Get Quote",
 });
@@ -36,26 +36,25 @@ const formatCity = (name) =>
     const snap = await getDoc(
       doc(db, "websites", "indiandiagnostic", "pages", "products")
     );
-
     if (snap.exists()) {
       const data = snap.data().products || [];
       const filtered = data
         .filter((item) => item.isPublished)
         .slice(0, 4);
-
       setProducts(filtered);
     }
   };
 
   fetchProducts();
 }, []);
+
+
 const useCounter = (end, duration = 2000) => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
     let start = 0;
     const increment = end / (duration / 16);
-
     const timer = setInterval(() => {
       start += increment;
       if (start >= end) {
@@ -65,17 +64,15 @@ const useCounter = (end, duration = 2000) => {
         setCount(Math.floor(start));
       }
     }, 16);
-
     return () => clearInterval(timer);
   }, [end, duration]);
-
   return count;
 };
+
 const productsCount = useCounter(500);
 const clientsCount = useCounter(200);
 const yearsCount = useCounter(15);
-
-  const [services, setServices] = useState([]);
+const [services, setServices] = useState([]);
 
 const icons = ["🧪", "💊", "⚙️", "🔧", "🌍", "📊"];
 
@@ -91,6 +88,7 @@ useEffect(() => {
 
   return () => unsub();
 }, []);
+
   useEffect(() =>{
     const unsub = onSnapshot(
       doc(db, "websites", "indiandiagnostic", "pages", "home"),
@@ -137,7 +135,6 @@ useEffect(() => {
                   {data.button2Text}
                 </button>
               </Link>
-
             </div>
           </div>
 
@@ -158,12 +155,10 @@ useEffect(() => {
 
       {/* LEFT IMAGE */}
       <div className="col-md-6 position-relative text-center">
-
         <div className="img-box">
          <img className="home-img" src="/HomeImg.png" />
         </div>
 
-        {/* FLOATING CARDS 🔥 */}
         <div className="float-card f1">💊</div>
         <div className="float-card f2">🧪</div>
         <div className="float-card f3">🏥</div>
@@ -174,7 +169,6 @@ useEffect(() => {
       {/* RIGHT TEXT */}
       <div className="col-md-6">
         <h6 className="about-tag">ABOUT COMPANY</h6>
-
         <h2 className="about-title">
           Trusted Partner for Clinical <br /> Instruments & Medical Solutions
         </h2>
@@ -206,13 +200,10 @@ useEffect(() => {
   <div className="container text-center">
     {/* <h6 className="service-tag">OUR SERVICES</h6> */}
     <h2 className="service-title">What We Offer</h2>
-
     <div className="row mt-5">
-
       {services.slice(0, 4).map((item, i) => (
         <div className="col-md-3" key={i}>
           <div className="service-card">
-
             <div className="icon">
               {icons[i] || "⚙️"}
             </div>
@@ -247,8 +238,6 @@ useEffect(() => {
           <p>Quick supply across India</p>
         </div>
       </div>
-
-
 
       <div className="col-md-4">
         <div className="p-4 shadow-sm rounded">

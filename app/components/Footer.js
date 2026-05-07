@@ -9,9 +9,7 @@ import districts from "@/lib/districts.json";
 export default function Footer() {
   const pathname = usePathname();
 const pathParts = pathname.split("/").filter(Boolean);
-
 const firstPart = pathParts[0];
-
 const districtExists = districts.some(
   (item) => item.slug === firstPart
 );
@@ -32,7 +30,6 @@ const citySlug = districtExists
     <footer className="footer-main">
       <div className="footer-container">
         <div className="row">
-
           {/* COMPANY */}
           <div className="col-md-4">
             <div className="footer-logo">
@@ -40,14 +37,14 @@ const citySlug = districtExists
               <h5>Raj Biosis</h5>
             </div>
 
-            <p className="footer-desc">
+        <p className="footer-desc">
               Trusted partner for clinical instruments & medical consumables.
               Delivering quality healthcare solutions since 2009.
-            </p>
+        </p>
           </div>
 
           {/* LINKS */}
-          <div className="col-md-2">
+      <div className="col-md-2">
             <h6>Quick Links</h6>
             <ul className="footer-links">
            <li><Link href={`/${citySlug}`}>Home</Link></li>
@@ -83,7 +80,6 @@ const citySlug = districtExists
               height="200"
             />
           </div>
-
         </div>
 
         <div className="footer-bottom">

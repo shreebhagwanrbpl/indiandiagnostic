@@ -403,7 +403,6 @@ useEffect(() => {
               {/* Per Page */}
               <div className="d-flex align-items-center gap-2">
                 <span className="fw-semibold text-muted">Per Page:</span>
-
                 <select
                   className="custom-select"
                   value={itemsPerPage}
@@ -452,7 +451,6 @@ useEffect(() => {
               </div>
             </div>
           </div>
-
         </div>
       </section>
     <div className={`drawer ${selectedProduct ? "open" : ""}`}>
