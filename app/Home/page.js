@@ -6,13 +6,14 @@ import { doc, onSnapshot,getDoc  } from "firebase/firestore";
 import Link from "next/link";
 import "./home.css"
 import toast from "react-hot-toast";
+import { FaUserCircle  } from "react-icons/fa";
 
 export default function Home({ city }) {
   const [animationData, setAnimationData] = useState(null);
   const [products, setProducts] = useState([]);
   const [data, setData] = useState({
-  title: "Trusted Diagnostic Solutions",
-  description: "Premium medical equipment & lab solutions for modern healthcare",
+  title: "Advanced Diagnostic & Laboratory Equipment",
+  description: "Reliable medical devices and innovative lab technology for modern healthcare",
   button1Text: "Explore Items",
   button2Text: "Get Quote",
 });
@@ -69,9 +70,9 @@ const useCounter = (end, duration = 2000) => {
   return count;
 };
 
-const productsCount = useCounter(500);
-const clientsCount = useCounter(200);
-const yearsCount = useCounter(15);
+const productsCount = useCounter(3500);
+const clientsCount = useCounter(10000);
+const yearsCount = useCounter(17);
 const [services, setServices] = useState([]);
 
 const icons = ["🧪", "💊", "⚙️", "🔧", "🌍", "📊"];
@@ -169,14 +170,13 @@ useEffect(() => {
       {/* RIGHT TEXT */}
       <div className="col-md-6">
         <h6 className="about-tag">ABOUT COMPANY</h6>
-        <h2 className="about-title">
-          Trusted Partner for Clinical <br /> Instruments & Medical Solutions
-        </h2>
+      <h2 className="about-title">
+        Trusted Partner for Diagnostic <br /> Instruments & Healthcare Equipment
+      </h2>
 
         <p className="about-desc">
-          Raj Biosis Pvt. Ltd., established in 2009, is a trusted name in the healthcare industry in {city || "India"}.
-          We provide high-quality diagnostic instruments, reagents, and medical consumables 
-          used in hospitals, laboratories, and clinics.
+          Raj Biosis is dedicated to providing advanced diagnostic instruments, laboratory equipment, and healthcare technologies that meet modern medical standards. 
+             With a focus on innovation, accuracy, and reliability, we help hospitals, laboratories, and healthcare professionals achieve efficient and precise diagnostic performance.
         </p>
 
         <div className="about-points">
@@ -292,42 +292,56 @@ useEffect(() => {
       What Clients Say
     </h2>
 
-    <div className="row g-4">
+   <div className="row g-4">
 
-      {/* Card 1 */}
-      <div className="col-md-4">
-        <div className="testimonial-card">
-          <div className="quote-icon">❝</div>
-          <p>
-            Best diagnostic equipment provider! Highly reliable and trusted.
-          </p>
-          <h6>- Hospital Owner</h6>
-        </div>
+  {/* Card 1 */}
+  <div className="col-md-4">
+    <div className="testimonial-card">
+      <div className="quote-icon">
+        <FaUserCircle  />
       </div>
 
-      {/* Card 2 */}
-      <div className="col-md-4">
-        <div className="testimonial-card">
-          <div className="quote-icon">❝</div>
-          <p>
-            Fast delivery & great service. Always on time support.
-          </p>
-          <h6>- Lab Technician</h6>
-        </div>
-      </div>
+      <p>
+        Best diagnostic equipment provider! Highly reliable and trusted.
+      </p>
 
-      {/* Card 3 */}
-      <div className="col-md-4">
-        <div className="testimonial-card">
-          <div className="quote-icon">❝</div>
-          <p>
-            Highly recommended for labs. Quality products guaranteed.
-          </p>
-          <h6>- Doctor</h6>
-        </div>
-      </div>
-
+      <h6>- Hospital Owner</h6>
     </div>
+  </div>
+
+  {/* Card 2 */}
+  <div className="col-md-4">
+    <div className="testimonial-card">
+      <div className="quote-icon">
+        <FaUserCircle  />
+      </div>
+
+      <p>
+        Fast delivery & great service. Always on time support.
+      </p>
+
+      <h6>- Lab Technician</h6>
+    </div>
+  </div>
+
+  {/* Card 3 */}
+  <div className="col-md-4">
+    <div className="testimonial-card">
+      <div className="quote-icon">
+        <FaUserCircle  />
+      </div>
+
+      <p>
+        Highly recommended for labs. Quality products guaranteed.
+      </p>
+
+      <h6>- Doctor</h6>
+    </div>
+  </div>
+
+</div>
+
+
   </div>
 </section>
 
@@ -366,24 +380,24 @@ useEffect(() => {
         <div className="row text-center">
 
            <div className="col">
-    <h3 className="fw-bold">{productsCount}+</h3>
-    <p>Products</p>
-  </div>
+          <h3 className="fw-bold">{productsCount}+</h3>
+          <p>Products</p>
+        </div>
 
-  <div className="col">
-    <h3 className="fw-bold">{clientsCount}+</h3>
-    <p>Clients</p>
-  </div>
+        <div className="col">
+          <h3 className="fw-bold">{clientsCount}+</h3>
+          <p>Clients</p>
+        </div>
 
-  <div className="col">
-    <h3 className="fw-bold">{yearsCount}+</h3>
-    <p>Years</p>
-  </div>
+        <div className="col">
+          <h3 className="fw-bold">{yearsCount}+</h3>
+          <p>Years</p>
+        </div>
 
-  <div className="col">
-    <h3 className="fw-bold">24/7</h3>
-    <p>Support</p>
-  </div>
+        <div className="col">
+          <h3 className="fw-bold">24/7</h3>
+          <p>Support</p>
+        </div>
 
         </div>
       </div>

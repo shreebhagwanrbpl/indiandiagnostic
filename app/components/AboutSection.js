@@ -33,16 +33,16 @@ export default function AboutSection() {
 
   return count;
 };
-const years = useCounter(10);
-const clients = useCounter(500);
+const years = useCounter(17);
+const clients = useCounter(10000); 
 const quality = useCounter(100);
+
+
   return (    
     <section className="about-section">
       <div className="container">
         <div className="row align-items-center">
-          {/* LEFT ANIMATION */}
           <div className="col-md-6 position-relative text-center">
-            {/* Main Animation */}
           {animationData && (
             <Lottie animationData={animationData} style={{ height: 420 }} />
         )}
@@ -58,19 +58,22 @@ const quality = useCounter(100);
             <h6 className="about-tag">ABOUT US</h6>
 
             <h2 className="about-title">
-              Delivering Excellence in <br /> Healthcare Solutions
+              Delivering Excellence in <br /> Diagnostic & Laboratory Technology
             </h2>
 
             <p className="about-desc">
-              Raj Biosis is committed to providing high-quality diagnostic 
-              equipment and laboratory solutions. Our focus is on innovation,
-              precision, and trust.
+             Raj Biosis is dedicated to providing advanced diagnostic instruments, laboratory equipment, and healthcare technologies that meet modern medical standards. 
+             With a focus on innovation, accuracy, and reliability, we help hospitals, laboratories, and healthcare professionals achieve efficient and precise diagnostic performance.
             </p>
 
             <div className="about-points">
-              <span>✔ Trusted Products</span>
-              <span>✔ Certified Quality</span>
-              <span>✔ Fast Delivery</span>
+              <span>✔ Advanced Diagnostic Instruments</span>
+              <span>✔ Reliable & Certified Quality Standards</span>
+              <span>✔ Innovative Laboratory Technologies</span>
+              <span>✔ Trusted by Healthcare Professionals</span>
+              <span>✔ Efficient Supply & Support Network</span>
+
+
             </div>
 
             <button className="about-btn">
@@ -89,20 +92,20 @@ const quality = useCounter(100);
         <div className="container text-center">
           <div className="row">
 
-<div className="col-md-4">
-  <h2>{years}+</h2>
-  <p>Years Experience</p>
-</div>
+          <div className="col-md-4">
+            <h2>{years}+</h2>
+            <p>Years Experience</p>
+          </div>
 
-<div className="col-md-4">
-  <h2>{clients}+</h2>
-  <p>Clients Served</p>
-</div>
+          <div className="col-md-4">
+            <h2>{clients}+</h2>
+            <p>Clients Served</p>
+          </div>
 
-<div className="col-md-4">
-  <h2>{quality}%</h2>
-  <p>Quality Assurance</p>
-</div>
+          <div className="col-md-4">
+            <h2>{quality}%</h2>
+            <p>Quality Assurance</p>
+          </div>
 
           </div>
         </div>
@@ -128,17 +131,17 @@ const quality = useCounter(100);
       {/* RIGHT CONTENT */}
       <div className="col-md-6">
         <h2 className="content-title">
-          Trusted Partner for Clinical Instruments & Medical Consumables
+          Trusted Partner for Diagnostic Instruments & Healthcare Technology
         </h2>
 
         <p className="content-desc">
-          Raj Biosis Pvt. Ltd., established in 2009 in Jaipur, is a trusted 
-          healthcare company providing clinical instruments and medical consumables.
+          Established in 2009, Raj Biosis Pvt. Ltd. is a leading provider of advanced diagnostic instruments, laboratory equipment, reagents, and medical consumables for hospitals,
+           diagnostic centers, research laboratories, and healthcare institutions.
         </p>
 
         <p className="content-desc">
-          Our products are widely used in hospitals, laboratories, and clinics, 
-          helping professionals work with accuracy and confidence.
+         With a strong commitment to quality, innovation, and reliability, we deliver modern healthcare technologies 
+         designed to support accurate diagnostics and efficient laboratory performance worldwide.
         </p>
 
         <p className="content-desc">
@@ -148,15 +151,15 @@ const quality = useCounter(100);
         {/* POINTS */}
         <div className="row mt-3">
           <div className="col-6">
-            <p>✔ Advanced Instruments</p>
-            <p>✔ Global Network</p>
-            <p>✔ Strong Distribution</p>
+            <p>✔ Advanced Diagnostic & Laboratory Equipment</p>
+            <p>✔ High-Quality Reagents & Medical Consumables</p>
+            <p>✔ Trusted by Hospitals, Labs & Healthcare Professionals</p>
           </div>
 
           <div className="col-6">
-            <p>✔ ISO Certified</p>
-            <p>✔ Reliable Devices</p>
-            <p>✔ Ethical Work</p>
+            <p>✔ Global Network</p>
+            <p>✔ ISO Certified Standards & Quality Assurance</p>
+            <p>✔ Strong Distribution & Service Network Across Multiple Regions</p>
           </div>
         </div>
 

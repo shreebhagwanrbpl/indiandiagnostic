@@ -10,7 +10,7 @@ export default function AboutPage() {
          <section className="about-banner">
         <div className="container banner-content">
           <h1>About Raj Biosis</h1>
-          <p>Trusted Partner for Clinical Instruments & Medical Solutions</p>
+          <p>Trusted Partner for Diagnostic Instruments & Healthcare Equipment</p>
         </div>
       </section>
         <AboutSection />

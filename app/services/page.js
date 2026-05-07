@@ -56,25 +56,110 @@ export default function ServicesPage() {
     </section>
 
       {/* 🔥 WHY CHOOSE US */}
-      <section className="why-service">
-        <div className="container text-center">
-          <h2>Why Choose Us</h2>
+     <section className="why-service py-5">
+  <div className="container">
+    <div className="text-center mb-5">
+      <span className="sub-title">WHY CHOOSE RAJ BIOSIS</span>
 
-          <div className="row mt-4">
-            <div className="col-md-4">
-              <div className="why-box">✔ Trusted Brand</div>
-            </div>
+      <h2 className="main-title mt-2">
+        Delivering Trusted Diagnostic <br />
+        Equipment & Healthcare Excellence
+      </h2>
 
-            <div className="col-md-4">
-              <div className="why-box">✔ Quality Assurance</div>
-            </div>
+      <p className="why-desc mt-3">
+        Raj Biosis provides advanced diagnostic instruments, laboratory
+        equipment, reagents, and healthcare solutions trusted by hospitals,
+        laboratories, and medical professionals across multiple regions.
+      </p>
+    </div>
 
-            <div className="col-md-4">
-              <div className="why-box">✔ Fast Support</div>
-            </div>
+    <div className="row g-4">
+      <div className="col-lg-4 col-md-6">
+        <div className="why-box">
+          <div className="why-icon">✔</div>
+
+          <div>
+            <h4>Trusted Healthcare Brand</h4>
+            <p>
+              Years of experience delivering reliable diagnostic and laboratory
+              solutions to healthcare institutions.
+            </p>
           </div>
         </div>
-      </section>
+      </div>
+
+      <div className="col-lg-4 col-md-6">
+        <div className="why-box">
+          <div className="why-icon">✔</div>
+
+          <div>
+            <h4>Certified Quality Standards</h4>
+            <p>
+              High-quality instruments and medical products designed to ensure
+              precision, safety, and performance.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="col-lg-4 col-md-6">
+        <div className="why-box">
+          <div className="why-icon">✔</div>
+
+          <div>
+            <h4>Advanced Laboratory Equipment</h4>
+            <p>
+              Modern diagnostic technologies built to support accurate and
+              efficient laboratory operations.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="col-lg-4 col-md-6">
+        <div className="why-box">
+          <div className="why-icon">✔</div>
+
+          <div>
+            <h4>Wide Product Range</h4>
+            <p>
+              Comprehensive solutions including analyzers, reagents, consumables,
+              and diagnostic systems.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="col-lg-4 col-md-6">
+        <div className="why-box">
+          <div className="why-icon">✔</div>
+
+          <div>
+            <h4>Fast Supply & Support</h4>
+            <p>
+              Dedicated customer support and efficient product delivery for
+              uninterrupted healthcare services.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="col-lg-4 col-md-6">
+        <div className="why-box">
+          <div className="why-icon">✔</div>
+
+          <div>
+            <h4>Trusted by Professionals</h4>
+            <p>
+              Preferred by hospitals, diagnostic centers, and laboratories for
+              dependable healthcare solutions.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* <Footer /> */}
 
