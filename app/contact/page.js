@@ -23,6 +23,7 @@ export default function Contact({ city }) {
   const districtData = districts.find(
   (d) => d.slug === currentCity
 );
+const citySlug = districtData?.slug || "jaipur";
 const state = districtData?.state || "Rajasthan";
 
 const cityName =
@@ -150,13 +151,16 @@ if (!phoneRegex.test(form.phone)) {
         else if (label?.includes("hour")) icon = "⏰";
 
         return (
-          <p key={i}>
-            <strong>{icon} {item.label}:</strong>
-            <br />
-           {label?.includes("address")
-        ? `${cityName}, ${state}, India`
-        : item.value}
-          </p>
+<p key={i}>
+  <strong>{icon} {item.label}:</strong>
+  <br />
+
+  {label?.includes("address")
+    ? citySlug === "jaipur"
+      ? "F-4, 1st Floor, Plot No. 16, D-Block Tagor Nagar, on Ajmer-Delhi, 200 Feet Bypass Rd, Jaipur, Rajasthan 302021"
+      : `${cityName}, ${state}, India`
+    : item.value}
+</p>
         );
       })
     )}
