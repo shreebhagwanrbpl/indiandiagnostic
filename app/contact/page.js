@@ -23,6 +23,10 @@ export default function Contact({ city }) {
   const districtData = districts.find(
   (d) => d.slug === currentCity
 );
+const state = districtData?.state || "Rajasthan";
+
+const cityName =
+  districtData?.district || currentCity;
 
   // LOAD CONTACT INFO
 useEffect(() => {
@@ -150,7 +154,7 @@ if (!phoneRegex.test(form.phone)) {
             <strong>{icon} {item.label}:</strong>
             <br />
            {label?.includes("address")
-        ? districtData?.address || `${currentCity}, Rajasthan`
+        ? `${cityName}, ${state}, India`
         : item.value}
           </p>
         );
@@ -247,9 +251,7 @@ if (!phoneRegex.test(form.phone)) {
         {/* MAP */}
         <div className="mt-5">
           <iframe
-            src={`https://www.google.com/maps?q=${
-              districtData?.map || `${currentCity},Rajasthan`
-            }&output=embed`}
+src={`https://www.google.com/maps?q=${cityName},${state},India&output=embed`}
             width="100%"
             height="300"
             style={{ border: 0, borderRadius: "15px" }}

@@ -5,20 +5,28 @@ import { usePathname } from "next/navigation";
 import "./comp.css";
 import districts from "@/lib/districts.json";
 
-
 export default function Footer() {
   const pathname = usePathname();
-const pathParts = pathname.split("/").filter(Boolean);
-const firstPart = pathParts[0];
-const districtExists = districts.some(
-  (item) => item.slug === firstPart
-);
 
-const citySlug = districtExists
-  ? firstPart
-  : "jaipur";
-  
-  const formatCity = (name) =>
+  const pathParts = pathname.split("/").filter(Boolean);
+  const firstPart = pathParts[0];
+
+  // ✅ Find district object
+  const foundDistrict = districts.find(
+    (item) => item.slug === firstPart
+  );
+
+  // ✅ Default fallback
+  const districtData = foundDistrict || {
+    district: "Jaipur",
+    slug: "jaipur",
+    state: "Rajasthan",
+  };
+
+  const citySlug = districtData.slug;
+
+  // ✅ Format district name
+  const formatCity = (name = "") =>
     name
       .split("-")
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
@@ -26,38 +34,44 @@ const citySlug = districtExists
 
   const city = formatCity(citySlug);
 
+  // ✅ Dynamic state
+  const state = districtData.state || "Rajasthan";
+
   return (
     <footer className="footer-main">
       <div className="footer-container">
         <div className="row">
+
           {/* COMPANY */}
           <div className="col-md-4">
             <div className="footer-logo">
-              <img src="/logo.png" />
+              <img src="/logo.png" alt="logo" />
               <h5>Raj Biosis</h5>
             </div>
 
-        <p className="footer-desc">
+            <p className="footer-desc">
               Trusted partner for clinical instruments & medical consumables.
               Delivering quality healthcare solutions since 2009.
-        </p>
+            </p>
           </div>
 
           {/* LINKS */}
-      <div className="col-md-2">
+          <div className="col-md-2">
             <h6>Quick Links</h6>
+
             <ul className="footer-links">
-           <li><Link href={`/${citySlug}`}>Home</Link></li>
-          <li><Link href={`/${citySlug}/about`}>About</Link></li>
-          <li><Link href={`/${citySlug}/services`}>Services</Link></li>
-          <li><Link href={`/${citySlug}/items`}>Products</Link></li>
-          <li><Link href={`/${citySlug}/contact`}>Contact</Link></li>
-      </ul>
+              <li><Link href={`/${citySlug}`}>Home</Link></li>
+              <li><Link href={`/${citySlug}/about`}>About</Link></li>
+              <li><Link href={`/${citySlug}/services`}>Services</Link></li>
+              <li><Link href={`/${citySlug}/items`}>Products</Link></li>
+              <li><Link href={`/${citySlug}/contact`}>Contact</Link></li>
+            </ul>
           </div>
 
           {/* PRODUCTS */}
           <div className="col-md-3">
             <h6>Products</h6>
+
             <ul className="footer-links">
               <li>Hematology Analyzer</li>
               <li>Biochemistry Analyzer</li>
@@ -69,17 +83,34 @@ const citySlug = districtExists
           {/* CONTACT */}
           <div className="col-md-3">
             <h6>Contact</h6>
-            <p>📍 {city}, Rajasthan</p>
+
+            {/* ✅ Dynamic District + State */}
+       {/* ✅ Dynamic District + State */}
+
+<p>
+  📍 {
+    citySlug === "jaipur"
+      ? "F-4, 1st Floor, Plot No. 16, D-Block Tagor Nagar, on Ajmer-Delhi, 200 Feet Bypass Rd, Jaipur, Rajasthan 302021"
+      : `${city}, ${state}, India`
+  }
+</p>
+
             <p>📞 +91 9876543210</p>
             <p>📧 info@rajbiosis.com</p>
 
-            {/* 🔥 Dynamic Map */}
-            <iframe
-              src={`https://maps.google.com/maps?q=${city},Rajasthan&output=embed`}
-              width="100%"
-              height="200"
-            />
+            {/* ✅ Dynamic Google Map */}
+<iframe
+  src={`https://maps.google.com/maps?q=${
+    citySlug === "jaipur"
+      ? "F-4, 1st Floor, Plot No. 16, D-Block Tagor Nagar, Jaipur Rajasthan 302021"
+      : `${city},${state},India`
+  }&output=embed`}
+  width="100%"
+  height="200"
+  loading="lazy"
+/>
           </div>
+
         </div>
 
         <div className="footer-bottom">
