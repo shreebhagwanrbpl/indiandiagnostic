@@ -147,7 +147,6 @@ export default function ServicesPage() {
       <div className="col-lg-4 col-md-6">
         <div className="why-box">
           <div className="why-icon">✔</div>
-
           <div>
             <h4>Trusted by Professionals</h4>
             <p>

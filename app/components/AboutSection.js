@@ -54,7 +54,7 @@ const quality = useCounter(100);
           </div>
 
           {/* RIGHT TEXT */}
-          <div className="col-md-6">
+          <div className="col-md-6 mt-4">
             <h6 className="about-tag">ABOUT US</h6>
 
             <h2 className="about-title">
@@ -76,9 +76,9 @@ const quality = useCounter(100);
 
             </div>
 
-            <button className="about-btn">
+            {/* <button className="about-btn">
               Learn More
-            </button>
+            </button> */}
           </div>
 
         </div>
