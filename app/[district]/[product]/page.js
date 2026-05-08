@@ -2,7 +2,7 @@ import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
 export async function generateMetadata({ params }) {
-  const { district, product } = await params; // ✅
+  const { district, product } = params;
 
   const city = district.replace(/-/g, " ");
   const productName = product.replace(/-/g, " ");
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function Page({ params }) {
-  const { district, product } = await params; // ✅
+  const { district, product } = params;
 
   const snap = await getDoc(
     doc(db, "websites", "indiandiagnostic", "pages", "products")
@@ -36,9 +36,10 @@ export default async function Page({ params }) {
 
   return (
     <div style={{ padding: "120px 20px" }}>
-      <h1>{found.title} in {city}</h1>
+      <h1>
+        {found.title} in {city}
+      </h1>
 
-      {/* SEO Schema */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -54,8 +55,14 @@ export default async function Page({ params }) {
       />
 
       <p>{found.desc}</p>
-      <p><b>Brand:</b> {found.brand}</p>
-      <p><b>Usage:</b> {found.usage}</p>
+
+      <p>
+        <b>Brand:</b> {found.brand}
+      </p>
+
+      <p>
+        <b>Usage:</b> {found.usage}
+      </p>
 
       <img
         src={found.image || "/no-image.png"}

@@ -1,8 +1,14 @@
+import districts from "@/lib/districts.json";
 import ItemsPage from "@/app/items/page";
 
-export default async function DistrictItemsPage({ params }) {
+export async function generateStaticParams() {
+  return districts.map((item) => ({
+    district: item.slug,
+  }));
+}
 
-  const { district } = await params;
+export default function DistrictItemsPage({ params }) {
+  const { district } = params;
 
   return <ItemsPage city={district} />;
 }

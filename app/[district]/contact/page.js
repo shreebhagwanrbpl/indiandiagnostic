@@ -1,8 +1,14 @@
+import districts from "@/lib/districts.json";
 import Contact from "@/app/contact/page";
 
-export default async function DistrictContactPage({ params }) {
+export async function generateStaticParams() {
+  return districts.map((item) => ({
+    district: item.slug,
+  }));
+}
 
-  const { district } = await params;
+export default function DistrictContactPage({ params }) {
+  const { district } = params;
 
   return <Contact city={district} />;
 }
