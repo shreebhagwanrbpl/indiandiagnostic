@@ -268,17 +268,17 @@ useEffect(() => {
             <div className="d-flex align-items-center justify-content-between flex-wrap gap-3">
 
               {/* Toggle */}
-              <button
-                className="btn btn-sm btn-light border d-flex align-items-center gap-2"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <FiFilter />
-                Filters
-              </button>
+        <button
+  className="filter-toggle-btn"
+  onClick={() => setShowFilters(!showFilters)}
+>
+  <FiFilter />
+  <span>Filters</span>
+</button>
 
               {/* Filters */}
               {showFilters && (
-                <div className="d-flex align-items-center gap-2 flex-wrap">
+               <div className="filter-area">
                   <input
                     type="text"
                     placeholder="Search..."
@@ -397,60 +397,73 @@ useEffect(() => {
           </div>
 
           {/* 🔥 PAGINATION */}
-          <div className="pagination-card mt-4 px-3 py-2 rounded shadow-sm bg-white">
-            <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+<div className="pagination-card mt-4">
 
-              {/* Per Page */}
-              <div className="d-flex align-items-center gap-2">
-                <span className="fw-semibold text-muted">Per Page:</span>
-                <select
-                  className="custom-select"
-                  value={itemsPerPage}
-                  onChange={(e) => {
-                    const value = e.target.value === "all" ? "all" : Number(e.target.value);
-                    setItemsPerPage(value);
-                    setCurrentPage(1);
-                  }}
-                >
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                  <option value="all">All</option>
-                </select>
-              </div>
+  <div className="pagination-wrapper">
 
-              {/* Right */}
-              <div className="d-flex align-items-center gap-3 ms-auto">
+    {/* LEFT */}
+    <div className="page-left">
 
-                <div className="text-muted small fw-medium">
-                  Total: <span className="fw-bold">{totalItems}</span>
-                </div>
+      <span>Per Page:</span>
 
-                <div className="d-flex align-items-center gap-2">
-                  <button
-                    className="btn btn-sm btn-light border"
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage((p) => p - 1)}
-                  >
-                    ◀
-                  </button>
-                  
-                  <button className="btn btn-sm btn-primary px-3">
-                    {currentPage}
-                  </button>
+      <select
+        className="custom-select"
+        value={itemsPerPage}
+        onChange={(e) => {
+          const value =
+            e.target.value === "all"
+              ? "all"
+              : Number(e.target.value);
 
-                  <button
-                    className="btn btn-sm btn-light border"
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage((p) => p + 1)}
-                  >
-                    ▶
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          setItemsPerPage(value);
+          setCurrentPage(1);
+        }}
+      >
+        <option value={10}>10</option>
+        <option value={25}>25</option>
+        <option value={50}>50</option>
+        <option value={100}>100</option>
+        <option value="all">All</option>
+      </select>
+
+    </div>
+
+    {/* RIGHT */}
+    <div className="page-right">
+
+      <div className="page-total">
+        Total: <b>{totalItems}</b>
+      </div>
+
+      <div className="page-buttons">
+
+        <button
+          className="btn"
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage((p) => p - 1)}
+        >
+          ◀
+        </button>
+
+        <button className="btn btn-primary">
+          {currentPage}
+        </button>
+
+        <button
+          className="btn"
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage((p) => p + 1)}
+        >
+          ▶
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
         </div>
       </section>
     <div className={`drawer ${selectedProduct ? "open" : ""}`}>
@@ -460,6 +473,21 @@ useEffect(() => {
             <div className="drawer-header">
              <h4>{selectedProduct.title}</h4>
               {/* <button onClick={handleCloseDrawer}>✖</button> */}
+
+<button
+  className="drawer-close"
+  onClick={() => {
+    setSelectedProduct(null);
+
+    const basePath =
+      sessionStorage.getItem("basePath") ||
+      (currentCity ? `/${currentCity}/items` : "/items");
+
+    window.history.pushState({}, "", basePath);
+  }}
+>
+  ✕
+</button>
             </div>
 
       {/* SCROLLABLE CONTENT */}

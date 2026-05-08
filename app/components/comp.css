@@ -170,12 +170,7 @@
           font-size: 14px;
           color: #777;
         }
-        .about-section {
-  position: relative;
-   background: #fffaf3;
 
-  overflow: hidden;
-}
 
 /* TEXT */
 .about-tag {
@@ -184,26 +179,10 @@
   margin-bottom: 10px;
 }
 
-.about-title {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: #111;
-}
 
-.about-desc {
-  margin-top: 15px;
-  color: #555;
-  line-height: 1.6;
-}
+
 
 /* POINTS */
-.about-points {
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-weight: 500;
-}
 
 /* BUTTON */
 .about-btn {
@@ -215,14 +194,7 @@
   border-radius: 30px;
 }
 
-/* FLOATING ICONS */
-.floating {
-  position: absolute;
-  background: white;
-  padding: 12px;
-  border-radius: 12px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
+
 
 /* Animation */
 @keyframes float {
@@ -263,49 +235,370 @@
   right: -50px;
 }
 
-.about-stats {
-  padding: 80px 0;
-  background: #fffaf3;
-}
 
 .about-stats h2 {
   font-size: 2.5rem;
   color: #dc2626;
 }
 
-.about-content-new {
 
-  background: #fffaf3;
-}
-
-/* IMAGE */
-.about-img {
-  width: 300px;
-  position: relative;
-}
-
-/* FLOATING ICONS */
-.float-icon {
-  position: absolute;
-  background: white;
-  padding: 10px;
-  border-radius: 12px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
 
 .f1 { top: 10%; left: 10%; animation: float 4s infinite; }
 .f2 { top: 20%; right: 10%; animation: float 6s infinite; }
 .f3 { bottom: 10%; left: 30%; animation: float 5s infinite; }
 
+/* =========================
+   ABOUT SECTION RESPONSIVE
+========================= */
+
+.about-section {
+  position: relative;
+  background: #fffaf3;
+  overflow: hidden;
+  padding: 100px 0;
+}
+
+/* MAIN ROW */
+.about-section .row {
+  align-items: center;
+}
+
 /* TEXT */
-.content-title {
-  font-size: 2.2rem;
+.about-tag {
+  color: #dc2626;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.about-title {
+  font-size: 2.7rem;
   font-weight: 800;
+  line-height: 1.3;
+  color: #111;
+}
+
+.about-desc {
+  margin-top: 18px;
+  color: #555;
+  line-height: 1.8;
+  font-size: 16px;
+}
+
+/* POINTS */
+.about-points {
+  margin-top: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-weight: 500;
+}
+
+.about-points span {
+  line-height: 1.6;
+}
+
+/* LOTTIE */
+.about-animation {
+  width: 100%;
+  max-width: 450px;
+  margin: auto;
+}
+
+/* FLOATING ICONS */
+.floating,
+.float-icon {
+  position: absolute;
+  background: white;
+  padding: 12px;
+  border-radius: 14px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+  z-index: 2;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-15px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.a1 {
+  top: 10%;
+  left: 10%;
+  animation: float 4s infinite;
+}
+
+.a2 {
+  top: 0%;
+  right: 10%;
+  animation: float 6s infinite;
+}
+
+.a3 {
+  bottom: 10%;
+  left: 20%;
+  animation: float 5s infinite;
+}
+
+.a4 {
+  bottom: 20%;
+  right: 15%;
+  animation: float 7s infinite;
+}
+
+/* GLOW */
+.about-glow {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: rgba(255,200,100,0.2);
+  border-radius: 50%;
+  filter: blur(100px);
+  z-index: 0;
+}
+
+.glow-left {
+  top: -50px;
+  left: -50px;
+}
+
+.glow-right {
+  bottom: -50px;
+  right: -50px;
+}
+
+/* =========================
+   STATS
+========================= */
+
+.about-stats {
+  padding: 80px 0;
+  background: #fffaf3;
+}
+
+.about-stats h2 {
+  font-size: 2.7rem;
+  color: #dc2626;
+  font-weight: 800;
+}
+
+.about-stats p {
+  color: #555;
+  margin-top: 10px;
+}
+
+/* =========================
+   SECOND ABOUT
+========================= */
+
+.about-content-new {
+  padding: 80px 0;
+  background: #fffaf3;
+}
+
+.about-content-new .row {
+  background: white;
+  padding: 50px;
+  border-radius: 30px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+/* IMAGE */
+.about-img {
+  width: 100%;
+  max-width: 320px;
+  margin: auto;
+}
+
+/* FLOAT ICONS */
+.f1 {
+  top: 10%;
+  left: 10%;
+  animation: float 4s infinite;
+}
+
+.f2 {
+  top: 20%;
+  right: 10%;
+  animation: float 6s infinite;
+}
+
+.f3 {
+  bottom: 10%;
+  left: 30%;
+  animation: float 5s infinite;
+}
+
+/* CONTENT */
+.content-title {
+  font-size: 2.3rem;
+  font-weight: 800;
+  line-height: 1.3;
+  margin-bottom: 20px;
 }
 
 .content-desc {
   color: #555;
-  line-height: 1.6;
+  line-height: 1.8;
+  margin-bottom: 15px;
+}
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 992px) {
+
+  .about-section {
+    padding: 80px 20px;
+    text-align: center;
+  }
+
+  .about-title,
+  .content-title {
+    font-size: 2rem;
+  }
+
+  .about-desc,
+  .content-desc {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .about-points {
+    align-items: center;
+  }
+
+  .about-animation {
+    max-width: 350px;
+    margin-bottom: 40px;
+  }
+
+  .about-content-new .row {
+    padding: 35px;
+  }
+
+  .about-img {
+    max-width: 260px;
+    margin-bottom: 30px;
+  }
+
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+
+  .about-section {
+    padding: 60px 15px;
+  }
+
+  .about-title,
+  .content-title {
+    font-size: 1.7rem;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  .about-desc,
+  .content-desc {
+    font-size: 14px;
+    line-height: 1.8;
+    text-align: center;
+  }
+
+  .about-points {
+    align-items: center;
+    text-align: center;
+  }
+
+  .about-animation {
+    max-width: 280px;
+    margin-bottom: 30px;
+  }
+
+  .about-stats {
+    padding: 50px 0;
+  }
+
+  .about-stats .col-md-4 {
+    margin-bottom: 30px;
+  }
+
+  .about-stats h2 {
+    font-size: 2rem;
+  }
+
+  .about-content-new {
+    padding: 50px 0;
+  }
+
+  .about-content-new .row {
+    padding: 25px 20px;
+    border-radius: 20px;
+  }
+
+  .about-img {
+    max-width: 220px;
+    margin-bottom: 25px;
+  }
+
+  .row.mt-3 .col-6 {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  /* HIDE FLOATS */
+  .floating,
+  .float-icon,
+  .about-glow {
+    display: none !important;
+  }
+
+}
+
+/* =========================
+   SMALL MOBILE
+========================= */
+
+@media (max-width: 480px) {
+
+  .about-title,
+  .content-title {
+    font-size: 1.45rem;
+  }
+
+  .about-desc,
+  .content-desc,
+  .about-points span,
+  .row.mt-3 p {
+    font-size: 13px;
+  }
+
+  .about-animation {
+    max-width: 230px;
+  }
+
+  .about-img {
+    max-width: 180px;
+  }
+
+  .about-stats h2 {
+    font-size: 1.8rem;
+  }
+
 }
 
 /* FLOAT ANIMATION */
