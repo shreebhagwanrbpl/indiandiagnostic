@@ -21,6 +21,9 @@ const [selectedUsage, setSelectedUsage] = useState("");
 const [currentPage, setCurrentPage] = useState(1);
 const [itemsPerPage, setItemsPerPage] = useState(25);
 const currentCity = city || "";
+const citySlug = currentCity
+  ?.toLowerCase()
+  ?.replace(/\s+/g, "-");
 const [queryForm, setQueryForm] = useState({
   email: "",
   phone: ""
@@ -378,13 +381,17 @@ useEffect(() => {
                             e.stopPropagation();
                             setSelectedProduct(item);
                             setShowForm(false);
-                            window.history.pushState(
-                            {},
-                            "",
-                            currentCity
-                              ? `/${currentCity}/${item.slug}`
-                              : `/${item.slug}`
-                          );
+const citySlug = currentCity
+  .toLowerCase()
+  .replace(/\s+/g, "-");
+
+window.history.pushState(
+  {},
+  "",
+  citySlug
+    ? `/${citySlug}/items/${item.slug}`
+    : `/items/${item.slug}`
+);
                           }}
                         >
                           View Details
@@ -478,10 +485,9 @@ useEffect(() => {
   className="drawer-close"
   onClick={() => {
     setSelectedProduct(null);
-
-    const basePath =
-      sessionStorage.getItem("basePath") ||
-      (currentCity ? `/${currentCity}/items` : "/items");
+const basePath = citySlug
+  ? `/${citySlug}/items`
+  : "/items";
 
     window.history.pushState({}, "", basePath);
   }}
@@ -555,9 +561,9 @@ useEffect(() => {
           onClick={() => {
             setSelectedProduct(null);
 
-            const basePath =
-              sessionStorage.getItem("basePath") ||
-              (currentCity ? `/${currentCity}/items` : "/items");
+        const basePath = citySlug
+  ? `/${citySlug}/items`
+  : "/items";
 
             window.history.pushState({}, "", basePath);
           }}

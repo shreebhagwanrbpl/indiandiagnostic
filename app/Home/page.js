@@ -17,12 +17,13 @@ export default function Home({ city }) {
   button2Text: "Get Quote",
 });
 
-const formatCity = (name) =>
+const formatCity = (name = "") =>
   name
     .split("-")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .map(
+      (w) => w.charAt(0).toUpperCase() + w.slice(1)
+    )
     .join(" ");
-
 
   useEffect(() => {
     fetch("https://assets10.lottiefiles.com/packages/lf20_jcikwtux.json")
@@ -110,15 +111,26 @@ useEffect(() => {
           <div className="row align-items-center">
 
               <div className="col-md-6">
-            <h1 className="hero-title">
-              {/* Trusted Diagnostic <br /> Solutions */}
-               {data.title} {city && `in ${formatCity(city)}`}
-            </h1>
+<h1 className="hero-title">
 
-            <p className="hero-desc">
-              {/* Premium medical equipment & lab solutions for modern healthcare. */}
-               {data.description} {city && `available in ${formatCity(city)}`}
-            </p>
+  {
+    data.title
+      ?.split(" in ")[0]
+  }
+
+  {city && ` in ${city}`}
+
+</h1>
+<p className="hero-desc">
+
+  {
+    data.description
+      ?.split(" available in ")[0]
+  }
+
+  {city && ` available in ${city}`}
+
+</p>
 
             <div className="mt-4">
               <Link href="/items">

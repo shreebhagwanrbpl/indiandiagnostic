@@ -3,73 +3,96 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import "./comp.css";
-import districts from "@/lib/districts.json";
 
 export default function Footer() {
+
   const pathname = usePathname();
 
   const pathParts = pathname.split("/").filter(Boolean);
+
   const firstPart = pathParts[0];
 
-  // ✅ Find district object
-  const foundDistrict = districts.find(
-    (item) => item.slug === firstPart
-  );
+  // fallback
+  const citySlug = firstPart || "jaipur";
 
-  // ✅ Default fallback
-  const districtData = foundDistrict || {
-    district: "Jaipur",
-    slug: "jaipur",
-    state: "Rajasthan",
-  };
-
-  const citySlug = districtData.slug;
-
-  // ✅ Format district name
+  // format city
   const formatCity = (name = "") =>
     name
       .split("-")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .map(
+        (w) => w.charAt(0).toUpperCase() + w.slice(1)
+      )
       .join(" ");
 
   const city = formatCity(citySlug);
 
-  // ✅ Dynamic state
-  const state = districtData.state || "Rajasthan";
-
   return (
     <footer className="footer-main">
+
       <div className="footer-container">
+
         <div className="row">
 
           {/* COMPANY */}
           <div className="col-md-4">
+
             <div className="footer-logo">
               <img src="/logo.png" alt="logo" />
               <h5>Raj Biosis</h5>
             </div>
 
             <p className="footer-desc">
-              Trusted partner for clinical instruments & medical consumables.
-              Delivering quality healthcare solutions since 2009.
+              Trusted partner for clinical instruments &
+              medical consumables. Delivering quality
+              healthcare solutions since 2009.
             </p>
+
           </div>
 
           {/* LINKS */}
           <div className="col-md-2">
+
             <h6>Quick Links</h6>
 
             <ul className="footer-links">
-              <li><Link href={`/${citySlug}`}>Home</Link></li>
-              <li><Link href={`/${citySlug}/about`}>About</Link></li>
-              <li><Link href={`/${citySlug}/services`}>Services</Link></li>
-              <li><Link href={`/${citySlug}/items`}>Products</Link></li>
-              <li><Link href={`/${citySlug}/contact`}>Contact</Link></li>
+
+              <li>
+                <Link href={`/${citySlug}`}>
+                  Home
+                </Link>
+              </li>
+
+              <li>
+                <Link href={`/${citySlug}/about`}>
+                  About
+                </Link>
+              </li>
+
+              <li>
+                <Link href={`/${citySlug}/services`}>
+                  Services
+                </Link>
+              </li>
+
+              <li>
+                <Link href={`/${citySlug}/items`}>
+                  Products
+                </Link>
+              </li>
+
+              <li>
+                <Link href={`/${citySlug}/contact`}>
+                  Contact
+                </Link>
+              </li>
+
             </ul>
+
           </div>
 
           {/* PRODUCTS */}
           <div className="col-md-3">
+
             <h6>Products</h6>
 
             <ul className="footer-links">
@@ -78,45 +101,50 @@ export default function Footer() {
               <li>Lab Reagents</li>
               <li>Blood Collection Tubes</li>
             </ul>
+
           </div>
 
           {/* CONTACT */}
           <div className="col-md-3">
+
             <h6>Contact</h6>
 
-            {/* ✅ Dynamic District + State */}
-       {/* ✅ Dynamic District + State */}
-
-<p>
-  📍 {
-    citySlug === "jaipur"
-      ? "F-4, 1st Floor, Plot No. 16, D-Block Tagor Nagar, on Ajmer-Delhi, 200 Feet Bypass Rd, Jaipur, Rajasthan 302021"
-      : `${city}, ${state}, India`
-  }
-</p>
+            <p>
+              📍 {
+                citySlug === "jaipur"
+                  ? "F-4, 1st Floor, Plot No. 16, D-Block Tagor Nagar, Ajmer-Delhi Bypass Rd, Jaipur, Rajasthan 302021"
+                  : `${city}, India`
+              }
+            </p>
 
             <p>📞 +91 9876543210</p>
+
             <p>📧 info@rajbiosis.com</p>
 
-            {/* ✅ Dynamic Google Map */}
-<iframe
-  src={`https://maps.google.com/maps?q=${
-    citySlug === "jaipur"
-      ? "F-4, 1st Floor, Plot No. 16, D-Block Tagor Nagar, Jaipur Rajasthan 302021"
-      : `${city},${state},India`
-  }&output=embed`}
-  width="100%"
-  height="200"
-  loading="lazy"
-/>
+            {/* MAP */}
+            <iframe
+              src={`https://maps.google.com/maps?q=${
+                citySlug === "jaipur"
+                  ? "Raj Biosis Jaipur Rajasthan"
+                  : `${city},India`
+              }&output=embed`}
+              width="100%"
+              height="200"
+              loading="lazy"
+            />
+
           </div>
 
         </div>
 
         <div className="footer-bottom">
-          © {new Date().getFullYear()} Raj Biosis Pvt. Ltd.
+          © {new Date().getFullYear()}
+          {" "}
+          Raj Biosis Pvt. Ltd.
         </div>
+
       </div>
+
     </footer>
   );
 }

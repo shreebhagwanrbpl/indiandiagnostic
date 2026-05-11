@@ -4,8 +4,12 @@ import { useState, useEffect } from "react";
 import "./contact.css";
 import { db } from "@/lib/firebase";
 import toast, { Toaster } from "react-hot-toast";
-import { doc, getDoc, collection, addDoc } from "firebase/firestore";
-import districts from "@/lib/districts.json";
+import {
+  doc,
+  getDoc,
+  collection,
+  addDoc,
+} from "firebase/firestore";
 
 export default function Contact({ city }) {
 
@@ -14,256 +18,410 @@ export default function Contact({ city }) {
     email: "",
     phone: "",
     message: "",
-    subject: ""
+    subject: "",
   });
 
   const [contactInfo, setContactInfo] = useState([]);
   const [loading, setLoading] = useState(true);
-  const currentCity = city || "jaipur";
-  const districtData = districts.find(
-  (d) => d.slug === currentCity
-);
-const citySlug = districtData?.slug || "jaipur";
-const state = districtData?.state || "Rajasthan";
 
-const cityName =
-  districtData?.district || currentCity;
+  // current city
+  const currentCity = city || "jaipur";
+
+  // format city
+  const formatCity = (name = "") =>
+    name
+      .split("-")
+      .map(
+        (w) =>
+          w.charAt(0).toUpperCase() + w.slice(1)
+      )
+      .join(" ");
+
+  const citySlug = currentCity;
+
+  const cityName = formatCity(currentCity);
 
   // LOAD CONTACT INFO
-useEffect(() => {
-  const load = async () => {
-    try {
-      const snap = await getDoc(
-        doc(db, "websites", "indiandiagnostic", "pages", "contact")
-      );
+  useEffect(() => {
 
-      if (snap.exists()) {
-        setContactInfo(snap.data().contactInfo || []);
+    const load = async () => {
+
+      try {
+
+        const snap = await getDoc(
+          doc(
+            db,
+            "websites",
+            "indiandiagnostic",
+            "pages",
+            "contact"
+          )
+        );
+
+        if (snap.exists()) {
+          setContactInfo(
+            snap.data().contactInfo || []
+          );
+        }
+
+      } catch (err) {
+
+        console.error(err);
+
+      } finally {
+
+        setLoading(false);
+
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false); // ✅ ye add karo
-    }
-  };
 
-  load();
-}, []);
-// useEffect(() => {
-//   const fetchData = async () => {
-//     const data = await getContactData(); // tumhara firebase function
-//     setContactInfo(data);
-//     setLoading(false);
-//   };
+    };
 
-//   fetchData();
-// }, []);
+    load();
+
+  }, []);
+
   // HANDLE CHANGE
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  // 🔥 UPDATED SUBMIT (NO ARRAY, AUTO ID)
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-
-  try {
-    //  validation (extra safety)
-if (!form.name || !form.email || !form.phone || !form.message) {
-  setLoading(false);
-  return toast.error("Please fill all required fields");
-}
-
-// email regex
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-if (!emailRegex.test(form.email)) {
-  setLoading(false);
-  return toast.error("Invalid email format");
-}
-
-// phone validation (India 10 digit)
-const phoneRegex = /^[6-9]\d{9}$/;
-if (!phoneRegex.test(form.phone)) {
-  setLoading(false);
-  return toast.error("Invalid phone number");
-}
-    const loadingToast = toast.loading("Sending message...");
-
-    await addDoc(collection(db, "websitesQueries","indiandiagnostic", "contactQueries"), {
-      name: form.name || "",
-      email: form.email || "",
-      phone: form.phone || "",
-      message: form.message || "",
-      subject: form.subject || "",
-      createdAt: new Date(),
-    });
-
-    toast.success("Message sent successfully", { id: loadingToast });
 
     setForm({
-      name: "",
-      email: "",
-      phone: "",
-      message: "",
-      subject: "",
+      ...form,
+      [e.target.name]: e.target.value,
     });
 
-  } catch (err) {
-    console.error("Error:", err);
-    toast.error("Something went wrong");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
+
+  // SUBMIT
+  const handleSubmit = async (e) => {
+
+    e.preventDefault();
+
+    setLoading(true);
+
+    try {
+
+      // validation
+      if (
+        !form.name ||
+        !form.email ||
+        !form.phone ||
+        !form.message
+      ) {
+        setLoading(false);
+
+        return toast.error(
+          "Please fill all required fields"
+        );
+      }
+
+      // email validation
+      const emailRegex =
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!emailRegex.test(form.email)) {
+
+        setLoading(false);
+
+        return toast.error(
+          "Invalid email format"
+        );
+
+      }
+
+      // phone validation
+      const phoneRegex = /^[6-9]\d{9}$/;
+
+      if (!phoneRegex.test(form.phone)) {
+
+        setLoading(false);
+
+        return toast.error(
+          "Invalid phone number"
+        );
+
+      }
+
+      const loadingToast =
+        toast.loading("Sending message...");
+
+      await addDoc(
+        collection(
+          db,
+          "websitesQueries",
+          "indiandiagnostic",
+          "contactQueries"
+        ),
+        {
+          name: form.name || "",
+          email: form.email || "",
+          phone: form.phone || "",
+          message: form.message || "",
+          subject: form.subject || "",
+          city: cityName,
+          createdAt: new Date(),
+        }
+      );
+
+      toast.success(
+        "Message sent successfully",
+        {
+          id: loadingToast,
+        }
+      );
+
+      // reset
+      setForm({
+        name: "",
+        email: "",
+        phone: "",
+        message: "",
+        subject: "",
+      });
+
+    } catch (err) {
+
+      console.error("Error:", err);
+
+      toast.error("Something went wrong");
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  };
 
   return (
-    <section style={{ background: "#f8fafc" }} className="py-0">
+    <>
+      <Toaster position="top-right" />
 
-      {/* BANNER */}
-      <section className="about-banner">
-        <div className="banner-content">
-          <h1>Contact Us</h1>
-          <p>Get in touch with us for medical equipment & support</p>
-        </div>
-      </section>
+      <section
+        style={{ background: "#f8fafc" }}
+        className="py-0"
+      >
 
-      <div className="container py-5">
-        <div className="row g-4">
+        {/* BANNER */}
+        <section className="about-banner">
 
-          {/* LEFT */}
-<div className="col-md-4">
-  <div className="contact-box h-100">
-    <h5 className="mb-4">Contact Information</h5>
+          <div className="banner-content">
 
-    {loading ? (
-      <p>Loading...</p>   
-    ) : contactInfo.length === 0 ? (
-      null   
-    ) : (
-      contactInfo.map((item, i) => {
-        const label = item.label?.toLowerCase();
+            <h1>
+              Contact Us
+            </h1>
 
-        let icon = "👉";
-        if (label?.includes("address")) icon = "📍";
-        else if (label?.includes("phone")) icon = "📞";
-        else if (label?.includes("email")) icon = "📧";
-        else if (label?.includes("hour")) icon = "⏰";
+            <p>
+              Get in touch with us for
+              medical equipment & support
+            </p>
 
-        return (
-<p key={i}>
-  <strong>{icon} {item.label}:</strong>
-  <br />
+          </div>
 
-  {label?.includes("address")
-    ? citySlug === "jaipur"
-      ? "F-4, 1st Floor, Plot No. 16, D-Block Tagor Nagar, on Ajmer-Delhi, 200 Feet Bypass Rd, Jaipur, Rajasthan 302021"
-      : `${cityName}, ${state}, India`
-    : item.value}
-</p>
-        );
-      })
-    )}
-  </div>
-</div>
+        </section>
 
-          {/* RIGHT */}
-          <div className="col-md-8">
-            <div className="contact-box">
-              <h5 className="mb-4">Send Message</h5>
+        <div className="container py-5">
 
-              <form onSubmit={handleSubmit}>
-                <div className="row g-3">
+          <div className="row g-4">
 
-                  <div className="col-md-6">
-                    <input
-                      type="text"
-                      name="name"
-                      placeholder="Your Name"
-                      className="form-control"
-                      value={form.name}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
+            {/* LEFT */}
+            <div className="col-md-4">
 
-                  <div className="col-md-6">
-                    <input
-                      type="email"
-                      name="email"
-                      placeholder="Your Email"
-                      className="form-control"
-                      value={form.email}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
+              <div className="contact-box h-100">
 
-                  <div className="col-md-6">
-                <input
-                  type="text"
-                  name="phone"
-                  placeholder="Phone Number"
-                  className="form-control"
-                  value={form.phone}
-                  onChange={handleChange}
-                  required
-                  pattern="[0-9]{10}"
-                />
-                  </div>
+                <h5 className="mb-4">
+                  Contact Information
+                </h5>
 
-                  <div className="col-md-6">
-                    <input
-                      type="text"
-                      name="subject"
-                      placeholder="Subject"
-                      className="form-control"
-                      value={form.subject}
-                      onChange={handleChange}
-                    />
-                  </div>
+                {loading ? (
 
-                  <div className="col-12">
-                    <textarea
-                      name="message"
-                      rows="5"
-                      placeholder="Your Message"
-                      className="form-control"
-                      value={form.message}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
+                  <p>Loading...</p>
 
-                  <div className="col-12">
-          <button
-  className="btn btn-dark w-100"
-  disabled={loading}
->
-  {loading ? "Sending..." : "Send Message"}
-</button>
-                  </div>
+                ) : contactInfo.length === 0 ? (
 
-                </div>
-              </form>
+                  <p>No contact info found</p>
+
+                ) : (
+
+                  contactInfo.map((item, i) => {
+
+                    const label =
+                      item.label?.toLowerCase();
+
+                    let icon = "👉";
+
+                    if (
+                      label?.includes("address")
+                    ) {
+                      icon = "📍";
+                    }
+
+                    else if (
+                      label?.includes("phone")
+                    ) {
+                      icon = "📞";
+                    }
+
+                    else if (
+                      label?.includes("email")
+                    ) {
+                      icon = "📧";
+                    }
+
+                    else if (
+                      label?.includes("hour")
+                    ) {
+                      icon = "⏰";
+                    }
+
+                    return (
+                      <p key={i}>
+
+                        <strong>
+                          {icon} {item.label}:
+                        </strong>
+
+                        <br />
+
+{
+  label?.includes("address")
+    ? item.value || `${cityName}, India`
+    : item.value
+}
+
+                      </p>
+                    );
+                  })
+
+                )}
+
+              </div>
 
             </div>
+
+            {/* RIGHT */}
+            <div className="col-md-8">
+
+              <div className="contact-box">
+
+                <h5 className="mb-4">
+                  Send Message
+                </h5>
+
+                <form onSubmit={handleSubmit}>
+
+                  <div className="row g-3">
+
+                    <div className="col-md-6">
+
+                      <input
+                        type="text"
+                        name="name"
+                        placeholder="Your Name"
+                        className="form-control"
+                        value={form.name}
+                        onChange={handleChange}
+                        required
+                      />
+
+                    </div>
+
+                    <div className="col-md-6">
+
+                      <input
+                        type="email"
+                        name="email"
+                        placeholder="Your Email"
+                        className="form-control"
+                        value={form.email}
+                        onChange={handleChange}
+                        required
+                      />
+
+                    </div>
+
+                    <div className="col-md-6">
+
+                      <input
+                        type="text"
+                        name="phone"
+                        placeholder="Phone Number"
+                        className="form-control"
+                        value={form.phone}
+                        onChange={handleChange}
+                        required
+                        pattern="[0-9]{10}"
+                      />
+
+                    </div>
+
+                    <div className="col-md-6">
+
+                      <input
+                        type="text"
+                        name="subject"
+                        placeholder="Subject"
+                        className="form-control"
+                        value={form.subject}
+                        onChange={handleChange}
+                      />
+
+                    </div>
+
+                    <div className="col-12">
+
+                      <textarea
+                        name="message"
+                        rows="5"
+                        placeholder="Your Message"
+                        className="form-control"
+                        value={form.message}
+                        onChange={handleChange}
+                        required
+                      />
+
+                    </div>
+
+                    <div className="col-12">
+
+                      <button
+                        className="btn btn-dark w-100"
+                        disabled={loading}
+                      >
+                        {loading
+                          ? "Sending..."
+                          : "Send Message"}
+                      </button>
+
+                    </div>
+
+                  </div>
+
+                </form>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* MAP */}
+          <div className="mt-5">
+
+            <iframe
+              src={`https://www.google.com/maps?q=${cityName},India&output=embed`}
+              width="100%"
+              height="300"
+              style={{
+                border: 0,
+                borderRadius: "15px",
+              }}
+              loading="lazy"
+            />
+
           </div>
 
         </div>
 
-        {/* MAP */}
-        <div className="mt-5">
-          <iframe
-src={`https://www.google.com/maps?q=${cityName},${state},India&output=embed`}
-            width="100%"
-            height="300"
-            style={{ border: 0, borderRadius: "15px" }}
-            loading="lazy"
-          ></iframe>
-        </div>
-
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

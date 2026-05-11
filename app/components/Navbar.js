@@ -4,28 +4,31 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import "./comp.css";
-import districts from "@/lib/districts.json";
 
 export default function Navbar() {
 
   const pathname = usePathname();
+
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // ✅ current URL parts
+  // current path
   const pathParts = pathname.split("/").filter(Boolean);
 
-  // ✅ first URL part
-  const firstPart = pathParts[0];
+  // district slug
+const reservedRoutes = [
+  "about",
+  "contact",
+  "items",
+  "services",
+];
 
-  // ✅ check district exists
-  const districtExists = districts.some(
-    (item) => item.slug.toLowerCase() === firstPart?.toLowerCase()
-  );
+const district =
+  pathParts[0] &&
+  !reservedRoutes.includes(pathParts[0])
+    ? pathParts[0]
+    : "";
 
-  // ✅ district only if valid
-  const district = districtExists ? firstPart : "";
-
-  // ✅ dynamic links
+  // dynamic links
   const makeLink = (path = "") => {
 
     if (!district) {
@@ -41,17 +44,21 @@ export default function Navbar() {
 
   return (
     <>
+
       <nav className="nav-main">
+
         <div className="nav-container">
 
           {/* LOGO */}
           <div className="logo-box">
+
             <Link href={makeLink("")}>
               <img src="/logo.png" alt="logo" />
             </Link>
+
           </div>
 
-          {/* MOBILE MENU BUTTON */}
+          {/* MOBILE BUTTON */}
           <button
             className="menu-btn"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -60,11 +67,19 @@ export default function Navbar() {
           </button>
 
           {/* MENU */}
-          <div className={`nav-links ${menuOpen ? "show-menu" : ""}`}>
+          <div
+            className={`nav-links ${
+              menuOpen ? "show-menu" : ""
+            }`}
+          >
 
             <Link
               href={makeLink("")}
-              className={pathname === makeLink("") ? "active" : ""}
+              className={
+                pathname === makeLink("")
+                  ? "active"
+                  : ""
+              }
               onClick={() => setMenuOpen(false)}
             >
               Home
@@ -72,7 +87,11 @@ export default function Navbar() {
 
             <Link
               href={makeLink("/about")}
-              className={pathname.includes("/about") ? "active" : ""}
+              className={
+                pathname.includes("/about")
+                  ? "active"
+                  : ""
+              }
               onClick={() => setMenuOpen(false)}
             >
               About
@@ -80,7 +99,11 @@ export default function Navbar() {
 
             <Link
               href={makeLink("/services")}
-              className={pathname.includes("/services") ? "active" : ""}
+              className={
+                pathname.includes("/services")
+                  ? "active"
+                  : ""
+              }
               onClick={() => setMenuOpen(false)}
             >
               Services
@@ -88,7 +111,11 @@ export default function Navbar() {
 
             <Link
               href={makeLink("/items")}
-              className={pathname.includes("/items") ? "active" : ""}
+              className={
+                pathname.includes("/items")
+                  ? "active"
+                  : ""
+              }
               onClick={() => setMenuOpen(false)}
             >
               Items
@@ -96,7 +123,11 @@ export default function Navbar() {
 
             <Link
               href={makeLink("/contact")}
-              className={pathname.includes("/contact") ? "active" : ""}
+              className={
+                pathname.includes("/contact")
+                  ? "active"
+                  : ""
+              }
               onClick={() => setMenuOpen(false)}
             >
               Contact
@@ -105,60 +136,70 @@ export default function Navbar() {
           </div>
 
         </div>
+
       </nav>
+
+      {/* MOBILE CSS */}
       <style>{`
-      /* ===== MOBILE NAVBAR ===== */
 
-.menu-btn{
-  display:none;
-  background:none;
-  border:none;
-  font-size:28px;
-  cursor:pointer;
-  color:#111;
-}
+        .menu-btn{
+          display:none;
+          background:none;
+          border:none;
+          font-size:28px;
+          cursor:pointer;
+          color:#111;
+        }
 
-@media(max-width:768px){
+        @media(max-width:768px){
 
-  .nav-container{
-    position:relative;
-  }
+          .nav-container{
+            position:relative;
+          }
 
-  .menu-btn{
-    display:block;
-  }
+          .menu-btn{
+            display:block;
+          }
 
-  .nav-links{
-    position:absolute;
-    top:70px;
-    right:0;
-    width:220px;
-    background:#fff;
-    border-radius:16px;
-    padding:20px;
-    display:flex;
-    flex-direction:column;
-    gap:15px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.1);
+          .nav-links{
+            position:absolute;
+            top:70px;
+            right:0;
+            width:220px;
+            background:#fff;
+            border-radius:16px;
+            padding:20px;
 
-    opacity:0;
-    visibility:hidden;
-    transform:translateY(-10px);
-    transition:0.3s;
-    z-index:999;
-  }
+            display:flex;
+            flex-direction:column;
+            gap:15px;
 
-  .nav-links.show-menu{
-    opacity:1;
-    visibility:visible;
-    transform:translateY(0);
-  }
+            box-shadow:0 10px 30px rgba(0,0,0,0.1);
 
-  .nav-links a{
-    width:100%;
-  }
-}
+            opacity:0;
+            visibility:hidden;
+
+            transform:translateY(-10px);
+
+            transition:0.3s;
+
+            z-index:999;
+          }
+
+          .nav-links.show-menu{
+            opacity:1;
+            visibility:visible;
+            transform:translateY(0);
+          }
+
+          .nav-links a{
+            width:100%;
+          }
+
+        }
+
       `}</style>
+
     </>
   );
 }
