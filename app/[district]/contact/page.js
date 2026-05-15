@@ -1,10 +1,9 @@
 import Contact from "@/app/contact/page";
 
-export default function DistrictContactPage({ params }) {
+export default async function DistrictContactPage({ params }) {
+  const resolvedParams = await params;
 
-  const { district } = params;
+  const district = resolvedParams?.district || "jaipur";
 
-  return (
-    <Contact city={district} />
-  );
+  return <Contact city={district} />;
 }

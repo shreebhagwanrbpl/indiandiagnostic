@@ -5,10 +5,10 @@ import { db } from "@/lib/firebase";
 import Link from "next/link";
 import toast, { Toaster } from "react-hot-toast";
 import "./items.css"
-import { doc, getDoc, collection, addDoc,onSnapshot  } from "firebase/firestore";
+import { doc, getDoc, collection, addDoc  } from "firebase/firestore";
 import { FiFilter } from "react-icons/fi";
 import { useRouter } from "next/navigation";
-import { usePathname } from "next/navigation";
+// import { usePathname } from "next/navigation";
 export default function ItemsPage({ city }) {
 const [showFilters, setShowFilters] = useState(false);
 const [selectedProduct, setSelectedProduct] = useState(null);
@@ -20,6 +20,9 @@ const [selectedBrand, setSelectedBrand] = useState("");
 const [selectedUsage, setSelectedUsage] = useState("");
 const [currentPage, setCurrentPage] = useState(1);
 const [itemsPerPage, setItemsPerPage] = useState(25);
+
+const [hasFetched, setHasFetched] = useState(false);
+
 const currentCity = city || "";
 const citySlug = currentCity
   ?.toLowerCase()
@@ -28,7 +31,26 @@ const [queryForm, setQueryForm] = useState({
   email: "",
   phone: ""
 });
-const pathname = usePathname();
+// const pathname = usePathname();
+
+// const pathParts =
+//   pathname.split("/").filter(Boolean);
+
+// const reservedRoutes = [
+//   "about",
+//   "contact",
+//   "items",
+//   "services",
+// ];
+
+// const detectedCity =
+//   pathParts[0] &&
+//   !reservedRoutes.includes(pathParts[0])
+//     ? pathParts[0]
+//     : "";
+
+// const currentCity =
+//   city || detectedCity;
 const brands = [...new Set(products.map(p => p.brand).filter(Boolean))];
 const usages = [...new Set(products.map(p => p.usage).filter(Boolean))];
 
@@ -56,20 +78,65 @@ const paginatedProducts =
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
       );
-useEffect(() => {
-  const slug = pathname.split("/").pop();
+// useEffect(() => {
 
-  if (!slug) return;
+//   const parts =
+//     pathname.split("/").filter(Boolean);
 
-  const foundProduct = products.find(p => p.slug === slug);
+//   const slug =
+//     parts.length >= 3
+//       ? parts[parts.length - 1]
+//       : null;
 
-  if (foundProduct) {
-    setSelectedProduct(foundProduct);
-  }
-}, [pathname, products]);
-useEffect(() => {
-  setCurrentPage(1);
-}, [search, selectedBrand, selectedUsage]);
+//   if (!slug) {
+
+//     setSelectedProduct(null);
+
+//     return;
+//   }
+
+//   const foundProduct =
+//     products.find(
+//       (p) => p.slug === slug
+//     );
+
+//   if (foundProduct) {
+
+//     setSelectedProduct(foundProduct);
+//   }
+
+// }, [pathname, products]);
+// useEffect(() => {
+
+//   const parts =
+//     pathname.split("/").filter(Boolean);
+
+//   const slug =
+//     parts.length >= 3
+//       ? parts[parts.length - 1]
+//       : null;
+
+//   if (!slug) {
+
+//     setSelectedProduct(null);
+
+//     return;
+//   }
+
+//   const foundProduct =
+//     products.find(
+//       (p) => p.slug === slug
+//     );
+
+//   if (foundProduct) {
+
+//     setSelectedProduct(foundProduct);
+//   }
+
+// }, [pathname, products]);
+// useEffect(() => {
+//   setCurrentPage(1);
+// }, [search, selectedBrand, selectedUsage]);
 // data fatch 
 // useEffect(() => {
 //   const unsub = onSnapshot(
@@ -103,40 +170,99 @@ useEffect(() => {
 //     scroll: false,
 //   });
 // };
+const generateKeywords = (productName = "") => {
+  const base = productName.toLowerCase();
 
+  const prefixes = [
+    "best", "cheap", "affordable", "top", "near me",
+    "online", "trusted", "fast", "certified"
+  ];
+
+  const suffixes = [
+    "lab", "test", "diagnostic", "center",
+    "price", "booking", "home collection",
+    "report", "clinic"
+  ];
+
+  const locations = ["india", "jaipur", "delhi"];
+
+  let keywords = new Set();
+
+  keywords.add(base);
+  keywords.add(`${base} test`);
+  keywords.add(`${base} lab`);
+  keywords.add(`${base} near me`);
+
+  prefixes.forEach(p => keywords.add(`${p} ${base}`));
+  suffixes.forEach(s => keywords.add(`${base} ${s}`));
+
+  prefixes.forEach(p => {
+    suffixes.forEach(s => {
+      keywords.add(`${p} ${base} ${s}`);
+    });
+  });
+
+  locations.forEach(loc => {
+    keywords.add(`${base} in ${loc}`);
+    keywords.add(`${base} test in ${loc}`);
+  });
+
+  return Array.from(keywords).slice(0, 35);
+};
 useEffect(() => {
-  const unsub = onSnapshot(
-    doc(db, "websites", "indiandiagnostic", "pages", "products"),
-    (snap) => {
+
+  if (hasFetched) return;
+
+  const fetchProducts = async () => {
+
+    try {
+
+      setHasFetched(true);
+
+      const snap = await getDoc(
+        doc(
+          db,
+          "websites",
+          "indiandiagnostic",
+          "pages",
+          "products"
+        )
+      );
+
       if (snap.exists()) {
 
-        const rawProducts = snap.data().products || [];
+        const rawProducts =
+          snap.data().products || [];
 
-        // 🔥 slug function
         const slugify = (text = "") =>
           text.toLowerCase().replace(/\s+/g, "-");
 
-        // 🔥 SEO + slug add
-        const productsWithSEO = rawProducts.map((p) => ({
-          ...p,
-          slug: slugify(p.title), // ✅ ADD THIS
-          seoKeywords: generateKeywords(p.title),
-        }));
+        const productsWithSEO =
+          rawProducts.map((p) => ({
+            ...p,
+            slug: slugify(p.title),
+            seoKeywords: generateKeywords(
+              p.title
+            ),
+          }));
 
         setProducts(productsWithSEO);
       }
 
-      setLoadingProducts(false);
-    },
-    (error) => {
-      console.error(error);
-      toast.error("Failed to load products");
-      setLoadingProducts(false);
-    }
-  );
+    } catch (error) {
 
-  return () => unsub();
-}, []);
+      console.error(error);
+
+    } finally {
+
+      setLoadingProducts(false);
+
+    }
+  };
+
+  fetchProducts();
+
+}, [hasFetched]);
 
 
 
@@ -190,69 +316,82 @@ const handleSubmitQuery = async () => {
 };
 
 
-const generateKeywords = (productName = "") => {
-  const base = productName.toLowerCase();
 
-  const prefixes = [
-    "best", "cheap", "affordable", "top", "near me",
-    "online", "trusted", "fast", "certified"
-  ];
-
-  const suffixes = [
-    "lab", "test", "diagnostic", "center",
-    "price", "booking", "home collection",
-    "report", "clinic"
-  ];
-
-  const locations = ["india", "jaipur", "delhi"];
-
-  let keywords = new Set();
-
-  keywords.add(base);
-  keywords.add(`${base} test`);
-  keywords.add(`${base} lab`);
-  keywords.add(`${base} near me`);
-
-  prefixes.forEach(p => keywords.add(`${p} ${base}`));
-  suffixes.forEach(s => keywords.add(`${base} ${s}`));
-
-  prefixes.forEach(p => {
-    suffixes.forEach(s => {
-      keywords.add(`${p} ${base} ${s}`);
-    });
-  });
-
-  locations.forEach(loc => {
-    keywords.add(`${base} in ${loc}`);
-    keywords.add(`${base} test in ${loc}`);
-  });
-
-  return Array.from(keywords).slice(0, 35);
-};
 
 
 useEffect(() => {
-  if (selectedProduct?.title) {
-    const keywords = generateKeywords(selectedProduct.title);
-    console.log("SEO KEYWORDS 👉", keywords);
-    document.title = selectedProduct.title;
 
-    let meta = document.querySelector('meta[name="keywords"]');
+  if (selectedProduct?.title) {
+
+    const keywords =
+      generateKeywords(
+        selectedProduct.title
+      );
+
+    console.log(
+      "SEO KEYWORDS 👉",
+      keywords
+    );
+
+    let meta =
+      document.querySelector(
+        'meta[name="keywords"]'
+      );
 
     if (!meta) {
-      meta = document.createElement("meta");
+
+      meta =
+        document.createElement(
+          "meta"
+        );
+
       meta.name = "keywords";
-      document.head.appendChild(meta);
+
+      document.head.appendChild(
+        meta
+      );
     }
 
-    meta.content = keywords.join(", ");
+    meta.content =
+      keywords.join(", ");
   }
+
 }, [selectedProduct]);
 
 
 
   return (
     <>
+
+    {selectedProduct && (
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context":
+              "https://schema.org",
+
+            "@type": "Product",
+
+            name:
+              selectedProduct.title,
+
+            image:
+              selectedProduct.image,
+
+            description:
+              selectedProduct.desc,
+
+            brand: {
+              "@type": "Brand",
+
+              name:
+                selectedProduct.brand,
+            },
+          }),
+        }}
+      />
+    )}
 
       {/* 🔥 BANNER */}
       <section className="item-banner">
@@ -287,13 +426,27 @@ useEffect(() => {
                     placeholder="Search..."
                     className="form-control form-control-sm filter-input"
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    // onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => {
+
+  setSearch(e.target.value);
+
+  setCurrentPage(1);
+
+}}
                   />
 
                   <select
                     className="form-select form-select-sm filter-select"
                     value={selectedBrand}
-                    onChange={(e) => setSelectedBrand(e.target.value)}
+                    // onChange={(e) => setSelectedBrand(e.target.value)}
+                    onChange={(e) => {
+
+  setSelectedBrand(e.target.value);
+
+  setCurrentPage(1);
+
+}}
                   >
                     <option value="">Brand</option>
                     {brands.map((b, i) => (
@@ -304,7 +457,14 @@ useEffect(() => {
                   <select
                     className="form-select form-select-sm filter-select"
                     value={selectedUsage}
-                    onChange={(e) => setSelectedUsage(e.target.value)}
+                    // onChange={(e) => setSelectedUsage(e.target.value)}
+                    onChange={(e) => {
+
+  setSelectedUsage(e.target.value);
+
+  setCurrentPage(1);
+
+}}
                   >
                     <option value="">Usage</option>
                     {usages.map((u, i) => (
@@ -351,13 +511,13 @@ useEffect(() => {
             ) : ( 
               paginatedProducts.map((item, index) => (
                     <div 
-                       key={item.slug || index}
+                      key={item.id || `${item.slug}-${index}`}
                     className="col-md-3">
                       <div
                         className="product-card"
                         onClick={() => {
-                          setSelectedProduct(item);
-                          setShowForm(false);
+                          // setSelectedProduct(item);
+                          // setShowForm(false);
                           // window.history.pushState({}, "", `/${currentCity}/${item.slug}`);
                         }}
                       >
@@ -375,27 +535,29 @@ useEffect(() => {
                           <p><b>Usage:</b> {item.usage || "-"}</p>
                         </div>
 
-                        <button
-                          className="btn-view"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedProduct(item);
-                            setShowForm(false);
-const citySlug = currentCity
-  .toLowerCase()
-  .replace(/\s+/g, "-");
+<button
+  className="btn-view"
+  onClick={(e) => {
 
-window.history.pushState(
-  {},
-  "",
-  citySlug
-    ? `/${citySlug}/items/${item.slug}`
-    : `/items/${item.slug}`
-);
-                          }}
-                        >
-                          View Details
-                        </button>
+    e.stopPropagation();
+
+    setSelectedProduct(item);
+
+    setShowForm(false);
+
+    const productPath = citySlug
+      ? `/${citySlug}/items/${item.slug}`
+      : `/items/${item.slug}`;
+
+    window.history.replaceState(
+      {},
+      "",
+      productPath
+    );
+  }}
+>
+  View Details
+</button>
                       </div>
                     </div>
               ))
@@ -484,12 +646,18 @@ window.history.pushState(
 <button
   className="drawer-close"
   onClick={() => {
-    setSelectedProduct(null);
-const basePath = citySlug
-  ? `/${citySlug}/items`
-  : "/items";
 
-    window.history.pushState({}, "", basePath);
+    setSelectedProduct(null);
+
+    const basePath = citySlug
+      ? `/${citySlug}/items`
+      : "/items";
+
+    window.history.replaceState(
+      {},
+      "",
+      basePath
+    );
   }}
 >
   ✕
@@ -565,7 +733,11 @@ const basePath = citySlug
   ? `/${citySlug}/items`
   : "/items";
 
-            window.history.pushState({}, "", basePath);
+window.history.replaceState(
+  {},
+  "",
+  basePath
+);
           }}
         ></div>
       )}

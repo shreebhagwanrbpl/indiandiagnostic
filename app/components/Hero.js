@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 
 export default function Hero() {
   const [animationData, setAnimationData] = useState(null);
-  const [mounted, setMounted] = useState(false);
+  // const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    // setMounted(true);
 
     fetch("https://assets10.lottiefiles.com/packages/lf20_tutvdkg0.json")
       .then(res => res.json())
@@ -15,7 +15,7 @@ export default function Hero() {
   }, []);
 
   // 🔥 IMPORTANT: SSR block
-  if (!mounted) return null;
+  // if (!mounted) return null;
 
   return (
     <section className="hero-section">
