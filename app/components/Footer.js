@@ -1,30 +1,96 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 import "./comp.css";
 
 export default function Footer() {
 
+  const [stateName, setStateName] =
+    useState("");
+
   const pathname = usePathname();
 
-  const pathParts = pathname.split("/").filter(Boolean);
+  const pathParts =
+    pathname.split("/").filter(Boolean);
 
   const firstPart = pathParts[0];
 
-  // fallback
-  const citySlug = firstPart || "jaipur";
+  // reserved routes
+  const reservedRoutes = [
+    "about",
+    "contact",
+    "items",
+    "services",
+  ];
+
+  // city slug
+  const citySlug =
+    firstPart &&
+    !reservedRoutes.includes(firstPart)
+      ? firstPart
+      : "jaipur";
 
   // format city
   const formatCity = (name = "") =>
     name
       .split("-")
       .map(
-        (w) => w.charAt(0).toUpperCase() + w.slice(1)
+        (w) =>
+          w.charAt(0).toUpperCase() +
+          w.slice(1)
       )
       .join(" ");
 
   const city = formatCity(citySlug);
+
+  // LOAD STATE NAME
+  useEffect(() => {
+
+    const loadDistrict = async () => {
+
+      // skip jaipur
+      if (
+        !citySlug ||
+        citySlug === "jaipur"
+      ) {
+        return;
+      }
+
+      try {
+
+        const snap = await getDoc(
+          doc(
+            db,
+            "websites",
+            "globalbiomedicalorg",
+            "districts",
+            citySlug
+          )
+        );
+
+        if (snap.exists()) {
+
+          setStateName(
+            snap.data()?.state || ""
+          );
+
+        }
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    };
+
+    loadDistrict();
+
+  }, [citySlug]);
 
   return (
     <footer className="footer-main">
@@ -37,14 +103,25 @@ export default function Footer() {
           <div className="col-md-4">
 
             <div className="footer-logo">
-              <img src="/logo.png" alt="logo" />
-              <h5>Raj Biosis</h5>
+
+              <img
+                src="/logo.png"
+                alt="logo"
+              />
+
+              <h5>
+                Raj Biosis
+              </h5>
+
             </div>
 
             <p className="footer-desc">
-              Trusted partner for clinical instruments &
-              medical consumables. Delivering quality
-              healthcare solutions since 2009.
+              Trusted partner for
+              clinical instruments &
+              medical consumables.
+              Delivering quality
+              healthcare solutions
+              since 2009.
             </p>
 
           </div>
@@ -52,7 +129,9 @@ export default function Footer() {
           {/* LINKS */}
           <div className="col-md-2">
 
-            <h6>Quick Links</h6>
+            <h6>
+              Quick Links
+            </h6>
 
             <ul className="footer-links">
 
@@ -63,25 +142,33 @@ export default function Footer() {
               </li>
 
               <li>
-                <Link href={`/${citySlug}/about`}>
+                <Link
+                  href={`/${citySlug}/about`}
+                >
                   About
                 </Link>
               </li>
 
               <li>
-                <Link href={`/${citySlug}/services`}>
+                <Link
+                  href={`/${citySlug}/services`}
+                >
                   Services
                 </Link>
               </li>
 
               <li>
-                <Link href={`/${citySlug}/items`}>
+                <Link
+                  href={`/${citySlug}/items`}
+                >
                   Products
                 </Link>
               </li>
 
               <li>
-                <Link href={`/${citySlug}/contact`}>
+                <Link
+                  href={`/${citySlug}/contact`}
+                >
                   Contact
                 </Link>
               </li>
@@ -93,13 +180,28 @@ export default function Footer() {
           {/* PRODUCTS */}
           <div className="col-md-3">
 
-            <h6>Products</h6>
+            <h6>
+              Products
+            </h6>
 
             <ul className="footer-links">
-              <li>Hematology Analyzer</li>
-              <li>Biochemistry Analyzer</li>
-              <li>Lab Reagents</li>
-              <li>Blood Collection Tubes</li>
+
+              <li>
+                Hematology Analyzer
+              </li>
+
+              <li>
+                Biochemistry Analyzer
+              </li>
+
+              <li>
+                Lab Reagents
+              </li>
+
+              <li>
+                Blood Collection Tubes
+              </li>
+
             </ul>
 
           </div>
@@ -107,26 +209,36 @@ export default function Footer() {
           {/* CONTACT */}
           <div className="col-md-3">
 
-            <h6>Contact</h6>
+            <h6>
+              Contact
+            </h6>
 
             <p>
-              📍 {
-                citySlug === "jaipur"
-                  ? "F-4, 1st Floor, Plot No. 16, D-Block Tagor Nagar, Ajmer-Delhi Bypass Rd, Jaipur, Rajasthan 302021"
-                  : `${city}, India`
-              }
+              📍{" "}
+
+              {citySlug === "jaipur"
+                ? "F-4, 1st Floor, Plot No. 16, D-Block Tagor Nagar, Ajmer-Delhi Bypass Rd, Jaipur, Rajasthan 302021"
+                : stateName
+                  ? `${city}, ${stateName}, India`
+                  : `${city}, India`}
             </p>
 
-            <p>📞 +91 9876543210</p>
+            <p>
+              📞 +91 9876543210
+            </p>
 
-            <p>📧 info@rajbiosis.com</p>
+            <p>
+              📧 info@rajbiosis.com
+            </p>
 
             {/* MAP */}
             <iframe
               src={`https://maps.google.com/maps?q=${
                 citySlug === "jaipur"
                   ? "Raj Biosis Jaipur Rajasthan"
-                  : `${city},India`
+                  : stateName
+                    ? `${city}, ${stateName}, India`
+                    : `${city}, India`
               }&output=embed`}
               width="100%"
               height="200"
@@ -138,9 +250,11 @@ export default function Footer() {
         </div>
 
         <div className="footer-bottom">
+
           © {new Date().getFullYear()}
           {" "}
           Raj Biosis Pvt. Ltd.
+
         </div>
 
       </div>

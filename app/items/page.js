@@ -5,7 +5,7 @@ import { db } from "@/lib/firebase";
 import Link from "next/link";
 import toast, { Toaster } from "react-hot-toast";
 import "./items.css"
-import { doc, getDoc, collection, addDoc,onSnapshot  } from "firebase/firestore";
+import { doc, getDoc, collection, addDoc  } from "firebase/firestore";
 import { FiFilter } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
@@ -21,6 +21,7 @@ const [selectedUsage, setSelectedUsage] = useState("");
 const [currentPage, setCurrentPage] = useState(1);
 const [itemsPerPage, setItemsPerPage] = useState(25);
 const currentCity = city || "";
+const [hasFetched, setHasFetched] = useState(false);
 const citySlug = currentCity
   ?.toLowerCase()
   ?.replace(/\s+/g, "-");
@@ -57,15 +58,32 @@ const paginatedProducts =
         currentPage * itemsPerPage
       );
 useEffect(() => {
-  const slug = pathname.split("/").pop();
 
-  if (!slug) return;
+  const parts =
+    pathname.split("/").filter(Boolean);
 
-  const foundProduct = products.find(p => p.slug === slug);
+  const slug =
+    parts.length >= 3
+      ? parts[parts.length - 1]
+      : null;
+
+  if (!slug) {
+
+    setSelectedProduct(null);
+
+    return;
+  }
+
+  const foundProduct =
+    products.find(
+      (p) => p.slug === slug
+    );
 
   if (foundProduct) {
+
     setSelectedProduct(foundProduct);
   }
+
 }, [pathname, products]);
 useEffect(() => {
   setCurrentPage(1);
@@ -103,40 +121,60 @@ useEffect(() => {
 //     scroll: false,
 //   });
 // };
-
 useEffect(() => {
-  const unsub = onSnapshot(
-    doc(db, "websites", "indiandiagnostic", "pages", "products"),
-    (snap) => {
+
+  if (hasFetched) return;
+
+  const fetchProducts = async () => {
+
+    try {
+
+      setHasFetched(true);
+
+      const snap = await getDoc(
+        doc(
+          db,
+          "websites",
+          "indiandiagnostic",
+          "pages",
+          "products"
+        )
+      );
+
       if (snap.exists()) {
 
-        const rawProducts = snap.data().products || [];
+        const rawProducts =
+          snap.data().products || [];
 
-        // 🔥 slug function
         const slugify = (text = "") =>
           text.toLowerCase().replace(/\s+/g, "-");
 
-        // 🔥 SEO + slug add
-        const productsWithSEO = rawProducts.map((p) => ({
-          ...p,
-          slug: slugify(p.title), // ✅ ADD THIS
-          seoKeywords: generateKeywords(p.title),
-        }));
+        const productsWithSEO =
+          rawProducts.map((p) => ({
+            ...p,
+            slug: slugify(p.title),
+            seoKeywords: generateKeywords(
+              p.title
+            ),
+          }));
 
         setProducts(productsWithSEO);
       }
 
-      setLoadingProducts(false);
-    },
-    (error) => {
-      console.error(error);
-      toast.error("Failed to load products");
-      setLoadingProducts(false);
-    }
-  );
+    } catch (error) {
 
-  return () => unsub();
-}, []);
+      console.error(error);
+
+    } finally {
+
+      setLoadingProducts(false);
+
+    }
+  };
+
+  fetchProducts();
+
+}, [hasFetched]);
 
 
 
@@ -351,7 +389,7 @@ useEffect(() => {
             ) : ( 
               paginatedProducts.map((item, index) => (
                     <div 
-                       key={item.slug || index}
+                      key={item.id || `${item.slug}-${index}`}
                     className="col-md-3">
                       <div
                         className="product-card"
@@ -375,27 +413,25 @@ useEffect(() => {
                           <p><b>Usage:</b> {item.usage || "-"}</p>
                         </div>
 
-                        <button
-                          className="btn-view"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedProduct(item);
-                            setShowForm(false);
-const citySlug = currentCity
-  .toLowerCase()
-  .replace(/\s+/g, "-");
+<button
+  className="btn-view"
+  onClick={(e) => {
 
-window.history.pushState(
-  {},
-  "",
-  citySlug
-    ? `/${citySlug}/items/${item.slug}`
-    : `/items/${item.slug}`
-);
-                          }}
-                        >
-                          View Details
-                        </button>
+    e.stopPropagation();
+
+    setSelectedProduct(item);
+
+    setShowForm(false);
+
+    window.history.pushState(
+      {},
+      "",
+      `/${citySlug}/items/${item.slug}`
+    );
+  }}
+>
+  View Details
+</button>
                       </div>
                     </div>
               ))
@@ -484,12 +520,18 @@ window.history.pushState(
 <button
   className="drawer-close"
   onClick={() => {
-    setSelectedProduct(null);
-const basePath = citySlug
-  ? `/${citySlug}/items`
-  : "/items";
 
-    window.history.pushState({}, "", basePath);
+    setSelectedProduct(null);
+
+    const basePath = citySlug
+      ? `/${citySlug}/items`
+      : "/items";
+
+    window.history.replaceState(
+      {},
+      "",
+      basePath
+    );
   }}
 >
   ✕
@@ -565,7 +607,11 @@ const basePath = citySlug
   ? `/${citySlug}/items`
   : "/items";
 
-            window.history.pushState({}, "", basePath);
+window.history.replaceState(
+  {},
+  "",
+  basePath
+);
           }}
         ></div>
       )}

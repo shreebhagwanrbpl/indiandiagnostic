@@ -1,5 +1,5 @@
 "use client";
-
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import "./contact.css";
 import { db } from "@/lib/firebase";
@@ -20,12 +20,30 @@ export default function Contact({ city }) {
     message: "",
     subject: "",
   });
-
+  const [stateName, setStateName] = useState("");
   const [contactInfo, setContactInfo] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // current city
-  const currentCity = city || "jaipur";
+const pathname = usePathname();
+
+const pathParts =
+  pathname.split("/").filter(Boolean);
+
+const reservedRoutes = [
+  "about",
+  "contact",
+  "items",
+  "services",
+];
+
+const district =
+  pathParts[0] &&
+  !reservedRoutes.includes(pathParts[0])
+    ? pathParts[0]
+    : "";
+
+const currentCity =
+  district || "jaipur";
 
   // format city
   const formatCity = (name = "") =>
@@ -41,6 +59,48 @@ export default function Contact({ city }) {
 
   const cityName = formatCity(currentCity);
 
+  useEffect(() => {
+
+  const loadDistrict = async () => {
+
+    if (
+      !citySlug ||
+      citySlug === "jaipur"
+    ) {
+      return;
+    }
+
+    try {
+
+      const snap = await getDoc(
+        doc(
+          db,
+          "websites",
+          "globalbiomedicalorg",
+          "districts",
+          citySlug
+        )
+      );
+
+      if (snap.exists()) {
+
+        setStateName(
+          snap.data()?.state || ""
+        );
+
+      }
+
+    } catch (err) {
+
+      console.log(err);
+
+    }
+
+  };
+
+  loadDistrict();
+
+}, [citySlug]);
   // LOAD CONTACT INFO
   useEffect(() => {
 
@@ -283,7 +343,9 @@ export default function Contact({ city }) {
 
 {
   label?.includes("address")
-    ? item.value || `${cityName}, India`
+    ? stateName
+  ? `${cityName}, ${stateName}, India`
+  : `${cityName}, India`
     : item.value
 }
 
@@ -407,7 +469,11 @@ export default function Contact({ city }) {
           <div className="mt-5">
 
             <iframe
-              src={`https://www.google.com/maps?q=${cityName},India&output=embed`}
+              src={`https://www.google.com/maps?q=${
+  stateName
+    ? `${cityName}, ${stateName}, India`
+    : `${cityName}, India`
+}&output=embed`}
               width="100%"
               height="300"
               style={{
