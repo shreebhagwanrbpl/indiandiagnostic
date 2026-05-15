@@ -1,10 +1,9 @@
 import Services from "@/app/services/page";
 
-export default function DistrictServicesPage({ params }) {
+export default async function DistrictServicesPage({ params }) {
+  const resolvedParams = await params;
 
-  const { district } = params;
+  const district = resolvedParams?.district || "jaipur";
 
-  return (
-    <Services city={district} />
-  );
+  return <Services city={district} />;
 }
