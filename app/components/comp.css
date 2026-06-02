@@ -1,175 +1,187 @@
+html,
+body {
+  overflow-x: hidden;
+}
+
 .nav-links a {
   text-decoration: none;
   color: #333;
   font-weight: 500;
 }
-  .active {
+
+.active {
   color: #dc2626 !important;
 }
 
 .active::after {
   width: 100% !important;
 }
+
 .nav-links a:hover {
   color: #dc2626 !important;
 }
-  .nav-main {
-    position: fixed;
-    top: 20px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    z-index: 999;
-  }
 
-  .nav-container {
-    width: 90%;
-    max-width: 1200px;
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(15px);
-    border-radius: 50px;
-    padding: 14px 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-  }
+.nav-main {
+  position: fixed;
+  top: 20px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 9999;
+}
 
-  /* LOGO */
-  .logo-box {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+.nav-container {
+  width: 90%;
+  max-width: 1200px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(15px);
+  border-radius: 50px;
+  padding: 14px 30px;
+  display: flex;
+  overflow: visible;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
 
-  .logo-box img {
-    height: 45px;
-    width: auto;
-    object-fit: contain;
-  }
+/* LOGO */
+.logo-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-  .logo-box span {
-    font-weight: 700;
-    color: #7f1d1d;
-    font-size: 18px;
-  }
+.logo-box img {
+  height: 45px;
+  width: auto;
+  object-fit: contain;
+}
 
-  /* NAV LINKS */
-  .nav-links {
-    display: flex;
-    gap: 35px;
-    align-items: center;
-    color:black;
-  }
+.logo-box span {
+  font-weight: 700;
+  color: #7f1d1d;
+  font-size: 18px;
+}
 
-  /* 🔥 MAIN FIX */
-  .nav-links a {
-    text-decoration: none !important;   /* underline hat gaya */
-    color: #444 !important;             /* blue hat gaya */
-    font-weight: 500;
-    font-size: 16px;
-    position: relative;
-    transition: 0.3s;
-  }
+/* NAV LINKS */
+.nav-links {
+  display: flex;
+  gap: 35px;
+  align-items: center;
+  color: black;
+}
 
- 
+/* 🔥 MAIN FIX */
+.nav-links a {
+  text-decoration: none !important;
+  /* underline hat gaya */
+  color: #444 !important;
+  /* blue hat gaya */
+  font-weight: 500;
+  font-size: 16px;
+  position: relative;
+  transition: 0.3s;
+}
 
-  /* 🔥 PREMIUM UNDERLINE ANIMATION */
-  .nav-links a::after {
-    content: "";
-    position: absolute;
-    width: 0%;
-    height: 2px;
-    bottom: -5px;
-    left: 0;
-    background: linear-gradient(135deg,#dc2626,#f97316);
-    transition: 0.3s;
-  }
 
-  .nav-links a:hover::after {
-    width: 100%;
-  }
 
-  /* 🔥 CONTACT BUTTON */
-  .btn-contact {
-    background: linear-gradient(135deg,#dc2626,#f97316);
-    color: white !important;
-    padding: 8px 20px;
-    border-radius: 30px;
-    font-weight: 600;
-  }
+/* 🔥 PREMIUM UNDERLINE ANIMATION */
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  width: 0%;
+  height: 2px;
+  bottom: -5px;
+  left: 0;
+  background: linear-gradient(135deg, #dc2626, #f97316);
+  transition: 0.3s;
+}
 
-  .btn-contact:hover {
-    transform: scale(1.05);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-  }
+.nav-links a:hover::after {
+  width: 100%;
+}
 
-         .footer-main {
-       
-          padding: 60px 0 20px;
-          display: flex;
-          justify-content: center;
-          background: #fef8f0;
-        }
+/* 🔥 CONTACT BUTTON */
+.btn-contact {
+  background: linear-gradient(135deg, #dc2626, #f97316);
+  color: white !important;
+  padding: 8px 20px;
+  border-radius: 30px;
+  font-weight: 600;
+}
 
-        .footer-container {
-          width: 90%;
-          max-width: 1200px;
-          background: rgba(255,255,255,0.85);
-          backdrop-filter: blur(15px);
-          border-radius: 30px;
-          padding: 40px;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-        }
+.btn-contact:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
 
-        .footer-logo {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 10px;
-        }
+.footer-main {
 
-        .footer-logo img {
-          height: 40px;
-        }
+  padding: 60px 0 20px;
+  display: flex;
+  justify-content: center;
+  background: #fef8f0;
+}
 
-        .footer-desc {
-          font-size: 14px;
-          color: #555;
-        }
+.footer-container {
+  width: 90%;
+  max-width: 1200px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(15px);
+  border-radius: 30px;
+  padding: 40px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
 
-        h6 {
-          font-weight: 600;
-          margin-bottom: 15px;
-        }
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
 
-        .footer-links {
-          list-style: none;
-          padding: 0;
-        }
+.footer-logo img {
+  height: 40px;
+}
 
-        .footer-links li {
-          margin-bottom: 8px;
-        }
+.footer-desc {
+  font-size: 14px;
+  color: #555;
+}
 
-        .footer-links a {
-          text-decoration: none;
-          color: #444;
-          transition: 0.3s;
-        }
+h6 {
+  font-weight: 600;
+  margin-bottom: 15px;
+}
 
-        .footer-links a:hover {
-          color: #dc2626;
-        }
+.footer-links {
+  list-style: none;
+  padding: 0;
+}
 
-        .footer-bottom {
-          text-align: center;
-          margin-top: 30px;
-          padding-top: 15px;
-          border-top: 1px solid #eee;
-          font-size: 14px;
-          color: #777;
-        }
+.footer-links li {
+  margin-bottom: 8px;
+}
+
+.footer-links a {
+  text-decoration: none;
+  color: #444;
+  transition: 0.3s;
+}
+
+.footer-links a:hover {
+  color: #dc2626;
+}
+
+.footer-bottom {
+  text-align: center;
+  margin-top: 30px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+  font-size: 14px;
+  color: #777;
+}
 
 
 /* TEXT */
@@ -187,7 +199,7 @@
 /* BUTTON */
 .about-btn {
   margin-top: 20px;
-  background: linear-gradient(135deg,#dc2626,#f97316);
+  background: linear-gradient(135deg, #dc2626, #f97316);
   color: white;
   border: none;
   padding: 10px 25px;
@@ -198,31 +210,59 @@
 
 /* Animation */
 @keyframes float {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
-  100% { transform: translateY(0); }
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
 }
 
-.a1 { top: 10%; left: 10%; animation: float 4s infinite; }
-.a2 { top: 0%; right: 10%; animation: float 6s infinite; }
-.a3 { bottom: 10%; left: 20%; animation: float 5s infinite; }
-.a4 { bottom: 20%; right: 15%; animation: float 7s infinite; }
+.a1 {
+  top: 10%;
+  left: 10%;
+  animation: float 4s infinite;
+}
+
+.a2 {
+  top: 0%;
+  right: 10%;
+  animation: float 6s infinite;
+}
+
+.a3 {
+  bottom: 10%;
+  left: 20%;
+  animation: float 5s infinite;
+}
+
+.a4 {
+  bottom: 20%;
+  right: 15%;
+  animation: float 7s infinite;
+}
 
 /* GLOW */
 .about-glow {
   position: absolute;
   width: 300px;
   height: 300px;
-  background: rgba(255,200,100,0.3);
+  background: rgba(255, 200, 100, 0.3);
   border-radius: 50%;
   filter: blur(100px);
   display: none;
 }
-  .about-content-new .row {
+
+.about-content-new .row {
   background: #ffffff;
   padding: 40px;
   border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
 }
 
 .glow-left {
@@ -243,9 +283,23 @@
 
 
 
-.f1 { top: 10%; left: 10%; animation: float 4s infinite; }
-.f2 { top: 20%; right: 10%; animation: float 6s infinite; }
-.f3 { bottom: 10%; left: 30%; animation: float 5s infinite; }
+.f1 {
+  top: 10%;
+  left: 10%;
+  animation: float 4s infinite;
+}
+
+.f2 {
+  top: 20%;
+  right: 10%;
+  animation: float 6s infinite;
+}
+
+.f3 {
+  bottom: 10%;
+  left: 30%;
+  animation: float 5s infinite;
+}
 
 /* =========================
    ABOUT SECTION RESPONSIVE
@@ -312,22 +366,8 @@
   background: white;
   padding: 12px;
   border-radius: 14px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
   z-index: 2;
-}
-
-@keyframes float {
-  0% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-15px);
-  }
-
-  100% {
-    transform: translateY(0);
-  }
 }
 
 .a1 {
@@ -359,7 +399,7 @@
   position: absolute;
   width: 300px;
   height: 300px;
-  background: rgba(255,200,100,0.2);
+  background: rgba(255, 200, 100, 0.2);
   border-radius: 50%;
   filter: blur(100px);
   z-index: 0;
@@ -408,7 +448,7 @@
   background: white;
   padding: 50px;
   border-radius: 30px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: hidden;
 }
@@ -599,11 +639,4 @@
     font-size: 1.8rem;
   }
 
-}
-
-/* FLOAT ANIMATION */
-@keyframes float {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-15px); }
-  100% { transform: translateY(0); }
 }

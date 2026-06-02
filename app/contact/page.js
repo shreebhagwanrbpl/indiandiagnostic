@@ -24,26 +24,26 @@ export default function Contact({ city }) {
   const [contactInfo, setContactInfo] = useState([]);
   const [loading, setLoading] = useState(true);
 
-const pathname = usePathname();
+  const pathname = usePathname();
 
-const pathParts =
-  pathname.split("/").filter(Boolean);
+  const pathParts =
+    pathname.split("/").filter(Boolean);
 
-const reservedRoutes = [
-  "about",
-  "contact",
-  "items",
-  "services",
-];
+  const reservedRoutes = [
+    "about",
+    "contact",
+    "items",
+    "services",
+  ];
 
-const district =
-  pathParts[0] &&
-  !reservedRoutes.includes(pathParts[0])
-    ? pathParts[0]
-    : "";
+  const district =
+    pathParts[0] &&
+      !reservedRoutes.includes(pathParts[0])
+      ? pathParts[0]
+      : "";
 
-const currentCity =
-  district || "jaipur";
+  const currentCity =
+    district || "jaipur";
 
   // format city
   const formatCity = (name = "") =>
@@ -61,46 +61,46 @@ const currentCity =
 
   useEffect(() => {
 
-  const loadDistrict = async () => {
+    const loadDistrict = async () => {
 
-    if (
-      !citySlug ||
-      citySlug === "jaipur"
-    ) {
-      return;
-    }
+      if (
+        !citySlug ||
+        citySlug === "jaipur"
+      ) {
+        return;
+      }
 
-    try {
+      try {
 
-      const snap = await getDoc(
-        doc(
-          db,
-          "websites",
-          "globalbiomedicalorg",
-          "districts",
-          citySlug
-        )
-      );
-
-      if (snap.exists()) {
-
-        setStateName(
-          snap.data()?.state || ""
+        const snap = await getDoc(
+          doc(
+            db,
+            "websites",
+            "globalbiomedicalorg",
+            "districts",
+            citySlug
+          )
         );
+
+        if (snap.exists()) {
+
+          setStateName(
+            snap.data()?.state || ""
+          );
+
+        }
+
+      } catch (err) {
+
+        console.log(err);
 
       }
 
-    } catch (err) {
+    };
 
-      console.log(err);
+    loadDistrict();
 
-    }
-
-  };
-
-  loadDistrict();
-
-}, [citySlug]);
+  }, [citySlug]);
   // LOAD CONTACT INFO
   useEffect(() => {
 
@@ -261,7 +261,7 @@ const currentCity =
       >
 
         {/* BANNER */}
-        <section className="about-banner">
+        <section className="contact-banner">
 
           <div className="banner-content">
 
@@ -340,14 +340,17 @@ const currentCity =
                         </strong>
 
                         <br />
-
-{
-  label?.includes("address")
-    ? stateName
-  ? `${cityName}, ${stateName}, India`
-  : `${cityName}, India`
-    : item.value
-}
+                        {
+                          label?.includes("address")
+                            ? (
+                              citySlug === "jaipur"
+                                ? "F-4, 1st Floor, Plot No. 16, D-Block Tagor Nagar, Ajmer-Delhi Bypass Rd, Jaipur, Rajasthan 302021"
+                                : stateName
+                                  ? `${cityName}, ${stateName}, India`
+                                  : `${cityName}, India`
+                            )
+                            : item.value
+                        }
 
                       </p>
                     );
@@ -469,17 +472,14 @@ const currentCity =
           <div className="mt-5">
 
             <iframe
-              src={`https://www.google.com/maps?q=${
-  stateName
-    ? `${cityName}, ${stateName}, India`
-    : `${cityName}, India`
-}&output=embed`}
+              src={`https://maps.google.com/maps?q=${citySlug === "jaipur"
+                ? "Raj Biosis Jaipur Rajasthan"
+                : stateName
+                  ? `${city}, ${stateName}, India`
+                  : `${city}, India`
+                }&output=embed`}
               width="100%"
-              height="300"
-              style={{
-                border: 0,
-                borderRadius: "15px",
-              }}
+              height="200"
               loading="lazy"
             />
 
