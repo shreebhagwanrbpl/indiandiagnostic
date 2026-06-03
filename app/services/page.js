@@ -32,40 +32,37 @@ export default function ServicesPage() {
       </section>
 
       {/* 🔥 SERVICES CARDS */}
-<section className="services-section">
-      <div className="container">
-        <div className="row g-4">
+      <section className="services-section">
+        <div className="container">
+          <div className="row g-4">
+            {services.map((item, i) => (
+              <div className="col-md-4" key={i}>
+                <div className="service-card">
 
-          {services.map((item, i) => (
-            <div className="col-md-4" key={i}>
-              <div className="service-card">
+                  <div className="icon">
+                    {icons[i] || "⚙️"}
+                  </div>
 
-                <div className="icon">
-                  {icons[i] || "⚙️"}
+                  <h5>{item.title}</h5>
+                  <p>{item.desc}</p>
+
                 </div>
-
-                <h5>{item.title}</h5>
-                <p>{item.desc}</p>
-
               </div>
-            </div>
-          ))}
+            ))}
 
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
       {/* 🔥 WHY CHOOSE US */}
      <section className="why-service py-5">
   <div className="container">
     <div className="text-center mb-5">
       <span className="sub-title">WHY CHOOSE RAJ BIOSIS</span>
-
       <h2 className="main-title mt-2">
         Delivering Trusted Diagnostic <br />
         Equipment & Healthcare Excellence
       </h2>
-
       <p className="why-desc mt-3">
         Raj Biosis provides advanced diagnostic instruments, laboratory
         equipment, reagents, and healthcare solutions trusted by hospitals,
@@ -77,7 +74,6 @@ export default function ServicesPage() {
       <div className="col-lg-4 col-md-6">
         <div className="why-box">
           <div className="why-icon">✔</div>
-
           <div>
             <h4>Trusted Healthcare Brand</h4>
             <p>
@@ -91,7 +87,6 @@ export default function ServicesPage() {
       <div className="col-lg-4 col-md-6">
         <div className="why-box">
           <div className="why-icon">✔</div>
-
           <div>
             <h4>Certified Quality Standards</h4>
             <p>
@@ -105,7 +100,6 @@ export default function ServicesPage() {
       <div className="col-lg-4 col-md-6">
         <div className="why-box">
           <div className="why-icon">✔</div>
-
           <div>
             <h4>Advanced Laboratory Equipment</h4>
             <p>
@@ -119,7 +113,6 @@ export default function ServicesPage() {
       <div className="col-lg-4 col-md-6">
         <div className="why-box">
           <div className="why-icon">✔</div>
-
           <div>
             <h4>Wide Product Range</h4>
             <p>
@@ -133,7 +126,6 @@ export default function ServicesPage() {
       <div className="col-lg-4 col-md-6">
         <div className="why-box">
           <div className="why-icon">✔</div>
-
           <div>
             <h4>Fast Supply & Support</h4>
             <p>
@@ -159,9 +151,6 @@ export default function ServicesPage() {
     </div>
   </div>
 </section>
-
-      {/* <Footer /> */}
-
     </>
   );
 }

@@ -1,5 +1,5 @@
 "use client";
-import Lottie from "lottie-react";
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import { doc, onSnapshot,getDoc  } from "firebase/firestore";
@@ -16,6 +16,11 @@ export default function Home({ city }) {
   button1Text: "Explore Items",
   button2Text: "Get Quote",
 });
+
+const Lottie = dynamic(
+  () => import("lottie-react"),
+  { ssr: false }
+);
 
 const formatCity = (name = "") =>
   name
@@ -98,7 +103,6 @@ useEffect(() => {
         }
       }
     );
-
     return () => unsub();
   }, []);
 
@@ -109,29 +113,23 @@ useEffect(() => {
       <section className="home-hero">
         <div className="container">
           <div className="row align-items-center">
-
               <div className="col-md-6">
-<h1 className="hero-title">
+              <h1 className="hero-title">
+                {
+                  data.title
+                    ?.split(" in ")[0]
+                }
+                {city && ` in ${city}`}
+              </h1>
+              <p className="hero-desc">
+                {
+                  data.description
+                    ?.split(" available in ")[0]
+                }
+                {city && ` available in ${city}`}
+              </p>
 
-  {
-    data.title
-      ?.split(" in ")[0]
-  }
-
-  {city && ` in ${city}`}
-
-</h1>
-<p className="hero-desc">
-
-  {
-    data.description
-      ?.split(" available in ")[0]
-  }
-
-  {city && ` available in ${city}`}
-
-</p>
-
+              
             <div className="mt-4">
               <Link href="/items">
               <button className="btn btn-light me-3 px-4">

@@ -315,48 +315,44 @@ const handleSubmitQuery = async () => {
   }
 };
 
+// useEffect(() => {
 
+//   if (selectedProduct?.title) {
 
+//     const keywords =
+//       generateKeywords(
+//         selectedProduct.title
+//       );
 
+//     console.log(
+//       "SEO KEYWORDS 👉",
+//       keywords
+//     );
 
-useEffect(() => {
+//     let meta =
+//       document.querySelector(
+//         'meta[name="keywords"]'
+//       );
 
-  if (selectedProduct?.title) {
+//     if (!meta) {
 
-    const keywords =
-      generateKeywords(
-        selectedProduct.title
-      );
+//       meta =
+//         document.createElement(
+//           "meta"
+//         );
 
-    console.log(
-      "SEO KEYWORDS 👉",
-      keywords
-    );
+//       meta.name = "keywords";
 
-    let meta =
-      document.querySelector(
-        'meta[name="keywords"]'
-      );
+//       document.head.appendChild(
+//         meta
+//       );
+//     }
 
-    if (!meta) {
+//     meta.content =
+//       keywords.join(", ");
+//   }
 
-      meta =
-        document.createElement(
-          "meta"
-        );
-
-      meta.name = "keywords";
-
-      document.head.appendChild(
-        meta
-      );
-    }
-
-    meta.content =
-      keywords.join(", ");
-  }
-
-}, [selectedProduct]);
+// }, [selectedProduct]);
 
 
 
@@ -534,30 +530,29 @@ useEffect(() => {
                           <p><b>Size:</b> {item.size || "-"}</p>
                           <p><b>Usage:</b> {item.usage || "-"}</p>
                         </div>
+                      <button
+                        className="btn-view"
+                        onClick={(e) => {
 
-<button
-  className="btn-view"
-  onClick={(e) => {
+                          e.stopPropagation();
 
-    e.stopPropagation();
+                          setSelectedProduct(item);
 
-    setSelectedProduct(item);
+                          setShowForm(false);
 
-    setShowForm(false);
+                          const productPath = citySlug
+                            ? `/${citySlug}/items/${item.slug}`
+                            : `/items/${item.slug}`;
 
-    const productPath = citySlug
-      ? `/${citySlug}/items/${item.slug}`
-      : `/items/${item.slug}`;
-
-    window.history.replaceState(
-      {},
-      "",
-      productPath
-    );
-  }}
->
-  View Details
-</button>
+                          window.history.replaceState(
+                            {},
+                            "",
+                            productPath
+                          );
+                        }}
+                      >
+                        View Details
+                      </button>
                       </div>
                     </div>
               ))
@@ -643,25 +638,25 @@ useEffect(() => {
              <h4>{selectedProduct.title}</h4>
               {/* <button onClick={handleCloseDrawer}>✖</button> */}
 
-<button
-  className="drawer-close"
-  onClick={() => {
+              <button
+                className="drawer-close"
+                onClick={() => {
 
-    setSelectedProduct(null);
+                  setSelectedProduct(null);
 
-    const basePath = citySlug
-      ? `/${citySlug}/items`
-      : "/items";
+                  const basePath = citySlug
+                    ? `/${citySlug}/items`
+                    : "/items";
 
-    window.history.replaceState(
-      {},
-      "",
-      basePath
-    );
-  }}
->
-  ✕
-</button>
+                  window.history.replaceState(
+                    {},
+                    "",
+                    basePath
+                  );
+                }}
+              >
+                ✕
+              </button>
             </div>
 
       {/* SCROLLABLE CONTENT */}
