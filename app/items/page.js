@@ -552,7 +552,7 @@ export default function ItemsPage({ city }) {
                       <p><b>Usage:</b> {item.usage || "-"}</p>
                     </div>
 
-                    <button
+                    {/* <button
                       className="btn-view"
                       onClick={(e) => {
 
@@ -570,6 +570,20 @@ export default function ItemsPage({ city }) {
                           {},
                           "",
                           itemPath
+                        );
+                      }}
+                    >
+                      View Details
+                    </button> */}
+                    <button
+                      className="btn-view"
+                      onClick={(e) => {
+                        e.stopPropagation();
+
+                        router.push(
+                          citySlug
+                            ? `/${citySlug}/items/${item.slug}`
+                            : `/items/${item.slug}`
                         );
                       }}
                     >
@@ -725,7 +739,13 @@ export default function ItemsPage({ city }) {
                     name="phone"
                     placeholder="Contact number"
                     value={queryForm.phone}
-                    onChange={handleFormChange}
+                    maxLength={10}
+                    onChange={(e) =>
+                      setQueryForm({
+                        ...queryForm,
+                        phone: e.target.value.replace(/\D/g, "")
+                      })
+                    }
                     required
                   />
 
