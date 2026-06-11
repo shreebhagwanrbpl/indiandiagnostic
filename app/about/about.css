@@ -1,19 +1,43 @@
+   /* .about-banner {
+     background: linear-gradient(135deg, #1e3c72, #2a5298);
+     color: white;
+     height: 370px;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     text-align: center;
+     position: relative;
+   }
+
+   .about-banner h1 {
+     font-size: 3rem;
+     font-weight: 800;
+   }
+
+   .about-banner p {
+     opacity: 0.9;
+   } */
+
    .about-banner {
-              background: linear-gradient(135deg, #1e3c72, #2a5298);
-              color: white;
-              height: 370px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              text-align: center;
-              position: relative;
-            }
+     width: 100%;
+     min-height: 350px;
+     background: linear-gradient(135deg, #1e3c72, #2a5298);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     text-align: center;
+     color: #fff;
+   }
 
-            .about-banner h1 {
-              font-size: 3rem;
-              font-weight: 800;
-            }
+   .banner-content {
+     max-width: 800px;
+   }
 
-            .about-banner p {
-              opacity: 0.9;
-            }
+   .about-banner h1 {
+     font-size: 3rem;
+     font-weight: 800;
+   }
+
+   .about-banner p {
+     opacity: 0.9;
+   }
