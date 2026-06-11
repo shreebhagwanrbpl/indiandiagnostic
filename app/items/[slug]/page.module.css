@@ -1,0 +1,153 @@
+.productDetailPage {
+    padding: 120px 0 80px;
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+.productCardWrap {
+    background: #fff;
+    border-radius: 24px;
+    padding: 30px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
+
+.productImageBox {
+    background: #f8fafc;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.productImageBox img {
+    width: 100%;
+    display: block;
+    object-fit: contain;
+}
+
+.productContent h1 {
+    font-size: 42px;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.productDesc {
+    color: #4b5563;
+    line-height: 1.8;
+    margin-bottom: 25px;
+}
+
+.productInfoList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.productInfoList p {
+    margin: 0;
+    font-size: 16px;
+}
+
+.queryBox {
+    margin-top: 35px;
+    padding-top: 25px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.queryBox h3 {
+    margin-bottom: 20px;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.queryInput {
+    width: 100%;
+    height: 55px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    padding: 0 15px;
+    margin-bottom: 15px;
+    outline: none;
+}
+
+.queryInput:focus {
+    border-color: #2563eb;
+}
+
+.queryBtn {
+    width: 100%;
+    height: 55px;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.queryBtn:hover {
+    background: #1d4ed8;
+}
+
+@media (max-width: 768px) {
+    .productDetailPage {
+        padding: 100px 0 60px;
+    }
+
+    .productCardWrap {
+        padding: 15px;
+    }
+
+    .productContent h1 {
+        font-size: 28px;
+        margin-top: 20px;
+    }
+
+    .queryBox h3 {
+        font-size: 22px;
+    }
+}
+
+.skeletonImage,
+.skeletonTitle,
+.skeletonText,
+.skeletonBtn {
+    background: linear-gradient(90deg,
+            #f1f5f9 25%,
+            #e2e8f0 50%,
+            #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 12px;
+}
+
+.skeletonImage {
+    width: 100%;
+    height: 450px;
+}
+
+.skeletonTitle {
+    height: 50px;
+    width: 70%;
+    margin-bottom: 20px;
+}
+
+.skeletonText {
+    height: 20px;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.skeletonBtn {
+    height: 55px;
+    width: 220px;
+    margin-top: 25px;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
