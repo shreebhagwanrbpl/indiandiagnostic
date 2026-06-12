@@ -411,12 +411,11 @@ export default function ItemsPage({ city }) {
 
             ) : (
               paginatedProducts.map((item, index) => (
-<<<<<<< Updated upstream
                 <div
                   key={item.id || `${item.slug}-${index}`}
                   className="col-md-3">
                   <div
-                    className="product-card"
+                    className="product-card"  
                     onClick={() => {
                       // setSelectedProduct(item);
                       // setShowForm(false);
@@ -428,58 +427,6 @@ export default function ItemsPage({ city }) {
                         src={item.image || "/no-image.png"}
                         className="product-img"
                       />
-=======
-                    <div 
-                       key={item.slug || index}
-                    className="col-md-3">
-                      <div
-                        className="product-card"
-                        onClick={() => {
-                          setSelectedProduct(item);
-                          setShowForm(false);
-                          // window.history.pushState({}, "", `/${currentCity}/${item.slug}`);
-                        }}
-                      >
-                        <div className="img-box">
-                          <img
-                            src={item.image || "/no-image.png"}
-                            className="product-img"
-                          />
-                        </div>
-
-                        <div className="product-info">
-                          <h5>{item.title}</h5>
-                          <p><b>Brand:</b> {item.brand || "-"}</p>
-                          <p><b>Size:</b> {item.size || "-"}</p>
-                          <p><b>Usage:</b> {item.usage || "-"}</p>
-                        </div>
-
-                        <button
-                          className="btn-view"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedProduct(item);
-                            setShowForm(false);
-                          //   window.history.pushState(
-                          //   {},
-                          //   "",
-                          //   currentCity
-                          //     ? `/${currentCity}/${item.slug}`
-                          //     : `/${item.slug}`
-                          // );
-                          window.history.pushState(
-                            {},
-                            "",
-                            currentCity
-                              ? `/${currentCity}/items/${item.slug}`
-                              : `/items/${item.slug}`
-                          );
-                          }}
-                        >
-                          View Details
-                        </button>
-                      </div>
->>>>>>> Stashed changes
                     </div>
 
                     <div className="product-info">
