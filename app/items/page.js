@@ -1,113 +1,106 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { db } from "@/lib/firebase";
-import Link from "next/link";
+import "./items.css";
 import toast, { Toaster } from "react-hot-toast";
-import "./items.css"
-import { doc, getDoc, collection, addDoc } from "firebase/firestore";
-import { FiFilter } from "react-icons/fi";
+import {
+  doc,
+  getDoc,
+} from "firebase/firestore";
+import {
+  FiFilter,
+  FiChevronDown,
+  FiChevronRight,
+} from "react-icons/fi";
 import { useRouter } from "next/navigation";
 
 export default function ItemsPage({ city }) {
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [showForm, setShowForm] = useState(false);
+
+  const router = useRouter();
+
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+
   const [search, setSearch] = useState("");
+
   const [selectedBrand, setSelectedBrand] = useState("");
+
   const [selectedUsage, setSelectedUsage] = useState("");
+
+  const [showFilters, setShowFilters] = useState(false);
+
   const [currentPage, setCurrentPage] = useState(1);
+
   const [itemsPerPage, setItemsPerPage] = useState(25);
-  const [errors, setErrors] = useState({});
-  const [hasFetched, setHasFetched] = useState(false);
 
   const currentCity = city || "";
+
   const citySlug = currentCity
     ?.toLowerCase()
     ?.replace(/\s+/g, "-");
-  const [queryForm, setQueryForm] = useState({
-    email: "",
-    phone: ""
-  });
- 
-  const brands = [...new Set(products.map(p => p.brand).filter(Boolean))];
-  const usages = [...new Set(products.map(p => p.usage).filter(Boolean))];
 
-  const filteredProducts = products
-    .filter((item) => item.isPublished)
-    .filter((item) => {
-      const text = `${item.title} ${item.brand} ${item.usage}`.toLowerCase();
 
-      return text.includes(search.toLowerCase()) &&
-        (selectedBrand ? item.brand === selectedBrand : true) &&
-        (selectedUsage ? item.usage === selectedUsage : true);
-    });
-  const totalItems = products.length;
-  const filteredCount = filteredProducts.length;
-  const router = useRouter();
-  const totalPages =
-    itemsPerPage === "all"
-      ? 1
-      : Math.ceil(filteredCount / itemsPerPage);
 
-  const paginatedProducts =
-    itemsPerPage === "all"
-      ? filteredProducts
-      : filteredProducts.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-      );
+  /* -------------------------------- */
 
-  const generateKeywords = (productName = "") => {
-    const base = productName.toLowerCase();
+  /* TEMP CATEGORY GENERATOR */
 
-    const prefixes = [
-      "best", "cheap", "affordable", "top", "near me",
-      "online", "trusted", "fast", "certified"
-    ];
+  /* -------------------------------- */
 
-    const suffixes = [
-      "lab", "test", "diagnostic", "center",
-      "price", "booking", "home collection",
-      "report", "clinic"
-    ];
+  const getCategory = (item) => {
 
-    const locations = ["india", "jaipur", "delhi"];
+    const title = (item.title || "").toLowerCase();
 
-    let keywords = new Set();
+    const usage = (item.usage || "").toLowerCase();
 
-    keywords.add(base);
-    keywords.add(`${base} test`);
-    keywords.add(`${base} lab`);
-    keywords.add(`${base} near me`);
+    if (
+      title.includes("rapid") ||
+      usage.includes("rapid")
+    )
+      return "Rapid Test Kits";
 
-    prefixes.forEach(p => keywords.add(`${p} ${base}`));
-    suffixes.forEach(s => keywords.add(`${base} ${s}`));
+    if (
+      title.includes("elisa")
+    )
+      return "ELISA Kits";
 
-    prefixes.forEach(p => {
-      suffixes.forEach(s => {
-        keywords.add(`${p} ${base} ${s}`);
-      });
-    });
+    if (
+      title.includes("electrolyte")
+    )
+      return "Electrolyte Reagents";
 
-    locations.forEach(loc => {
-      keywords.add(`${base} in ${loc}`);
-      keywords.add(`${base} test in ${loc}`);
-    });
+    if (
+      title.includes("hematology")
+    )
+      return "Hematology";
 
-    return Array.from(keywords).slice(0, 35);
+    if (
+      title.includes("biochemistry")
+    )
+      return "Biochemistry";
+
+    if (
+      title.includes("urine")
+    )
+      return "Urine Test";
+
+    return "Other Products";
   };
-  useEffect(() => {
 
-    if (hasFetched) return;
+
+
+  /* -------------------------------- */
+
+  /* FETCH PRODUCTS */
+
+  /* -------------------------------- */
+
+  useEffect(() => {
 
     const fetchProducts = async () => {
 
       try {
-
-        setHasFetched(true);
 
         const snap = await getDoc(
           doc(
@@ -119,550 +112,1120 @@ export default function ItemsPage({ city }) {
           )
         );
 
-        if (snap.exists()) {
+        if (!snap.exists()) return;
 
-          const rawProducts =
-            snap.data().products || [];
+        const raw =
+          snap.data().products || [];
 
-          const slugify = (text = "") =>
-            text.toLowerCase().replace(/\s+/g, "-");
+        const slugify = (text = "") =>
+          text
+            .toLowerCase()
+            .replace(/\s+/g, "-");
 
-          const productsWithSEO =
-            rawProducts.map((p) => ({
-              ...p,
-              slug: slugify(p.title),
-              seoKeywords: generateKeywords(
-                p.title
-              ),
-            }));
+        const formatted =
+          raw.map((item) => ({
 
-          setProducts(productsWithSEO);
-        }
+            ...item,
 
-      } catch (error) {
+            slug:
+              item.slug ||
+              slugify(item.title),
 
-        console.error(error);
+            category:
+              getCategory(item),
+
+          }));
+
+        setProducts(formatted);
+
+      } catch (err) {
+
+        console.log(err);
 
       } finally {
 
         setLoadingProducts(false);
 
       }
+
     };
 
     fetchProducts();
 
-  }, [hasFetched]);
+  }, []);
 
 
 
-  const handleFormChange = (e) => {
-    setQueryForm({
-      ...queryForm,
-      [e.target.name]: e.target.value
-    });
-  };
 
-  const handleSubmitQuery = async () => {
-    try {
-      const { email, phone } = queryForm;
+  /* -------------------------------- */
 
-      // required check
-      if (!email || !phone) {
-        return toast.error("Please fill all fields");
-      }
+  /* FILTER PRODUCTS */
 
-      //  email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return toast.error("Invalid email");
-      }
+  /* -------------------------------- */
 
-      // phone validation (India)
-      const phoneRegex = /^[6-9]\d{9}$/;
-      if (!phoneRegex.test(phone)) {
-        return toast.error("Invalid phone number");
-      }
+  const filteredProducts =
+    useMemo(() => {
 
-      const loading = toast.loading("Submitting...");
+      return products
 
-      await addDoc(collection(db, "websitesQueries", "indiandiagnostic", "productQueries"), {
-        productName: selectedProduct.title || "",
-        email,
-        phone,
-        createdAt: new Date(),
+        .filter((p) => p.isPublished)
+
+        .filter((item) => {
+
+          const txt =
+            `${item.title}
+             ${item.brand}
+             ${item.usage}`
+              .toLowerCase();
+
+          return (
+
+            txt.includes(
+              search.toLowerCase()
+            )
+
+            &&
+
+            (
+              selectedBrand
+                ? item.brand === selectedBrand
+                : true
+            )
+
+            &&
+
+            (
+              selectedUsage
+                ? item.usage === selectedUsage
+                : true
+            )
+
+          );
+
+        });
+
+    }, [
+      products,
+      search,
+      selectedBrand,
+      selectedUsage
+    ]);
+
+
+
+  /* -------------------------------- */
+
+  /* GROUP CATEGORY */
+
+  /* -------------------------------- */
+
+  const groupedProducts =
+    useMemo(() => {
+
+      const obj = {};
+
+      filteredProducts.forEach((item) => {
+
+        if (!obj[item.category]) {
+
+          obj[item.category] = [];
+
+        }
+
+        obj[item.category].push(item);
+
       });
 
-      toast.success("Query submitted successfully", { id: loading });
+      return obj;
 
-      // reset form
-      setQueryForm({ email: "", phone: "" });
-      setShowForm(false);
+    }, [filteredProducts]);
 
-      setSelectedProduct(null);
 
-      const basePath = citySlug
-        ? `/${citySlug}/items`
-        : "/items";
 
-      window.history.replaceState(
-        {},
-        "",
-        basePath
-      );
+  const categoryNames =
+    Object.keys(groupedProducts);
 
-    } catch (err) {
-      console.error(err);
-      toast.error("Something went wrong");
-    }
-  };
+
+
+  const [activeCategory,
+    setActiveCategory] =
+    useState("");
+
+
 
   useEffect(() => {
 
-    if (selectedProduct?.title) {
+    if (
+      categoryNames.length &&
+      !activeCategory
+    ) {
 
-      const keywords =
-        generateKeywords(
-          selectedProduct.title
-        );
-
-      console.log(
-        "SEO KEYWORDS 👉",
-        keywords
+      setActiveCategory(
+        categoryNames[0]
       );
 
-      let meta =
-        document.querySelector(
-          'meta[name="keywords"]'
-        );
-
-      if (!meta) {
-
-        meta =
-          document.createElement(
-            "meta"
-          );
-
-        meta.name = "keywords";
-
-        document.head.appendChild(
-          meta
-        );
-      }
-
-      meta.content =
-        keywords.join(", ");
     }
 
-  }, [selectedProduct]);
+  }, [categoryNames]);
 
-  return (
-    <>
-      <Toaster
-        position="top-center"
-        containerStyle={{
-          zIndex: 999999,
-        }}
-      />
-      {selectedProduct && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context":
-                "https://schema.org",
+  /* ============================================================
+   FILTER OPTIONS
+============================================================ */
 
-              "@type": "Product",
+const brands = useMemo(() => {
 
-              name:
-                selectedProduct.title,
+    return [
+        ...new Set(
+            filteredProducts
+                .map((item) => item.brand)
+                .filter(Boolean)
+        )
+    ];
 
-              image:
-                selectedProduct.image,
-
-              description:
-                selectedProduct.desc,
-
-              brand: {
-                "@type": "Brand",
-
-                name:
-                  selectedProduct.brand,
-              },
-            }),
-          }}
-        />
-      )}
-
-      {/* 🔥 BANNER */}
-      <section className="item-banner">
-        <div className="item-content">
-          <h1>Our Products</h1>
-          <p className="text-white">Explore our premium medical equipment</p>
-        </div>
-      </section>
+}, [filteredProducts]);
 
 
-      {/* 🔥 PRODUCTS GRID */}
-      <section className="items-section">
-        <div className="container">
-          {/* 🔥 FILTERS */}
-          <div className="filter-card mb-4 px-3 py-2 rounded shadow-sm bg-white">
-            <div className="d-flex align-items-center justify-content-between flex-wrap gap-3">
 
-              {/* Toggle */}
-              <button
-                className="filter-toggle-btn"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <FiFilter />
-                <span>Filters</span>
-              </button>
+const usages = useMemo(() => {
 
-              {/* Filters */}
-              {showFilters && (
-                <div className="filter-area">
+    return [
+        ...new Set(
+            filteredProducts
+                .map((item) => item.usage)
+                .filter(Boolean)
+        )
+    ];
+
+}, [filteredProducts]);
+
+
+
+/* ============================================================
+   PAGINATION
+============================================================ */
+
+const totalItems = filteredProducts.length;
+
+const totalPages =
+    itemsPerPage === "all"
+        ? 1
+        : Math.ceil(
+            totalItems /
+            itemsPerPage
+        );
+
+
+
+const paginatedProducts =
+    itemsPerPage === "all"
+
+        ? filteredProducts
+
+        : filteredProducts.slice(
+
+            (currentPage - 1) *
+            itemsPerPage,
+
+            currentPage *
+            itemsPerPage
+
+        );
+
+
+
+/* ============================================================
+   GROUP PAGINATION
+============================================================ */
+
+const paginatedGroupedProducts =
+    useMemo(() => {
+
+        const obj = {};
+
+        paginatedProducts.forEach((item) => {
+
+            if (!obj[item.category]) {
+
+                obj[item.category] = [];
+
+            }
+
+            obj[item.category].push(item);
+
+        });
+
+        return obj;
+
+    }, [paginatedProducts]);
+
+
+
+/* ============================================================
+   SIDEBAR ACCORDION
+============================================================ */
+
+const [openedCategory,
+    setOpenedCategory] =
+    useState("");
+
+
+
+useEffect(() => {
+
+    if (
+
+        Object.keys(
+            groupedProducts
+        ).length
+
+        &&
+
+        !openedCategory
+
+    ) {
+
+        setOpenedCategory(
+
+            Object.keys(
+                groupedProducts
+            )[0]
+
+        );
+
+    }
+
+}, [groupedProducts]);
+
+
+
+const toggleCategory = (category) => {
+    if (openedCategory === category) {
+        setOpenedCategory("");
+        return;
+    }
+    setOpenedCategory(category);
+    setActiveCategory(category);
+};
+
+
+
+/* ============================================================
+   SCROLL TO CATEGORY
+============================================================ */
+
+const scrollToCategory = (category) => {
+
+    setOpenedCategory(category);
+
+    setActiveCategory(category);
+
+    const section =
+        document.getElementById(
+
+            category
+                .replace(/\s+/g, "-")
+                .toLowerCase()
+
+        );
+
+    if (section) {
+
+        section.scrollIntoView({
+
+            behavior: "smooth",
+
+            block: "start"
+
+        });
+
+    }
+
+};
+
+
+
+/* ============================================================
+   ACTIVE CATEGORY WHILE SCROLL
+============================================================ */
+
+useEffect(() => {
+
+    const handleScroll = () => {
+
+        let current = "";
+
+        Object.keys(
+            groupedProducts
+        ).forEach((category) => {
+
+            const section =
+                document.getElementById(
+
+                    category
+                        .replace(/\s+/g, "-")
+                        .toLowerCase()
+
+                );
+
+            if (!section) return;
+
+            const top =
+                section.getBoundingClientRect().top;
+
+            if (top <= 180) {
+
+                current = category;
+
+            }
+
+        });
+
+        if (
+
+            current
+
+            &&
+
+            current !== activeCategory
+
+        ) {
+
+            setActiveCategory(current);
+
+            // setOpenedCategory(current);
+            setActiveCategory(current);
+
+        }
+
+    };
+
+    window.addEventListener(
+
+        "scroll",
+
+        handleScroll
+
+    );
+
+    return () =>
+
+        window.removeEventListener(
+
+            "scroll",
+
+            handleScroll
+
+        );
+
+}, [
+
+    groupedProducts,
+
+    activeCategory
+
+]);
+
+
+
+/* ============================================================
+   RESET FILTER
+============================================================ */
+
+const resetFilters = () => {
+
+    setSearch("");
+
+    setSelectedBrand("");
+
+    setSelectedUsage("");
+
+    setCurrentPage(1);
+
+};
+
+
+
+/* ============================================================
+   VIEW DETAILS
+============================================================ */
+
+const viewDetails = (item) => {
+
+    router.push(
+
+        citySlug
+
+            ? `/${citySlug}/items/${item.slug}`
+
+            : `/items/${item.slug}`
+
+    );
+
+};
+
+return (
+  <>
+    <Toaster
+      position="top-center"
+      containerStyle={{
+        zIndex: 99999,
+      }}
+    />
+
+    {/* ===========================
+            HERO
+    =========================== */}
+
+    <section className="item-banner">
+      <div className="item-content">
+
+        <h1>
+          Medical Products
+        </h1>
+
+        <p>
+          Find Diagnostic &
+          Laboratory Products
+        </p>
+
+      </div>
+    </section>
+
+    {/* ===========================
+            MAIN
+    =========================== */}
+
+    <section className="items-section">
+
+      <div className="container-fluid">
+
+        <div className="row">
+
+          {/* ===========================
+                LEFT SIDEBAR
+          =========================== */}
+
+          <div className="col-lg-3">
+
+            <div className="category-sidebar">
+
+              <div className="sidebar-head">
+
+                <h4>
+                  Categories
+                </h4>
+
+              </div>
+
+              <div className="category-search">
+
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search Product..."
+                  value={search}
+                  onChange={(e) => {
+
+                    setSearch(
+                      e.target.value
+                    );
+
+                  }}
+                />
+
+              </div>
+
+              <div className="category-list">
+
+                {
+
+                  Object.keys(
+                    groupedProducts
+                  ).map((category) => (
+
+                    <div
+                      className="category-item"
+                      key={category}
+                    >
+
+                      <button
+
+                        className={`category-btn
+
+                        ${activeCategory === category
+                            ? "active"
+                            : ""}
+
+                        `}
+
+                        onClick={() =>
+                          toggleCategory(
+                            category
+                          )
+                        }
+
+                      >
+
+                        <span>
+
+                          {
+
+                            openedCategory === category
+
+                              ?
+
+                              <FiChevronDown />
+
+                              :
+
+                              <FiChevronRight />
+
+                          }
+
+                          {category}
+
+                        </span>
+
+                        <span
+                          className="count"
+                        >
+
+                          {
+
+                            groupedProducts[
+                              category
+                            ].length
+
+                          }
+
+                        </span>
+
+                      </button>
+
+                      <div
+
+                        className={`category-content
+
+                        ${openedCategory === category
+                            ? "show"
+                            : ""}
+
+                        `}
+
+                      >
+
+                        {
+
+                          // groupedProducts[
+                          //   category
+                          // ].map((item) => (
+                            groupedProducts[category].map((item, index) => (
+
+                            <button
+
+                              // key={item.slug}
+                              key={`${item.slug}-${index}`}
+
+                              className="product-link"
+
+                              onClick={() =>
+                                scrollToCategory(
+                                  category
+                                )
+                              }
+
+                            >
+
+                              {item.title}
+
+                            </button>
+
+                          ))
+
+                        }
+
+                      </div>
+
+                    </div>
+
+                  ))
+
+                }
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* ===========================
+                RIGHT SIDE
+          =========================== */}
+
+          <div className="col-lg-9">
+
+            {/* FILTER */}
+
+            <div className="filter-card">
+
+              <div className="row g-3">
+
+                <div className="col-lg-4">
+
                   <input
                     type="text"
+                    className="form-control"
                     placeholder="Search..."
-                    className="form-control form-control-sm filter-input"
                     value={search}
-                    // onChange={(e) => setSearch(e.target.value)}
                     onChange={(e) => {
 
-                      setSearch(e.target.value);
-
-                      setCurrentPage(1);
+                      setSearch(
+                        e.target.value
+                      );
 
                     }}
                   />
 
+                </div>
+
+                <div className="col-lg-3">
+
                   <select
-                    className="form-select form-select-sm filter-select"
+                    className="form-select"
                     value={selectedBrand}
-                    // onChange={(e) => setSelectedBrand(e.target.value)}
-                    onChange={(e) => {
-
-                      setSelectedBrand(e.target.value);
-
-                      setCurrentPage(1);
-
-                    }}
+                    onChange={(e) =>
+                      setSelectedBrand(
+                        e.target.value
+                      )
+                    }
                   >
-                    <option value="">Brand</option>
-                    {brands.map((b, i) => (
-                      <option key={i} value={b}>{b}</option>
-                    ))}
+
+                    <option value="">
+                      Brand
+                    </option>
+
+                    {
+
+                      brands.map((b) => (
+
+                        <option
+                          key={b}
+                          value={b}
+                        >
+                          {b}
+                        </option>
+
+                      ))
+
+                    }
+
                   </select>
+
+                </div>
+
+                <div className="col-lg-3">
 
                   <select
-                    className="form-select form-select-sm filter-select"
+                    className="form-select"
                     value={selectedUsage}
-                    // onChange={(e) => setSelectedUsage(e.target.value)}
-                    onChange={(e) => {
+                    onChange={(e) =>
+                      setSelectedUsage(
+                        e.target.value
+                      )
+                    }
+                  >
 
-                      setSelectedUsage(e.target.value);
+                    <option value="">
+                      Usage
+                    </option>
+
+                    {
+
+                      usages.map((u) => (
+
+                        <option
+                          key={u}
+                          value={u}
+                        >
+                          {u}
+                        </option>
+
+                      ))
+
+                    }
+
+                  </select>
+
+                </div>
+
+                <div className="col-lg-2">
+
+                  <button
+
+                    className="btn-reset"
+
+                    onClick={
+                      resetFilters
+                    }
+
+                  >
+
+                    Reset
+
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* PRODUCT LIST START */}
+
+            {
+
+              Object.entries(
+                paginatedGroupedProducts
+              ).map(
+
+                ([category, list]) => (
+
+                  <div
+
+                    key={category}
+
+                    id={category
+                      .replace(/\s+/g, "-")
+                      .toLowerCase()}
+
+                    className="product-section"
+
+                  >
+
+                    <div className="section-title">
+
+                      <h3>
+
+                        {category}
+
+                      </h3>
+
+                      <span>
+
+                        {
+
+                          list.length
+
+                        }
+
+                        Products
+
+                      </span>
+
+                    </div>
+
+                                        {
+
+                      // list.map((item) => (
+                        list.map((item, index) => (
+
+                        <div
+                          className="product-list-card"
+                          // key={item.slug}
+                          key={`${item.slug}-${index}`}
+                        >
+
+                          <div className="row align-items-center">
+
+                            {/* IMAGE */}
+
+                            <div className="col-lg-3 col-md-4">
+
+                              <div className="list-image">
+
+                                <img
+                                  src={
+                                    item.image ||
+                                    "/no-image.png"
+                                  }
+                                  alt={item.title}
+                                />
+
+                              </div>
+
+                            </div>
+
+                            {/* DETAILS */}
+
+                            <div className="col-lg-6 col-md-8">
+
+                              <div className="list-content">
+
+                                <h4>
+                                  {item.title}
+                                </h4>
+
+                                <p>
+                                  {item.desc}
+                                </p>
+
+                                <div className="spec-grid">
+
+                                  <div>
+                                    <b>Brand</b>
+
+                                    <span>
+
+                                      {
+                                        item.brand ||
+                                        "-"
+
+                                      }
+
+                                    </span>
+
+                                  </div>
+
+                                  <div>
+
+                                    <b>Usage</b>
+
+                                    <span>
+
+                                      {
+                                        item.usage ||
+                                        "-"
+
+                                      }
+
+                                    </span>
+
+                                  </div>
+
+                                  <div>
+
+                                    <b>Model</b>
+
+                                    <span>
+
+                                      {
+                                        item.model ||
+                                        "-"
+
+                                      }
+
+                                    </span>
+
+                                  </div>
+
+                                  <div>
+
+                                    <b>Availability</b>
+
+                                    <span>
+
+                                      {
+                                        item.availability ||
+                                        "-"
+
+                                      }
+
+                                    </span>
+
+                                  </div>
+
+                                </div>
+
+                              </div>
+
+                            </div>
+
+                            {/* ACTION */}
+
+                            <div className="col-lg-3">
+
+                              <div className="product-action">
+
+                                <button
+
+                                  className="btn-view"
+
+                                  onClick={() =>
+                                    viewDetails(item)
+                                  }
+
+                                >
+
+                                  View Details
+
+                                </button>
+
+                                {/* <button
+
+                                  className="btn-enquiry"
+
+                                >
+
+                                  Get Quote
+
+                                </button> */}
+
+                              </div>
+
+                            </div>
+
+                          </div>
+
+                        </div>
+
+                      ))
+
+                    }
+
+                  </div>
+
+                )
+
+              )
+
+            }
+
+            {/* PAGINATION */}
+
+            <div className="pagination-card">
+
+              <div className="pagination-wrapper">
+
+                <div className="page-left">
+
+                  <span>
+
+                    Per Page
+
+                  </span>
+
+                  <select
+
+                    className="custom-select"
+
+                    value={itemsPerPage}
+
+                    onChange={(e)=>{
+
+                      const value =
+                      e.target.value==="all"
+                      ?"all"
+                      :Number(
+                        e.target.value
+                      );
+
+                      setItemsPerPage(
+                        value
+                      );
 
                       setCurrentPage(1);
 
                     }}
+
                   >
-                    <option value="">Usage</option>
-                    {usages.map((u, i) => (
-                      <option key={i} value={u}>{u}</option>
-                    ))}
+
+                    <option value={10}>10</option>
+
+                    <option value={25}>25</option>
+
+                    <option value={50}>50</option>
+
+                    <option value={100}>100</option>
+
+                    <option value="all">
+                      All
+                    </option>
+
                   </select>
 
-                  <button
-                    className="btn btn-sm btn-outline-secondary"
-                    onClick={() => {
-                      setSearch("");
-                      setSelectedBrand("");
-                      setSelectedUsage("");
-                    }}
-                  >
-                    Reset
-                  </button>
-                </div>
-              )}
-
-              {/* Showing */}
-              <div className="text-muted small fw-medium">
-                Showing: <b>{filteredCount}</b>
-              </div>
-
-            </div>
-          </div>
-
-          {/* 🔥 PRODUCTS */}
-          <div className="row g-4 product-container">
-
-            {loadingProducts ? (
-              <div className="col-12">
-                <div className="loader-box">
-                  <p>Loading products...</p>
-                </div>
-              </div>
-
-            ) : filteredProducts.length === 0 ? (
-              <div className="col-12 text-center py-5">
-                <p>No products found</p>
-              </div>
-
-            ) : (
-              paginatedProducts.map((item, index) => (
-                <div
-                  key={item.id || `${item.slug}-${index}`}
-                  className="col-md-3">
-                  <div
-                    className="product-card"  
-                    onClick={() => {
-                      // setSelectedProduct(item);
-                      // setShowForm(false);
-                      // window.history.pushState({}, "", `/${currentCity}/${item.slug}`);
-                    }}
-                  >
-                    <div className="img-box">
-                      <img
-                        src={item.image || "/no-image.png"}
-                        className="product-img"
-                      />
-                    </div>
-
-                    <div className="product-info">
-                      <h5>{item.title}</h5>
-                      <p><b>Brand:</b> {item.brand || "-"}</p>
-                      <p><b>Size:</b> {item.size || "-"}</p>
-                      <p><b>Usage:</b> {item.usage || "-"}</p>
-                    </div>
-
-                    {/* <button
-                      className="btn-view"
-                      onClick={(e) => {
-
-                        e.stopPropagation();
-
-                        setSelectedProduct(item);
-
-                        setShowForm(false);
-
-                        const itemPath = citySlug
-                          ? `/${citySlug}/items`
-                          : "/items";
-
-                        window.history.replaceState(
-                          {},
-                          "",
-                          itemPath
-                        );
-                      }}
-                    >
-                      View Details
-                    </button> */}
-                    <button
-                      className="btn-view"
-                      onClick={(e) => {
-                        e.stopPropagation();
-
-                        router.push(
-                          citySlug
-                            ? `/${citySlug}/items/${item.slug}`
-                            : `/items/${item.slug}`
-                        );
-                      }}
-                    >
-                      View Details
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-
-          </div>
-
-          {/* 🔥 PAGINATION */}
-          <div className="pagination-card mt-4">
-
-            <div className="pagination-wrapper">
-
-              {/* LEFT */}
-              <div className="page-left">
-
-                <span>Per Page:</span>
-
-                <select
-                  className="custom-select"
-                  value={itemsPerPage}
-                  onChange={(e) => {
-                    const value =
-                      e.target.value === "all"
-                        ? "all"
-                        : Number(e.target.value);
-
-                    setItemsPerPage(value);
-                    setCurrentPage(1);
-                  }}
-                >
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                  <option value="all">All</option>
-                </select>
-
-              </div>
-
-              {/* RIGHT */}
-              <div className="page-right">
-
-                <div className="page-total">
-                  Total: <b>{totalItems}</b>
                 </div>
 
-                <div className="page-buttons">
+                <div className="page-right">
 
                   <button
+
                     className="btn"
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage((p) => p - 1)}
-                  >
-                    ◀
-                  </button>
 
-                  <button className="btn btn-primary">
-                    {currentPage}
-                  </button>
-
-                  <button
-                    className="btn"
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage((p) => p + 1)}
-                  >
-                    ▶
-                  </button>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-        </div>
-      </section>
-      <div className={`drawer ${selectedProduct ? "open" : ""}`}>
-
-        {selectedProduct && (
-          <>
-            <div className="drawer-header">
-              <h4>{selectedProduct.title}</h4>
-              {/* <button onClick={handleCloseDrawer}>✖</button> */}
-
-              <button
-                className="drawer-close"
-                onClick={() => {
-
-                  setSelectedProduct(null);
-
-                  const basePath = citySlug
-                    ? `/${citySlug}/items`
-                    : "/items";
-
-                  window.history.replaceState(
-                    {},
-                    "",
-                    basePath
-                  );
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* SCROLLABLE CONTENT */}
-            <div className="drawer-content">
-              <img
-                src={selectedProduct.image || "/no-image.png"}
-                className="drawer-img"
-              />
-
-              <div className="drawer-details">
-                <p><b>Description:</b> {selectedProduct.desc}</p>
-                <p><b>Brand:</b> {selectedProduct.brand}</p>
-                <p><b>Size:</b> {selectedProduct.size}</p>
-                <p><b>Usage:</b> {selectedProduct.usage}</p>
-                <p><b>Model:</b> {selectedProduct.model}</p>
-                <p><b>Instrument:</b> {selectedProduct.instrument}</p>
-                <p><b>Automation:</b> {selectedProduct.automation}</p>
-                <p><b>Availability:</b> {selectedProduct.availability}</p>
-              </div>
-            </div>
-
-            {/* FIXED FOOTER */}
-            <div className="drawer-footer">
-              {!showForm ? (
-                <button
-                  className="btn-main"
-                  onClick={() => setShowForm(true)}
-                >
-                  Get Details
-                </button>
-              ) : (
-                <div className="form-box">
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="Enter your email"
-                    value={queryForm.email}
-                    onChange={handleFormChange}
-                    required
-                  />
-
-                  <input
-                    type="tel"
-                    name="phone"
-                    placeholder="Contact number"
-                    value={queryForm.phone}
-                    maxLength={10}
-                    onChange={(e) =>
-                      setQueryForm({
-                        ...queryForm,
-                        phone: e.target.value.replace(/\D/g, "")
-                      })
+                    disabled={
+                      currentPage===1
                     }
-                    required
-                  />
 
-                  <button className="btn-main" onClick={handleSubmitQuery}>
-                    Submit
+                    onClick={()=>
+
+                      setCurrentPage(
+
+                        p=>p-1
+
+                      )
+
+                    }
+
+                  >
+
+                    ◀
+
                   </button>
+
+                  <button
+                    className="btn btn-primary"
+                  >
+
+                    {
+
+                      currentPage
+
+                    }
+
+                  </button>
+
+                  <button
+
+                    className="btn"
+
+                    disabled={
+
+                      currentPage===
+
+                      totalPages
+
+                    }
+
+                    onClick={()=>
+
+                      setCurrentPage(
+
+                        p=>p+1
+
+                      )
+
+                    }
+
+                  >
+
+                    ▶
+
+                  </button>
+
                 </div>
-              )}
+
+              </div>
+
             </div>
-          </>
-        )}
+
+          </div>
+
+        </div>
+
       </div>
 
-      {/* 🔥 OVERLAY */}
-      {selectedProduct && (
-        <div
-          className="overlay"
-          onClick={() => {
-            setSelectedProduct(null);
+    </section>
 
-            const basePath = citySlug
-              ? `/${citySlug}/items`
-              : "/items";
+  </>
 
-            window.history.replaceState(
-              {},
-              "",
-              basePath
-            );
-          }}
-        ></div>
-      )}
-
-    </>
-  );
+);
 }

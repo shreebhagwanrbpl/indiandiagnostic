@@ -10,7 +10,7 @@ body {
 }
 
 .active {
-  color: #dc2626 !important;
+  color: #fff !important;
 }
 
 .active::after {
@@ -18,7 +18,7 @@ body {
 }
 
 .nav-links a:hover {
-  color: #dc2626 !important;
+  color: #4f83f4 !important;
 }
 
 .nav-main {
