@@ -7,6 +7,8 @@ import toast, { Toaster } from "react-hot-toast";
 import {
   doc,
   getDoc,
+  collection,
+  getDocs,
 } from "firebase/firestore";
 import {
   FiFilter,
@@ -18,14 +20,14 @@ import { useRouter } from "next/navigation";
 export default function ItemsPage({ city }) {
 
   const router = useRouter();
-
+  const [categorySearch, setCategorySearch] = useState("");
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
   const [search, setSearch] = useState("");
 
   const [selectedBrand, setSelectedBrand] = useState("");
-
+  const [allCategories, setAllCategories] = useState([]);
   const [selectedUsage, setSelectedUsage] = useState("");
 
   const [showFilters, setShowFilters] = useState(false);
@@ -48,45 +50,45 @@ export default function ItemsPage({ city }) {
 
   /* -------------------------------- */
 
-  const getCategory = (item) => {
+  // const getCategory = (item) => {
 
-    const title = (item.title || "").toLowerCase();
+  //   const title = (item.title || "").toLowerCase();
 
-    const usage = (item.usage || "").toLowerCase();
+  //   const usage = (item.usage || "").toLowerCase();
 
-    if (
-      title.includes("rapid") ||
-      usage.includes("rapid")
-    )
-      return "Rapid Test Kits";
+  //   if (
+  //     title.includes("rapid") ||
+  //     usage.includes("rapid")
+  //   )
+  //     return "Rapid Test Kits";
 
-    if (
-      title.includes("elisa")
-    )
-      return "ELISA Kits";
+  //   if (
+  //     title.includes("elisa")
+  //   )
+  //     return "ELISA Kits";
 
-    if (
-      title.includes("electrolyte")
-    )
-      return "Electrolyte Reagents";
+  //   if (
+  //     title.includes("electrolyte")
+  //   )
+  //     return "Electrolyte Reagents";
 
-    if (
-      title.includes("hematology")
-    )
-      return "Hematology";
+  //   if (
+  //     title.includes("hematology")
+  //   )
+  //     return "Hematology";
 
-    if (
-      title.includes("biochemistry")
-    )
-      return "Biochemistry";
+  //   if (
+  //     title.includes("biochemistry")
+  //   )
+  //     return "Biochemistry";
 
-    if (
-      title.includes("urine")
-    )
-      return "Urine Test";
+  //   if (
+  //     title.includes("urine")
+  //   )
+  //     return "Urine Test";
 
-    return "Other Products";
-  };
+  //   return "Other Products";
+  // };
 
 
 
@@ -102,7 +104,38 @@ export default function ItemsPage({ city }) {
 
       try {
 
-        const snap = await getDoc(
+        const allProducts = [];
+
+        // CATEGORY PRODUCTS
+        const categorySnap = await getDocs(
+          collection(
+            db,
+            "websites",
+            "indiandiagnostic",
+            "pages",
+            "categoryproducts",
+            "categories"
+          )
+        );
+
+        categorySnap.forEach((categoryDoc) => {
+
+          const data = categoryDoc.data();
+
+          const products =
+            (data.products || []).map((item) => ({
+              ...item,
+              category:
+                data.category ||
+                categoryDoc.id
+            }));
+
+          allProducts.push(...products);
+
+        });
+
+        // OLD PRODUCTS
+        const productSnap = await getDoc(
           doc(
             db,
             "websites",
@@ -112,31 +145,21 @@ export default function ItemsPage({ city }) {
           )
         );
 
-        if (!snap.exists()) return;
+        if (productSnap.exists()) {
 
-        const raw =
-          snap.data().products || [];
+          const oldProducts =
+            (productSnap.data().products || []).map(
+              (item) => ({
+                ...item,
+                category:
+                  item.category || "Other Products"
+              })
+            );
 
-        const slugify = (text = "") =>
-          text
-            .toLowerCase()
-            .replace(/\s+/g, "-");
+          allProducts.push(...oldProducts);
+        }
 
-        const formatted =
-          raw.map((item) => ({
-
-            ...item,
-
-            slug:
-              item.slug ||
-              slugify(item.title),
-
-            category:
-              getCategory(item),
-
-          }));
-
-        setProducts(formatted);
+        setProducts(allProducts);
 
       } catch (err) {
 
@@ -247,291 +270,247 @@ export default function ItemsPage({ city }) {
 
 
 
-  const [activeCategory,
-    setActiveCategory] =
+  const [activeCategory, setActiveCategory] =
     useState("");
 
-
-
-  useEffect(() => {
-
-    if (
-      categoryNames.length &&
-      !activeCategory
-    ) {
-
-      setActiveCategory(
-        categoryNames[0]
-      );
-
-    }
-
-  }, [categoryNames]);
-
+  const currentActiveCategory =
+    categoryNames.includes(activeCategory)
+      ? activeCategory
+      : categoryNames[0] || "";
   /* ============================================================
    FILTER OPTIONS
 ============================================================ */
 
-const brands = useMemo(() => {
+  const brands = useMemo(() => {
 
     return [
-        ...new Set(
-            filteredProducts
-                .map((item) => item.brand)
-                .filter(Boolean)
-        )
+      ...new Set(
+        filteredProducts
+          .map((item) => item.brand)
+          .filter(Boolean)
+      )
     ];
 
-}, [filteredProducts]);
+  }, [filteredProducts]);
 
 
 
-const usages = useMemo(() => {
+  const usages = useMemo(() => {
 
     return [
-        ...new Set(
-            filteredProducts
-                .map((item) => item.usage)
-                .filter(Boolean)
-        )
+      ...new Set(
+        filteredProducts
+          .map((item) => item.usage)
+          .filter(Boolean)
+      )
     ];
 
-}, [filteredProducts]);
+  }, [filteredProducts]);
 
 
 
-/* ============================================================
-   PAGINATION
-============================================================ */
+  /* ============================================================
+     PAGINATION
+  ============================================================ */
 
-const totalItems = filteredProducts.length;
+  const totalItems = filteredProducts.length;
 
-const totalPages =
+  const totalPages =
     itemsPerPage === "all"
-        ? 1
-        : Math.ceil(
-            totalItems /
-            itemsPerPage
-        );
+      ? 1
+      : Math.ceil(
+        totalItems /
+        itemsPerPage
+      );
 
 
 
-const paginatedProducts =
+  const paginatedProducts =
     itemsPerPage === "all"
 
-        ? filteredProducts
+      ? filteredProducts
 
-        : filteredProducts.slice(
+      : filteredProducts.slice(
 
-            (currentPage - 1) *
-            itemsPerPage,
+        (currentPage - 1) *
+        itemsPerPage,
 
-            currentPage *
-            itemsPerPage
+        currentPage *
+        itemsPerPage
 
-        );
+      );
 
 
 
-/* ============================================================
-   GROUP PAGINATION
-============================================================ */
+  /* ============================================================
+     GROUP PAGINATION
+  ============================================================ */
 
-const paginatedGroupedProducts =
+  const paginatedGroupedProducts =
     useMemo(() => {
 
-        const obj = {};
+      const obj = {};
 
-        paginatedProducts.forEach((item) => {
+      paginatedProducts.forEach((item) => {
 
-            if (!obj[item.category]) {
+        if (!obj[item.category]) {
 
-                obj[item.category] = [];
+          obj[item.category] = [];
 
-            }
+        }
 
-            obj[item.category].push(item);
+        obj[item.category].push(item);
 
-        });
+      });
 
-        return obj;
+      return obj;
 
     }, [paginatedProducts]);
 
 
 
-/* ============================================================
-   SIDEBAR ACCORDION
-============================================================ */
+  /* ============================================================
+     SIDEBAR ACCORDION
+  ============================================================ */
 
-const [openedCategory,
+  const [openedCategory,
     setOpenedCategory] =
     useState("");
 
+  const currentOpenedCategory =
+    groupedProducts[openedCategory]
+      ? openedCategory
+      : Object.keys(groupedProducts)[0] || "";
 
 
-useEffect(() => {
+  const toggleCategory = (category) => {
 
-    if (
+    if (currentOpenedCategory === category) {
 
-        Object.keys(
-            groupedProducts
-        ).length
-
-        &&
-
-        !openedCategory
-
-    ) {
-
-        setOpenedCategory(
-
-            Object.keys(
-                groupedProducts
-            )[0]
-
-        );
+      setOpenedCategory("");
+      return;
 
     }
 
-}, [groupedProducts]);
-
-
-
-const toggleCategory = (category) => {
-    if (openedCategory === category) {
-        setOpenedCategory("");
-        return;
-    }
     setOpenedCategory(category);
     setActiveCategory(category);
-};
+
+  };
 
 
 
-/* ============================================================
-   SCROLL TO CATEGORY
-============================================================ */
+  /* ============================================================
+     SCROLL TO CATEGORY
+  ============================================================ */
 
-const scrollToCategory = (category) => {
+  const scrollToCategory = (category) => {
 
     setOpenedCategory(category);
 
     setActiveCategory(category);
 
     const section =
-        document.getElementById(
+      document.getElementById(
 
-            category
-                .replace(/\s+/g, "-")
-                .toLowerCase()
+        category
+          .replace(/\s+/g, "-")
+          .toLowerCase()
 
-        );
+      );
 
     if (section) {
 
-        section.scrollIntoView({
+      section.scrollIntoView({
 
-            behavior: "smooth",
+        behavior: "smooth",
 
-            block: "start"
+        block: "start"
 
-        });
+      });
 
     }
 
-};
+  };
 
 
 
-/* ============================================================
-   ACTIVE CATEGORY WHILE SCROLL
-============================================================ */
+  /* ============================================================
+     ACTIVE CATEGORY WHILE SCROLL
+  ============================================================ */
 
-useEffect(() => {
+  useEffect(() => {
 
     const handleScroll = () => {
 
-        let current = "";
+      let current = "";
 
-        Object.keys(
-            groupedProducts
-        ).forEach((category) => {
+      Object.keys(
+        groupedProducts
+      ).forEach((category) => {
 
-            const section =
-                document.getElementById(
+        const section =
+          document.getElementById(
 
-                    category
-                        .replace(/\s+/g, "-")
-                        .toLowerCase()
+            category
+              .replace(/\s+/g, "-")
+              .toLowerCase()
 
-                );
+          );
 
-            if (!section) return;
+        if (!section) return;
 
-            const top =
-                section.getBoundingClientRect().top;
+        const top =
+          section.getBoundingClientRect().top;
 
-            if (top <= 180) {
+        if (top <= 180) {
 
-                current = category;
-
-            }
-
-        });
-
-        if (
-
-            current
-
-            &&
-
-            current !== activeCategory
-
-        ) {
-
-            setActiveCategory(current);
-
-            // setOpenedCategory(current);
-            setActiveCategory(current);
+          current = category;
 
         }
+
+      });
+
+      if (
+        current &&
+        current !== currentActiveCategory
+      ) {
+        // setOpenedCategory(current);
+        setActiveCategory(current);
+
+      }
 
     };
 
     window.addEventListener(
 
-        "scroll",
+      "scroll",
 
-        handleScroll
+      handleScroll
 
     );
 
     return () =>
 
-        window.removeEventListener(
+      window.removeEventListener(
 
-            "scroll",
+        "scroll",
 
-            handleScroll
+        handleScroll
 
-        );
+      );
 
-}, [
-
+  }, [
     groupedProducts,
-
-    activeCategory
-
-]);
+    currentActiveCategory
+  ]);
 
 
 
-/* ============================================================
-   RESET FILTER
-============================================================ */
+  /* ============================================================
+     RESET FILTER
+  ============================================================ */
 
-const resetFilters = () => {
+  const resetFilters = () => {
 
     setSearch("");
 
@@ -540,339 +519,222 @@ const resetFilters = () => {
     setSelectedUsage("");
 
     setCurrentPage(1);
+    setCategorySearch("");
 
-};
+  };
 
 
 
-/* ============================================================
-   VIEW DETAILS
-============================================================ */
+  /* ============================================================
+     VIEW DETAILS
+  ============================================================ */
 
-const viewDetails = (item) => {
+  const viewDetails = (item) => {
 
     router.push(
 
-        citySlug
+      citySlug
 
-            ? `/${citySlug}/items/${item.slug}`
+        ? `/${citySlug}/items/${item.slug}`
 
-            : `/items/${item.slug}`
+        : `/items/${item.slug}`
 
     );
 
-};
+  };
 
-return (
-  <>
-    <Toaster
-      position="top-center"
-      containerStyle={{
-        zIndex: 99999,
-      }}
-    />
+  return (
+    <>
+      <Toaster
+        position="top-center"
+        containerStyle={{
+          zIndex: 99999,
+        }}
+      />
 
-    {/* ===========================
+      {/* ===========================
             HERO
     =========================== */}
 
-    <section className="item-banner">
-      <div className="item-content">
+      <section className="item-banner">
+        <div className="item-content">
 
-        <h1>
-          Medical Products
-        </h1>
+          <h1>
+            Medical Products
+          </h1>
 
-        <p>
-          Find Diagnostic &
-          Laboratory Products
-        </p>
+          <p>
+            Find Diagnostic &
+            Laboratory Products
+          </p>
 
-      </div>
-    </section>
+        </div>
+      </section>
 
-    {/* ===========================
+      {/* ===========================
             MAIN
     =========================== */}
 
-    <section className="items-section">
+      <section className="items-section">
 
-      <div className="container-fluid">
+        <div className="container-fluid">
 
-        <div className="row">
+          <div className="row">
 
-          {/* ===========================
+            {/* ===========================
                 LEFT SIDEBAR
           =========================== */}
 
-          <div className="col-lg-3">
+            <div className="col-lg-3">
 
-            <div className="category-sidebar">
+              <div className="category-sidebar">
 
-              <div className="sidebar-head">
+                <div className="sidebar-head">
 
-                <h4>
-                  Categories
-                </h4>
+                  <h4>
+                    Categories
+                  </h4>
 
-              </div>
+                </div>
 
-              <div className="category-search">
-
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Search Product..."
-                  value={search}
-                  onChange={(e) => {
-
-                    setSearch(
-                      e.target.value
-                    );
-
-                  }}
-                />
-
-              </div>
-
-              <div className="category-list">
-
-                {
-
-                  Object.keys(
-                    groupedProducts
-                  ).map((category) => (
-
-                    <div
-                      className="category-item"
-                      key={category}
-                    >
-
-                      <button
-
-                        className={`category-btn
-
-                        ${activeCategory === category
-                            ? "active"
-                            : ""}
-
-                        `}
-
-                        onClick={() =>
-                          toggleCategory(
-                            category
-                          )
-                        }
-
-                      >
-
-                        <span>
-
-                          {
-
-                            openedCategory === category
-
-                              ?
-
-                              <FiChevronDown />
-
-                              :
-
-                              <FiChevronRight />
-
-                          }
-
-                          {category}
-
-                        </span>
-
-                        <span
-                          className="count"
-                        >
-
-                          {
-
-                            groupedProducts[
-                              category
-                            ].length
-
-                          }
-
-                        </span>
-
-                      </button>
-
-                      <div
-
-                        className={`category-content
-
-                        ${openedCategory === category
-                            ? "show"
-                            : ""}
-
-                        `}
-
-                      >
-
-                        {
-
-                          // groupedProducts[
-                          //   category
-                          // ].map((item) => (
-                            groupedProducts[category].map((item, index) => (
-
-                            <button
-
-                              // key={item.slug}
-                              key={`${item.slug}-${index}`}
-
-                              className="product-link"
-
-                              onClick={() =>
-                                scrollToCategory(
-                                  category
-                                )
-                              }
-
-                            >
-
-                              {item.title}
-
-                            </button>
-
-                          ))
-
-                        }
-
-                      </div>
-
-                    </div>
-
-                  ))
-
-                }
-
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* ===========================
-                RIGHT SIDE
-          =========================== */}
-
-          <div className="col-lg-9">
-
-            {/* FILTER */}
-
-            <div className="filter-card">
-
-              <div className="row g-3">
-
-                <div className="col-lg-4">
+                <div className="category-search">
 
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Search..."
-                    value={search}
+                    placeholder="Search Category..."
+                    value={categorySearch}
                     onChange={(e) => {
-
-                      setSearch(
-                        e.target.value
-                      );
-
+                      setCategorySearch(e.target.value);
                     }}
                   />
 
                 </div>
 
-                <div className="col-lg-3">
+                <div className="category-list">
 
-                  <select
-                    className="form-select"
-                    value={selectedBrand}
-                    onChange={(e) =>
-                      setSelectedBrand(
-                        e.target.value
+                  {
+
+                    Object.keys(
+                      groupedProducts
+                    )
+                      .filter((category) =>
+                        category
+                          .toLowerCase()
+                          .includes(
+                            categorySearch.toLowerCase()
+                          )
                       )
-                    }
-                  >
+                      .map((category) => (
 
-                    <option value="">
-                      Brand
-                    </option>
-
-                    {
-
-                      brands.map((b) => (
-
-                        <option
-                          key={b}
-                          value={b}
+                        <div
+                          className="category-item"
+                          key={category}
                         >
-                          {b}
-                        </option>
+
+                          <button
+
+                            className={`category-btn
+
+${currentActiveCategory === category
+                                ? "active"
+                                : ""}
+
+                        `}
+
+                            onClick={() =>
+                              toggleCategory(
+                                category
+                              )
+                            }
+
+                          >
+
+                            <span>
+
+                              {
+
+                                currentOpenedCategory === category
+
+                                  ?
+
+                                  <FiChevronDown />
+
+                                  :
+
+                                  <FiChevronRight />
+
+                              }
+
+                              {category}
+
+                            </span>
+
+                            <span
+                              className="count"
+                            >
+
+                              {
+
+                                groupedProducts[
+                                  category
+                                ].length
+
+                              }
+
+                            </span>
+
+                          </button>
+
+                          <div
+
+                            className={`category-content
+
+                        ${currentOpenedCategory === category
+                                ? "show"
+                                : ""}
+
+                        `}
+
+                          >
+
+                            {
+
+                              // groupedProducts[
+                              //   category
+                              // ].map((item) => (
+                              groupedProducts[category].map((item, index) => (
+
+                                <button
+
+                                  // key={item.slug}
+                                  key={`${item.slug}-${index}`}
+
+                                  className="product-link"
+
+                                  onClick={() =>
+                                    scrollToCategory(
+                                      category
+                                    )
+                                  }
+
+                                >
+
+                                  {item.title}
+
+                                </button>
+
+                              ))
+
+                            }
+
+                          </div>
+
+                        </div>
 
                       ))
 
-                    }
-
-                  </select>
-
-                </div>
-
-                <div className="col-lg-3">
-
-                  <select
-                    className="form-select"
-                    value={selectedUsage}
-                    onChange={(e) =>
-                      setSelectedUsage(
-                        e.target.value
-                      )
-                    }
-                  >
-
-                    <option value="">
-                      Usage
-                    </option>
-
-                    {
-
-                      usages.map((u) => (
-
-                        <option
-                          key={u}
-                          value={u}
-                        >
-                          {u}
-                        </option>
-
-                      ))
-
-                    }
-
-                  </select>
-
-                </div>
-
-                <div className="col-lg-2">
-
-                  <button
-
-                    className="btn-reset"
-
-                    onClick={
-                      resetFilters
-                    }
-
-                  >
-
-                    Reset
-
-                  </button>
+                  }
 
                 </div>
 
@@ -880,157 +742,264 @@ return (
 
             </div>
 
-            {/* PRODUCT LIST START */}
+            {/* ===========================
+                RIGHT SIDE
+          =========================== */}
 
-            {
+            <div className="col-lg-9">
 
-              Object.entries(
-                paginatedGroupedProducts
-              ).map(
+              {/* FILTER */}
 
-                ([category, list]) => (
+              <div className="filter-card">
+
+                <div className="row g-3">
+
+                  <div className="col-lg-4">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Search Product..."
+                      value={search}
+                      onChange={(e) => {
+                        setSearch(e.target.value);
+                      }}
+                    />
+
+                  </div>
+
+                  <div className="col-lg-3">
+
+                    <select
+                      className="form-select"
+                      value={selectedBrand}
+                      onChange={(e) =>
+                        setSelectedBrand(
+                          e.target.value
+                        )
+                      }
+                    >
+
+                      <option value="">
+                        Brand
+                      </option>
+
+                      {
+
+                        brands.map((b) => (
+
+                          <option
+                            key={b}
+                            value={b}
+                          >
+                            {b}
+                          </option>
+
+                        ))
+
+                      }
+
+                    </select>
+
+                  </div>
+
+                  <div className="col-lg-3">
+
+                    <select
+                      className="form-select"
+                      value={selectedUsage}
+                      onChange={(e) =>
+                        setSelectedUsage(
+                          e.target.value
+                        )
+                      }
+                    >
+
+                      <option value="">
+                        Usage
+                      </option>
+
+                      {
+
+                        usages.map((u) => (
+
+                          <option
+                            key={u}
+                            value={u}
+                          >
+                            {u}
+                          </option>
+
+                        ))
+
+                      }
+
+                    </select>
+
+                  </div>
+
+                  <div className="col-lg-2">
+
+                    <button
+
+                      className="btn-reset"
+
+                      onClick={
+                        resetFilters
+                      }
+
+                    >
+
+                      Reset
+
+                    </button>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* PRODUCT LIST START */}
+
+              {
+                Object.keys(paginatedGroupedProducts).length === 0 ? (
 
                   <div
-
-                    key={category}
-
-                    id={category
-                      .replace(/\s+/g, "-")
-                      .toLowerCase()}
-
                     className="product-section"
-
+                    style={{
+                      textAlign: "center",
+                      padding: "60px 20px",
+                      background: "#fff",
+                      borderRadius: "16px",
+                      marginTop: "20px"
+                    }}
                   >
+                    <h3>No Products Found</h3>
 
-                    <div className="section-title">
+                    <p>
+                      No products available for the selected filters.
+                    </p>
 
-                      <h3>
+                  </div>
 
-                        {category}
+                ) : (
 
-                      </h3>
+                  Object.entries(
+                    paginatedGroupedProducts
+                  ).map(
 
-                      <span>
+                    ([category, list]) => (
+
+                      <div
+
+                        key={category}
+
+                        id={category
+                          .replace(/\s+/g, "-")
+                          .toLowerCase()}
+
+                        className="product-section"
+
+                      >
+
+                        <div className="section-title">
+
+                          <h3>{category}</h3>
+
+                          <span>
+                            {list.length}  Products per page
+                          </span>
+
+                        </div>
 
                         {
 
-                          list.length
+                          list.map((item, index) => (
 
-                        }
+                            <div
+                              className="product-list-card"
+                              key={`${item.slug}-${index}`}
+                            >
 
-                        Products
+                              <div className="row align-items-center">
 
-                      </span>
+                                <div className="col-lg-3 col-md-4">
 
-                    </div>
+                                  <div className="list-image">
 
-                                        {
-
-                      // list.map((item) => (
-                        list.map((item, index) => (
-
-                        <div
-                          className="product-list-card"
-                          // key={item.slug}
-                          key={`${item.slug}-${index}`}
-                        >
-
-                          <div className="row align-items-center">
-
-                            {/* IMAGE */}
-
-                            <div className="col-lg-3 col-md-4">
-
-                              <div className="list-image">
-
-                                <img
-                                  src={
-                                    item.image ||
-                                    "/no-image.png"
-                                  }
-                                  alt={item.title}
-                                />
-
-                              </div>
-
-                            </div>
-
-                            {/* DETAILS */}
-
-                            <div className="col-lg-6 col-md-8">
-
-                              <div className="list-content">
-
-                                <h4>
-                                  {item.title}
-                                </h4>
-
-                                <p>
-                                  {item.desc}
-                                </p>
-
-                                <div className="spec-grid">
-
-                                  <div>
-                                    <b>Brand</b>
-
-                                    <span>
-
-                                      {
-                                        item.brand ||
-                                        "-"
-
+                                    <img
+                                      src={
+                                        item.image ||
+                                        "/no-image.png"
                                       }
-
-                                    </span>
+                                      alt={item.title}
+                                    />
 
                                   </div>
 
-                                  <div>
+                                </div>
 
-                                    <b>Usage</b>
+                                <div className="col-lg-6 col-md-8">
 
-                                    <span>
+                                  <div className="list-content">
 
-                                      {
-                                        item.usage ||
-                                        "-"
+                                    <h4>{item.title}</h4>
 
-                                      }
+                                    <p>{item.desc}</p>
 
-                                    </span>
+                                    <div className="spec-grid">
+
+                                      <div>
+                                        <b>Brand</b>
+                                        <span>
+                                          {item.brand || "-"}
+                                        </span>
+                                      </div>
+
+                                      <div>
+                                        <b>Usage</b>
+                                        <span>
+                                          {item.usage || "-"}
+                                        </span>
+                                      </div>
+
+                                      <div>
+                                        <b>Model</b>
+                                        <span>
+                                          {item.model || "-"}
+                                        </span>
+                                      </div>
+
+                                      <div>
+                                        <b>Availability</b>
+                                        <span>
+                                          {item.availability || "-"}
+                                        </span>
+                                      </div>
+
+                                    </div>
 
                                   </div>
 
-                                  <div>
+                                </div>
 
-                                    <b>Model</b>
+                                <div className="col-lg-3">
 
-                                    <span>
+                                  <div className="product-action">
 
-                                      {
-                                        item.model ||
-                                        "-"
+                                    <button
 
+                                      className="btn-view"
+
+                                      onClick={() =>
+                                        viewDetails(item)
                                       }
 
-                                    </span>
+                                    >
 
-                                  </div>
+                                      View Details
 
-                                  <div>
-
-                                    <b>Availability</b>
-
-                                    <span>
-
-                                      {
-                                        item.availability ||
-                                        "-"
-
-                                      }
-
-                                    </span>
+                                    </button>
 
                                   </div>
 
@@ -1040,176 +1009,141 @@ return (
 
                             </div>
 
-                            {/* ACTION */}
+                          ))
 
-                            <div className="col-lg-3">
+                        }
 
-                              <div className="product-action">
+                      </div>
 
-                                <button
+                    )
 
-                                  className="btn-view"
+                  )
 
-                                  onClick={() =>
-                                    viewDetails(item)
-                                  }
+                )
+              }
 
-                                >
+              {/* PAGINATION */}
 
-                                  View Details
+              <div className="pagination-card">
 
-                                </button>
+                <div className="pagination-wrapper">
 
-                                {/* <button
+                  <div className="page-left">
 
-                                  className="btn-enquiry"
+                    <span>
 
-                                >
+                      Per Page
 
-                                  Get Quote
+                    </span>
 
-                                </button> */}
+                    <select
 
-                              </div>
+                      className="custom-select"
 
-                            </div>
+                      value={itemsPerPage}
 
-                          </div>
+                      onChange={(e) => {
 
-                        </div>
+                        const value =
+                          e.target.value === "all"
+                            ? "all"
+                            : Number(
+                              e.target.value
+                            );
 
-                      ))
+                        setItemsPerPage(
+                          value
+                        );
 
-                    }
+                        setCurrentPage(1);
+
+                      }}
+
+                    >
+
+                      <option value={10}>10</option>
+
+                      <option value={25}>25</option>
+
+                      <option value={50}>50</option>
+
+                      <option value={100}>100</option>
+
+                      <option value="all">
+                        All
+                      </option>
+
+                    </select>
 
                   </div>
 
-                )
+                  <div className="page-right">
 
-              )
+                    <button
 
-            }
+                      className="btn"
 
-            {/* PAGINATION */}
+                      disabled={
+                        currentPage === 1
+                      }
 
-            <div className="pagination-card">
+                      onClick={() =>
 
-              <div className="pagination-wrapper">
+                        setCurrentPage(
 
-                <div className="page-left">
+                          p => p - 1
 
-                  <span>
+                        )
 
-                    Per Page
+                      }
 
-                  </span>
+                    >
 
-                  <select
+                      ◀
 
-                    className="custom-select"
+                    </button>
 
-                    value={itemsPerPage}
+                    <button
+                      className="btn btn-primary"
+                    >
 
-                    onChange={(e)=>{
+                      {
 
-                      const value =
-                      e.target.value==="all"
-                      ?"all"
-                      :Number(
-                        e.target.value
-                      );
+                        currentPage
 
-                      setItemsPerPage(
-                        value
-                      );
+                      }
 
-                      setCurrentPage(1);
+                    </button>
 
-                    }}
+                    <button
 
-                  >
+                      className="btn"
 
-                    <option value={10}>10</option>
+                      disabled={
 
-                    <option value={25}>25</option>
+                        currentPage ===
 
-                    <option value={50}>50</option>
+                        totalPages
 
-                    <option value={100}>100</option>
+                      }
 
-                    <option value="all">
-                      All
-                    </option>
+                      onClick={() =>
 
-                  </select>
+                        setCurrentPage(
 
-                </div>
+                          p => p + 1
 
-                <div className="page-right">
+                        )
 
-                  <button
+                      }
 
-                    className="btn"
+                    >
 
-                    disabled={
-                      currentPage===1
-                    }
+                      ▶
 
-                    onClick={()=>
+                    </button>
 
-                      setCurrentPage(
-
-                        p=>p-1
-
-                      )
-
-                    }
-
-                  >
-
-                    ◀
-
-                  </button>
-
-                  <button
-                    className="btn btn-primary"
-                  >
-
-                    {
-
-                      currentPage
-
-                    }
-
-                  </button>
-
-                  <button
-
-                    className="btn"
-
-                    disabled={
-
-                      currentPage===
-
-                      totalPages
-
-                    }
-
-                    onClick={()=>
-
-                      setCurrentPage(
-
-                        p=>p+1
-
-                      )
-
-                    }
-
-                  >
-
-                    ▶
-
-                  </button>
+                  </div>
 
                 </div>
 
@@ -1221,11 +1155,9 @@ return (
 
         </div>
 
-      </div>
+      </section>
 
-    </section>
+    </>
 
-  </>
-
-);
+  );
 }
