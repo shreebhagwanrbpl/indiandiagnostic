@@ -375,19 +375,29 @@ export default function ItemsPage({ city }) {
 
   const [openedCategory,
     setOpenedCategory] =
-    useState("");
+    useState(null);
 
-  const currentOpenedCategory =
-    groupedProducts[openedCategory]
-      ? openedCategory
-      : Object.keys(groupedProducts)[0] || "";
+  // const currentOpenedCategory =
+  //   groupedProducts[openedCategory]
+  //     ? openedCategory
+  //     : Object.keys(groupedProducts)[0] || "";
+  const currentOpenedCategory = openedCategory;
 
-
+  // useEffect(() => {
+  //   if (
+  //     openedCategory === null &&
+  //     Object.keys(groupedProducts).length > 0
+  //   ) {
+  //     setOpenedCategory(
+  //       Object.keys(groupedProducts)[0]
+  //     );
+  //   }
+  // }, [groupedProducts]);
   const toggleCategory = (category) => {
 
-    if (currentOpenedCategory === category) {
+    if (openedCategory === category) {
 
-      setOpenedCategory("");
+      setOpenedCategory(null);
       return;
 
     }
