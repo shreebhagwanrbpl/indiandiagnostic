@@ -25,7 +25,7 @@ export default function ItemsPage({ city }) {
   const [loadingProducts, setLoadingProducts] = useState(true);
 
   const [search, setSearch] = useState("");
-
+  const [showTopBtn, setShowTopBtn] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState("");
   const [allCategories, setAllCategories] = useState([]);
   const [selectedUsage, setSelectedUsage] = useState("");
@@ -552,7 +552,38 @@ export default function ItemsPage({ city }) {
     );
 
   };
+  useEffect(() => {
 
+    const handleTopButton = () => {
+
+      if (window.scrollY > 400) {
+        setShowTopBtn(true);
+      } else {
+        setShowTopBtn(false);
+      }
+
+    };
+
+    window.addEventListener(
+      "scroll",
+      handleTopButton
+    );
+
+    return () =>
+      window.removeEventListener(
+        "scroll",
+        handleTopButton
+      );
+
+  }, []);
+  const scrollToTop = () => {
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+
+  };
   return (
     <>
       <Toaster
@@ -1157,6 +1188,14 @@ ${currentActiveCategory === category
 
                 </div>
 
+                {showTopBtn && (
+                  <button
+                    className="back-to-top-btn"
+                    onClick={scrollToTop}
+                  >
+                    ↑
+                  </button>
+                )}
               </div>
 
             </div>
