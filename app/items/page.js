@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 export default function ItemsPage({ city }) {
 
   const router = useRouter();
+  const [isSticky, setIsSticky] = useState(false);
 
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -413,32 +414,25 @@ const toggleCategory = (category) => {
    SCROLL TO CATEGORY
 ============================================================ */
 
-const scrollToCategory = (category) => {
+const scrollToProduct = (slug, category) => {
 
     setOpenedCategory(category);
-
     setActiveCategory(category);
 
-    const section =
-        document.getElementById(
+    setTimeout(() => {
 
-            category
-                .replace(/\s+/g, "-")
-                .toLowerCase()
+        const product = document.getElementById(`product-${slug}`);
 
-        );
+        if (product) {
 
-    if (section) {
+            product.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+            });
 
-        section.scrollIntoView({
+        }
 
-            behavior: "smooth",
-
-            block: "start"
-
-        });
-
-    }
+    }, 150);
 
 };
 
@@ -563,6 +557,31 @@ const viewDetails = (item) => {
 
 };
 
+
+useEffect(() => {
+  const section = document.querySelector(".items-section");
+
+  const handleScroll = () => {
+    if (!section) return;
+
+    const rect = section.getBoundingClientRect();
+
+    // section start hone ke baad
+    if (rect.top <= 100 && rect.bottom > window.innerHeight) {
+      setIsSticky(true);
+    } else {
+      setIsSticky(false);
+    }
+  };
+
+  window.addEventListener("scroll", handleScroll);
+
+  handleScroll();
+
+  return () =>
+    window.removeEventListener("scroll", handleScroll);
+}, []);
+
 return (
   <>
     <Toaster
@@ -599,15 +618,32 @@ return (
 
       <div className="container-fluid">
 
-        <div className="row">
+        <div className="row"   style={{
+    alignItems: "flex-start"
+  }}>
 
           {/* ===========================
                 LEFT SIDEBAR
           =========================== */}
 
-          <div className="col-lg-3">
+       <div
+          className="col-lg-3"
+          style={{
+            position: isSticky ? "fixed" : "relative",
+            top: isSticky ? "100px" : "0",
+            left: isSticky ? "40px" : "0",
+            width: isSticky ? "320px" : "",
+            zIndex: 100,
+          }}
+        >
 
-            <div className="category-sidebar">
+            <div
+              className="category-sidebar"
+              style={{
+                maxHeight: "calc(100vh - 120px)",
+                overflow: "hidden"
+              }}
+            >
 
               <div className="sidebar-head">
 
@@ -635,7 +671,13 @@ return (
 
               </div>
 
-              <div className="category-list">
+             <div
+              className="category-list"
+              style={{
+                overflowY: "auto",
+                maxHeight: "calc(100vh - 220px)"
+              }}
+            >
 
                 {
 
@@ -728,11 +770,12 @@ return (
 
                               className="product-link"
 
-                              onClick={() =>
-                                scrollToCategory(
-                                  category
+                             onClick={() =>
+                                scrollToProduct(
+                                    item.slug,
+                                    category
                                 )
-                              }
+                            }
 
                             >
 
@@ -762,7 +805,12 @@ return (
                 RIGHT SIDE
           =========================== */}
 
-          <div className="col-lg-9">
+          <div
+            className="col-lg-9"
+            style={{
+              marginLeft: isSticky ? "340px" : "",
+            }}
+          >
 
             {/* FILTER */}
 
@@ -929,11 +977,11 @@ return (
                       // list.map((item) => (
                         list.map((item, index) => (
 
-                        <div
-                          className="product-list-card"
-                          // key={item.slug}
-                          key={`${item.slug}-${index}`}
-                        >
+                       <div
+                        id={`product-${item.slug}`}
+                        className="product-list-card"
+                        key={`${item.slug}-${index}`}
+                    >
 
                           <div className="row align-items-center">
 
