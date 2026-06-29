@@ -1,20 +1,20 @@
 export async function generateMetadata({
   params,
 }) {
-  const district =
-    params?.district ||
-    "jaipur";
+
+  const { district = "jaipur" } =
+    await params;
 
   const districtName =
     district
       .replace(/-/g, " ")
       .replace(
         /\b\w/g,
-        (char) =>
-          char.toUpperCase()
+        (char) => char.toUpperCase()
       );
 
-  const url = `https://indiandiagnostic.com/${district}`;
+  const url =
+    `https://indiandiagnostic.com/${district}`;
 
   return {
     title: `Diagnostic Lab Equipment in ${districtName} | Indian Diagnostic`,
@@ -44,6 +44,7 @@ export async function generateMetadata({
       description: `Medical and diagnostic products in ${districtName}.`,
 
       url,
+
       type: "website",
     },
   };
