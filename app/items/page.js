@@ -29,67 +29,20 @@ export default function ItemsPage({ city }) {
   const [selectedBrand, setSelectedBrand] = useState("");
   const [allCategories, setAllCategories] = useState([]);
   const [selectedUsage, setSelectedUsage] = useState("");
-
+  const [pendingScroll, setPendingScroll] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
 
   const [itemsPerPage, setItemsPerPage] = useState(25);
-
+  const [openedCategory,
+    setOpenedCategory] =
+    useState(null);
   const currentCity = city || "";
 
   const citySlug = currentCity
     ?.toLowerCase()
     ?.replace(/\s+/g, "-");
-
-
-
-  /* -------------------------------- */
-
-  /* TEMP CATEGORY GENERATOR */
-
-  /* -------------------------------- */
-
-  // const getCategory = (item) => {
-
-  //   const title = (item.title || "").toLowerCase();
-
-  //   const usage = (item.usage || "").toLowerCase();
-
-  //   if (
-  //     title.includes("rapid") ||
-  //     usage.includes("rapid")
-  //   )
-  //     return "Rapid Test Kits";
-
-  //   if (
-  //     title.includes("elisa")
-  //   )
-  //     return "ELISA Kits";
-
-  //   if (
-  //     title.includes("electrolyte")
-  //   )
-  //     return "Electrolyte Reagents";
-
-  //   if (
-  //     title.includes("hematology")
-  //   )
-  //     return "Hematology";
-
-  //   if (
-  //     title.includes("biochemistry")
-  //   )
-  //     return "Biochemistry";
-
-  //   if (
-  //     title.includes("urine")
-  //   )
-  //     return "Urine Test";
-
-  //   return "Other Products";
-  // };
-
 
 
   /* -------------------------------- */
@@ -307,7 +260,31 @@ export default function ItemsPage({ city }) {
 
   }, [filteredProducts]);
 
+  const scrollToProduct = (slug, category) => {
+    setPendingScroll(slug);
+    setOpenedCategory(category);
+    setActiveCategory(category);
+  };
+  useEffect(() => {
+    if (!pendingScroll) return;
 
+    const timer = setTimeout(() => {
+      const el = document.getElementById(
+        `product-${pendingScroll}`
+      );
+
+      if (el) {
+        el.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+
+      setPendingScroll(null);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [openedCategory, pendingScroll]);
 
   /* ============================================================
      PAGINATION
@@ -373,9 +350,7 @@ export default function ItemsPage({ city }) {
      SIDEBAR ACCORDION
   ============================================================ */
 
-  const [openedCategory,
-    setOpenedCategory] =
-    useState(null);
+
 
   // const currentOpenedCategory =
   //   groupedProducts[openedCategory]
@@ -616,17 +591,39 @@ export default function ItemsPage({ city }) {
             MAIN
     =========================== */}
 
-      <section className="items-section">
+      <section
+        className="items-section"
+        style={{
+          overflow: "visible"
+        }}
+      >
 
-        <div className="container-fluid">
+        <div
+          className="container-fluid"
+          style={{
+            overflow: "visible"
+          }}
+        >
 
-          <div className="row">
+          <div
+            className="row"
+            style={{
+              alignItems: "flex-start",
+            }}
+          >
 
             {/* ===========================
                 LEFT SIDEBAR
           =========================== */}
 
-            <div className="col-lg-3">
+            <aside
+              className="col-lg-3"
+              style={{
+                position: "sticky",
+                top: "120px",
+                alignSelf: "flex-start"
+              }}
+            >
 
               <div className="category-sidebar">
 
@@ -754,7 +751,8 @@ ${currentActiveCategory === category
                                   className="product-link"
 
                                   onClick={() =>
-                                    scrollToCategory(
+                                    scrollToProduct(
+                                      item.slug,
                                       category
                                     )
                                   }
@@ -781,7 +779,7 @@ ${currentActiveCategory === category
 
               </div>
 
-            </div>
+            </aside>
 
             {/* ===========================
                 RIGHT SIDE
@@ -903,7 +901,7 @@ ${currentActiveCategory === category
               {/* PRODUCT LIST START */}
 
               {
-                Object.keys(paginatedGroupedProducts).length === 0 ? (
+                Object.keys(groupedProducts).length === 0 ? (
 
                   <div
                     className="product-section"
@@ -926,7 +924,7 @@ ${currentActiveCategory === category
                 ) : (
 
                   Object.entries(
-                    paginatedGroupedProducts
+                    groupedProducts
                   ).map(
 
                     ([category, list]) => (
@@ -958,13 +956,14 @@ ${currentActiveCategory === category
                           list.map((item, index) => (
 
                             <div
+                              id={`product-${item.slug}`}
                               className="product-list-card"
                               key={`${item.slug}-${index}`}
                             >
 
                               <div className="row align-items-center">
 
-                                <div className="col-lg-3 col-md-4">
+                                <div className="col-lg-3">
 
                                   <div className="list-image">
 
@@ -1204,7 +1203,7 @@ ${currentActiveCategory === category
 
         </div>
 
-      </section>
+      </section >
 
     </>
 

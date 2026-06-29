@@ -46,6 +46,10 @@ body {
   background: #fffaf3;
 }
 
+.row {
+  align-items: flex-start !important;
+}
+
 /* =========================
    FILTER CARD FIX
 ========================= */
@@ -430,17 +434,23 @@ body {
 /*=============================
 SIDEBAR
 ==============================*/
+.sidebar-column {
+  align-self: flex-start;
+  /* height: 100%; */
+}
 
 .category-sidebar {
-  position: sticky;
-  top: 90px;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
   border: 1px solid #eee;
-  overflow: hidden;
+  position: sticky;
+  top: 120px;
+}
 
-  min-height: 700px;
+.sticky-sidebar {
+  position: sticky;
+  top: 120px;
 }
 
 .sidebar-head {
@@ -466,8 +476,8 @@ SIDEBAR
 }
 
 .category-list {
-  max-height: 75vh;
-  overflow: auto;
+  /* max-height: 75vh;
+  overflow: auto; */
 }
 
 .category-list::-webkit-scrollbar {
@@ -482,6 +492,11 @@ SIDEBAR
 /*=============================
 CATEGORY
 ==============================*/
+@media (max-width:992px) {
+  .sticky-sidebar {
+    position: static;
+  }
+}
 
 .category-item {
   border-bottom: 1px solid #f3f3f3;
