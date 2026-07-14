@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { doc, getDoc, addDoc, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import toast, { Toaster } from "react-hot-toast";
@@ -9,11 +9,12 @@ import styles from "./page.module.css";
 
 export default function ProductDetailPage() {
     const { slug } = useParams();
-
+    console.log("URL Slug =", slug);
     const [product, setProduct] = useState(null);
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
-
+    const [selectedImage, setSelectedImage] = useState("");
+    const [selectedMedia, setSelectedMedia] = useState("image");
     useEffect(() => {
         const fetchProduct = async () => {
             const snap = await getDoc(
@@ -29,19 +30,63 @@ export default function ProductDetailPage() {
             if (!snap.exists()) return;
 
             const products = snap.data().products || [];
+            console.log("Total Products =", products.length);
+            const slugify = (text = "") =>
+                text
+                    .toLowerCase()
+                    .trim()
+                    .replace(/[^a-z0-9\s-]/g, "")
+                    .replace(/\s+/g, "-");
 
-            const found = products.find(
-                (p) =>
-                    p.slug === slug ||
-                    p.title?.toLowerCase().replace(/\s+/g, "-") === slug
-            );
+            const found = products.find((p) => {
 
+                const productSlug =
+                    p.slug?.trim()
+                        ? p.slug
+                        : slugify(
+                            p.title ||
+                            p.instrument ||
+                            p.model ||
+                            `product-${p.productId}`
+                        );
+
+                return productSlug === slug;
+
+            });
+
+            console.log("Found Product =", found);
+            if (found) {
+                setSelectedImage(
+                    found.images?.[0] ||
+                    found.image ||
+                    ""
+                );
+            }
             setProduct(found);
         };
 
         fetchProduct();
     }, [slug]);
+    const pathname = usePathname();
 
+    const pathParts = pathname
+        .split("/")
+        .filter(Boolean);
+
+    const reservedRoutes = [
+        "about",
+        "contact",
+        "items",
+        "services",
+    ];
+
+    const city =
+        pathParts[0] &&
+            !reservedRoutes.includes(pathParts[0])
+            ? pathParts[0]
+                .replace(/-/g, " ")
+                .replace(/\b\w/g, c => c.toUpperCase())
+            : "India";
     const handleSubmit = async () => {
         if (!email.trim() || !phone.trim()) {
             toast.error("Please fill all fields");
@@ -73,7 +118,7 @@ export default function ProductDetailPage() {
                     "productQueries"
                 ),
                 {
-                    productName: product.title,
+                    productName,
                     email,
                     phone,
                     createdAt: new Date(),
@@ -124,7 +169,11 @@ export default function ProductDetailPage() {
             </section>
         );
     }
-
+    const productName =
+        product.title ||
+        product.instrument ||
+        product.model ||
+        "Laboratory Equipment";
     return (
         <>
             <Toaster position="top-right" />
@@ -137,17 +186,87 @@ export default function ProductDetailPage() {
 
                             <div className="col-lg-5">
                                 <div className={styles.productImageBox}>
-                                    <img
-                                        src={product.image || "/no-image.png"}
-                                        alt={product.title}
-                                    />
+                                    {selectedMedia === "image" && (
+                                        <img
+                                            src={selectedImage || "/no-image.png"}
+                                            alt={product.title}
+                                            className={styles.productDetailImage}
+                                        />
+                                    )}
+
+                                    {selectedMedia === "video" && (
+                                        <video
+                                            controls
+                                            width="100%"
+                                            className={styles.productVideo}
+                                        >
+                                            <source
+                                                src={product.video}
+                                                type="video/mp4"
+                                            />
+                                        </video>
+                                    )}
+                                </div>
+                                <div className={styles.thumbnailGallery}>
+
+                                    {(product.images?.length
+                                        ? product.images
+                                        : [product.image]
+                                    ).map((img, index) => (
+
+                                        <img
+                                            key={index}
+                                            src={img}
+                                            alt={`thumb-${index}`}
+                                            className={`${styles.thumbnailItem}
+            ${selectedImage === img &&
+                                                    selectedMedia === "image"
+                                                    ? styles.active
+                                                    : ""
+                                                }`}
+                                            onClick={() => {
+                                                setSelectedImage(img);
+                                                setSelectedMedia("image");
+                                            }}
+                                        />
+
+                                    ))}
+
+                                    {product.video && (
+                                        <div
+                                            className={`${styles.mediaThumb}
+            ${selectedMedia === "video"
+                                                    ? styles.active
+                                                    : ""
+                                                }`}
+                                            onClick={() =>
+                                                setSelectedMedia("video")
+                                            }
+                                        >
+                                            ▶
+                                            <span>Video</span>
+                                        </div>
+                                    )}
+
+                                    {product.pdf && (
+                                        <a
+                                            href={product.pdf}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className={styles.mediaThumb}
+                                        >
+                                            📄
+                                            <span>PDF</span>
+                                        </a>
+                                    )}
+
                                 </div>
                             </div>
 
                             <div className="col-lg-7">
                                 <div className={styles.productContent}>
 
-                                    <h1>{product.title}</h1>
+                                    <h1>{productName}</h1>
 
                                     <p className={styles.productDesc}>
                                         {product.desc}
@@ -202,7 +321,68 @@ export default function ProductDetailPage() {
                             </div>
 
                         </div>
+                        <div className={styles.seoContent}>
 
+                            <section className={styles.seoSection}>
+                                <h2>{productName} Supplier in {city}</h2>
+
+                                <p>
+                                    Raj Biosis is a trusted supplier and dealer of <strong>{productName}</strong> in {city}.
+                                    We provide advanced laboratory instruments, pathology equipment,
+                                    diagnostic analyzers, hospital devices, blood bank equipment and
+                                    research laboratory solutions for healthcare organizations across {city}.
+                                </p>
+                            </section>
+
+                            <section className={styles.seoSection}>
+                                <h2>Leading {productName} Dealer in {city}</h2>
+
+                                <p>
+                                    As a reputed {productName} dealer in {city}, we offer premium quality
+                                    equipment from globally recognized manufacturers. Our team provides
+                                    installation support, user training, maintenance guidance and
+                                    after-sales assistance to ensure smooth laboratory operations.
+                                </p>
+                            </section>
+
+                            <section className={styles.seoSection}>
+                                <h2>Buy {productName} in {city} at Best Price</h2>
+
+                                <p>
+                                    Looking to buy {productName} in {city}? Raj Biosis offers genuine
+                                    products, competitive pricing and fast delivery. We help hospitals,
+                                    diagnostic centres, pathology laboratories and healthcare institutions
+                                    choose the right equipment according to their workflow and budget.
+                                </p>
+                            </section>
+
+                            <section className={styles.seoSection}>
+                                <h2>Applications of {productName}</h2>
+
+                                <ul>
+                                    <li>Clinical Diagnostics Laboratories</li>
+                                    <li>Hospitals & Healthcare Centres</li>
+                                    <li>Pathology Laboratories</li>
+                                    <li>Blood Banks</li>
+                                    <li>Medical Colleges</li>
+                                    <li>Research & Development Laboratories</li>
+                                </ul>
+                            </section>
+
+                            <section className={styles.seoSection}>
+                                <h2>Why Choose Raj Biosis in {city}</h2>
+
+                                <ul>
+                                    <li>Trusted Biomedical Equipment Supplier</li>
+                                    <li>Original Products From Leading Brands</li>
+                                    <li>Competitive Pricing</li>
+                                    <li>Quick Delivery Across {city}</li>
+                                    <li>Technical Support & Service Assistance</li>
+                                    <li>Experienced Healthcare Equipment Team</li>
+                                </ul>
+                            </section>
+
+                        </div>
                     </div>
                 </div>
             </section>

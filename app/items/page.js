@@ -120,6 +120,8 @@ export default function ItemsPage({ city }) {
         const slugify = (text = "") =>
           text
             .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s-]/g, "")
             .replace(/\s+/g, "-");
 
         const formatted =
@@ -127,9 +129,21 @@ export default function ItemsPage({ city }) {
 
             ...item,
 
+            title:
+              item.title ||
+              item.instrument ||
+              item.model ||
+              "Medical Equipment",
+
             slug:
-              item.slug ||
-              slugify(item.title),
+              item.slug?.trim()
+                ? item.slug
+                : slugify(
+                  item.title ||
+                  item.instrument ||
+                  item.model ||
+                  `product-${item.productId}`
+                ),
 
             category:
               getCategory(item),
@@ -254,277 +268,259 @@ export default function ItemsPage({ city }) {
 
 
   useEffect(() => {
-
     if (
-      categoryNames.length &&
-      !activeCategory
+      categoryNames.length > 0 &&
+      activeCategory === ""
     ) {
-
-      setActiveCategory(
-        categoryNames[0]
-      );
-
+      setTimeout(() => {
+        setActiveCategory(categoryNames[0]);
+      }, 0);
     }
-
-  }, [categoryNames]);
+  }, [categoryNames, activeCategory]);
 
   /* ============================================================
    FILTER OPTIONS
 ============================================================ */
 
-const brands = useMemo(() => {
+  const brands = useMemo(() => {
 
     return [
-        ...new Set(
-            filteredProducts
-                .map((item) => item.brand)
-                .filter(Boolean)
-        )
+      ...new Set(
+        filteredProducts
+          .map((item) => item.brand)
+          .filter(Boolean)
+      )
     ];
 
-}, [filteredProducts]);
+  }, [filteredProducts]);
 
 
 
-const usages = useMemo(() => {
+  const usages = useMemo(() => {
 
     return [
-        ...new Set(
-            filteredProducts
-                .map((item) => item.usage)
-                .filter(Boolean)
-        )
+      ...new Set(
+        filteredProducts
+          .map((item) => item.usage)
+          .filter(Boolean)
+      )
     ];
 
-}, [filteredProducts]);
+  }, [filteredProducts]);
 
 
 
-/* ============================================================
-   PAGINATION
-============================================================ */
+  /* ============================================================
+     PAGINATION
+  ============================================================ */
 
-const totalItems = filteredProducts.length;
+  const totalItems = filteredProducts.length;
 
-const totalPages =
+  const totalPages =
     itemsPerPage === "all"
-        ? 1
-        : Math.ceil(
-            totalItems /
-            itemsPerPage
-        );
+      ? 1
+      : Math.ceil(
+        totalItems /
+        itemsPerPage
+      );
 
 
 
-const paginatedProducts =
+  const paginatedProducts =
     itemsPerPage === "all"
 
-        ? filteredProducts
+      ? filteredProducts
 
-        : filteredProducts.slice(
+      : filteredProducts.slice(
 
-            (currentPage - 1) *
-            itemsPerPage,
+        (currentPage - 1) *
+        itemsPerPage,
 
-            currentPage *
-            itemsPerPage
+        currentPage *
+        itemsPerPage
 
-        );
+      );
 
 
 
-/* ============================================================
-   GROUP PAGINATION
-============================================================ */
+  /* ============================================================
+     GROUP PAGINATION
+  ============================================================ */
 
-const paginatedGroupedProducts =
+  const paginatedGroupedProducts =
     useMemo(() => {
 
-        const obj = {};
+      const obj = {};
 
-        paginatedProducts.forEach((item) => {
+      paginatedProducts.forEach((item) => {
 
-            if (!obj[item.category]) {
+        if (!obj[item.category]) {
 
-                obj[item.category] = [];
+          obj[item.category] = [];
 
-            }
+        }
 
-            obj[item.category].push(item);
+        obj[item.category].push(item);
 
-        });
+      });
 
-        return obj;
+      return obj;
 
     }, [paginatedProducts]);
 
 
 
-/* ============================================================
-   SIDEBAR ACCORDION
-============================================================ */
+  /* ============================================================
+     SIDEBAR ACCORDION
+  ============================================================ */
 
-const [openedCategory,
+  const [openedCategory,
     setOpenedCategory] =
     useState("");
 
 
 
-useEffect(() => {
+  useEffect(() => {
+    const categories = Object.keys(groupedProducts);
 
     if (
-
-        Object.keys(
-            groupedProducts
-        ).length
-
-        &&
-
-        !openedCategory
-
+      categories.length > 0 &&
+      openedCategory === ""
     ) {
-
-        setOpenedCategory(
-
-            Object.keys(
-                groupedProducts
-            )[0]
-
-        );
-
+      setTimeout(() => {
+        setOpenedCategory(categories[0]);
+      }, 0);
     }
-
-}, [groupedProducts]);
-
+  }, [groupedProducts, openedCategory]);
 
 
-const toggleCategory = (category) => {
+  const toggleCategory = (category) => {
     if (openedCategory === category) {
-        setOpenedCategory("");
-        return;
+      setOpenedCategory("");
+      return;
     }
     setOpenedCategory(category);
     setActiveCategory(category);
-};
+  };
 
 
 
-/* ============================================================
-   SCROLL TO CATEGORY
-============================================================ */
+  /* ============================================================
+     SCROLL TO CATEGORY
+  ============================================================ */
 
-const scrollToProduct = (slug, category) => {
+  const scrollToProduct = (slug, category) => {
 
     setOpenedCategory(category);
     setActiveCategory(category);
 
     setTimeout(() => {
 
-        const product = document.getElementById(`product-${slug}`);
+      const product = document.getElementById(`product-${slug}`);
 
-        if (product) {
+      if (product) {
 
-            product.scrollIntoView({
-                behavior: "smooth",
-                block: "start",
-            });
+        product.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
 
-        }
+      }
 
     }, 150);
 
-};
+  };
 
 
 
-/* ============================================================
-   ACTIVE CATEGORY WHILE SCROLL
-============================================================ */
+  /* ============================================================
+     ACTIVE CATEGORY WHILE SCROLL
+  ============================================================ */
 
-useEffect(() => {
+  useEffect(() => {
 
     const handleScroll = () => {
 
-        let current = "";
+      let current = "";
 
-        Object.keys(
-            groupedProducts
-        ).forEach((category) => {
+      Object.keys(
+        groupedProducts
+      ).forEach((category) => {
 
-            const section =
-                document.getElementById(
+        const section =
+          document.getElementById(
 
-                    category
-                        .replace(/\s+/g, "-")
-                        .toLowerCase()
+            category
+              .replace(/\s+/g, "-")
+              .toLowerCase()
 
-                );
+          );
 
-            if (!section) return;
+        if (!section) return;
 
-            const top =
-                section.getBoundingClientRect().top;
+        const top =
+          section.getBoundingClientRect().top;
 
-            if (top <= 180) {
+        if (top <= 180) {
 
-                current = category;
-
-            }
-
-        });
-
-        if (
-
-            current
-
-            &&
-
-            current !== activeCategory
-
-        ) {
-
-            setActiveCategory(current);
-
-            // setOpenedCategory(current);
-            setActiveCategory(current);
+          current = category;
 
         }
+
+      });
+
+      if (
+
+        current
+
+        &&
+
+        current !== activeCategory
+
+      ) {
+
+        setActiveCategory(current);
+
+        // setOpenedCategory(current);
+        setActiveCategory(current);
+
+      }
 
     };
 
     window.addEventListener(
 
-        "scroll",
+      "scroll",
 
-        handleScroll
+      handleScroll
 
     );
 
     return () =>
 
-        window.removeEventListener(
+      window.removeEventListener(
 
-            "scroll",
+        "scroll",
 
-            handleScroll
+        handleScroll
 
-        );
+      );
 
-}, [
+  }, [
 
     groupedProducts,
 
     activeCategory
 
-]);
+  ]);
 
 
 
-/* ============================================================
-   RESET FILTER
-============================================================ */
+  /* ============================================================
+     RESET FILTER
+  ============================================================ */
 
-const resetFilters = () => {
+  const resetFilters = () => {
 
     setSearch("");
 
@@ -534,287 +530,192 @@ const resetFilters = () => {
 
     setCurrentPage(1);
 
-};
-
-
-
-/* ============================================================
-   VIEW DETAILS
-============================================================ */
-
-const viewDetails = (item) => {
-
-    router.push(
-
-        citySlug
-
-            ? `/${citySlug}/items/${item.slug}`
-
-            : `/items/${item.slug}`
-
-    );
-
-};
-
-
-useEffect(() => {
-  const section = document.querySelector(".items-section");
-
-  const handleScroll = () => {
-    if (!section) return;
-
-    const rect = section.getBoundingClientRect();
-
-    // section start hone ke baad
-    if (rect.top <= 100 && rect.bottom > window.innerHeight) {
-      setIsSticky(true);
-    } else {
-      setIsSticky(false);
-    }
   };
 
-  window.addEventListener("scroll", handleScroll);
 
-  handleScroll();
 
-  return () =>
-    window.removeEventListener("scroll", handleScroll);
-}, []);
+  /* ============================================================
+     VIEW DETAILS
+  ============================================================ */
 
-return (
-  <>
-    <Toaster
-      position="top-center"
-      containerStyle={{
-        zIndex: 99999,
-      }}
-    />
+  const viewDetails = (item) => {
 
-    {/* ===========================
+    console.log("CLICKED");
+    console.log("ITEM =", item);
+    console.log(
+      citySlug
+        ? `/${citySlug}/items/${item.slug}`
+        : `/items/${item.slug}`
+    );
+
+    router.push(
+      citySlug
+        ? `/${citySlug}/items/${item.slug}`
+        : `/items/${item.slug}`
+    );
+
+  };
+
+
+  useEffect(() => {
+
+    const section =
+      document.querySelector(".items-section");
+
+    const sidebar =
+      document.querySelector(".category-sidebar");
+
+    const wrapper =
+      document.querySelector(".sidebar-wrapper");
+
+    if (!section || !sidebar || !wrapper) return;
+
+    const handleScroll = () => {
+
+      // Mobile => No Sticky
+      if (window.innerWidth <= 992) {
+
+        sidebar.style.width = "";
+        sidebar.style.left = "";
+
+        setIsSticky(false);
+
+        return;
+      }
+
+      const rect =
+        section.getBoundingClientRect();
+
+      const shouldStick =
+        rect.top <= 100 &&
+        rect.bottom >
+        sidebar.offsetHeight + 150;
+
+      if (shouldStick) {
+
+        const wrapperRect =
+          wrapper.getBoundingClientRect();
+
+        sidebar.style.width =
+          `${Math.floor(
+            wrapperRect.width
+          )}px`;
+
+        sidebar.style.left =
+          `${Math.floor(
+            wrapperRect.left +
+            window.scrollX
+          )}px`;
+
+        setIsSticky(true);
+
+      } else {
+
+        sidebar.style.width = "";
+        sidebar.style.left = "";
+
+        setIsSticky(false);
+
+      }
+
+    };
+
+    handleScroll();
+
+    window.addEventListener(
+      "scroll",
+      handleScroll,
+      { passive: true }
+    );
+
+    window.addEventListener(
+      "resize",
+      handleScroll
+    );
+
+    return () => {
+
+      window.removeEventListener(
+        "scroll",
+        handleScroll
+      );
+
+      window.removeEventListener(
+        "resize",
+        handleScroll
+      );
+
+    };
+
+  }, []);
+  return (
+    <>
+      <Toaster
+        position="top-center"
+        containerStyle={{
+          zIndex: 99999,
+        }}
+      />
+
+      {/* ===========================
             HERO
     =========================== */}
 
-    <section className="item-banner">
-      <div className="item-content">
+      <section className="item-banner">
+        <div className="item-content">
 
-        <h1>
-          Medical Products
-        </h1>
+          <h1>
+            Medical Products
+          </h1>
 
-        <p>
-          Find Diagnostic &
-          Laboratory Products
-        </p>
+          <p>
+            Find Diagnostic &
+            Laboratory Products
+          </p>
 
-      </div>
-    </section>
+        </div>
+      </section>
 
-    {/* ===========================
+      {/* ===========================
             MAIN
     =========================== */}
 
-    <section className="items-section">
+      <section className="items-section">
 
-      <div className="container-fluid">
+        <div className="container-fluid">
 
-        <div className="row">
+          <div className="row g-4">
 
-          {/* ===========================
+            {/* ===========================
                 LEFT SIDEBAR
           =========================== */}
-
-                <div
-          className="col-lg-3"
-          style={{
-            position: isSticky ? "fixed" : "relative",
-            top: isSticky ? "100px" : "0",
-            left: isSticky ? "40px" : "0",
-            width: isSticky ? "320px" : "",
-            zIndex: 100,
-          }}
-        >
-
-              <div
-              className="category-sidebar"
-              style={{
-                maxHeight: "calc(100vh - 120px)",
-                overflow: "hidden"
-              }}
+            <div
+              className={`col-lg-3 sidebar-wrapper ${isSticky ? "sticky" : ""
+                }`}
             >
 
-              <div className="sidebar-head">
+              <div
+                className="category-sidebar"
+                style={{
+                  maxHeight: "calc(100vh - 120px)",
+                  overflow: "hidden"
+                }}
+              >
 
-                <h4>
-                  Categories
-                </h4>
+                <div className="sidebar-head">
 
-              </div>
+                  <h4>
+                    Categories
+                  </h4>
 
-              <div className="category-search">
+                </div>
 
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Search Product..."
-                  value={search}
-                  onChange={(e) => {
-
-                    setSearch(
-                      e.target.value
-                    );
-
-                  }}
-                />
-
-              </div>
-
-              <div className="category-list">
-
-                {
-
-                  Object.keys(
-                    groupedProducts
-                  ).map((category) => (
-
-                    <div
-                      className="category-item"
-                      key={category}
-                    >
-
-                      <button
-
-                        className={`category-btn
-
-                        ${activeCategory === category
-                            ? "active"
-                            : ""}
-
-                        `}
-
-                        onClick={() =>
-                          toggleCategory(
-                            category
-                          )
-                        }
-
-                      >
-
-                        <span>
-
-                          {
-
-                            openedCategory === category
-
-                              ?
-
-                              <FiChevronDown />
-
-                              :
-
-                              <FiChevronRight />
-
-                          }
-
-                          {category}
-
-                        </span>
-
-                        <span
-                          className="count"
-                        >
-
-                          {
-
-                            groupedProducts[
-                              category
-                            ].length
-
-                          }
-
-                        </span>
-
-                      </button>
-
-                      <div
-
-                        className={`category-content
-
-                        ${openedCategory === category
-                            ? "show"
-                            : ""}
-
-                        `}
-
-                      >
-
-                        {
-
-                          // groupedProducts[
-                          //   category
-                          // ].map((item) => (
-                            groupedProducts[category].map((item, index) => (
-
-                            <button
-
-                              // key={item.slug}
-                              key={`${item.slug}-${index}`}
-
-                              className="product-link"
-
-                        onClick={() =>
-                          scrollToProduct(
-                              item.slug,
-                              category
-                          )
-                      }
-
-                            >
-
-                              {item.title}
-
-                            </button>
-
-                          ))
-
-                        }
-
-                      </div>
-
-                    </div>
-
-                  ))
-
-                }
-
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* ===========================
-                RIGHT SIDE
-          =========================== */}
-
-          <div
-            className="col-lg-9"
-            style={{
-              marginLeft: isSticky ? "340px" : "",
-            }}
-          >
-
-            {/* FILTER */}
-
-            <div className="filter-card">
-
-              <div className="row g-3">
-
-                <div className="col-lg-4">
+                <div className="category-search">
 
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Search..."
+                    placeholder="Search Product..."
                     value={search}
                     onChange={(e) => {
 
@@ -827,91 +728,123 @@ return (
 
                 </div>
 
-                <div className="col-lg-3">
+                <div className="category-list">
 
-                  <select
-                    className="form-select"
-                    value={selectedBrand}
-                    onChange={(e) =>
-                      setSelectedBrand(
-                        e.target.value
-                      )
-                    }
-                  >
+                  {
 
-                    <option value="">
-                      Brand
-                    </option>
+                    Object.keys(
+                      groupedProducts
+                    ).map((category) => (
 
-                    {
+                      <div
+                        className="category-item"
+                        key={category}
+                      >
 
-                      brands.map((b) => (
+                        <button
 
-                        <option
-                          key={b}
-                          value={b}
+                          className={`category-btn
+
+                        ${activeCategory === category
+                              ? "active"
+                              : ""}
+
+                        `}
+
+                          onClick={() =>
+                            toggleCategory(
+                              category
+                            )
+                          }
+
                         >
-                          {b}
-                        </option>
 
-                      ))
+                          <span>
 
-                    }
+                            {
 
-                  </select>
+                              openedCategory === category
 
-                </div>
+                                ?
 
-                <div className="col-lg-3">
+                                <FiChevronDown />
 
-                  <select
-                    className="form-select"
-                    value={selectedUsage}
-                    onChange={(e) =>
-                      setSelectedUsage(
-                        e.target.value
-                      )
-                    }
-                  >
+                                :
 
-                    <option value="">
-                      Usage
-                    </option>
+                                <FiChevronRight />
 
-                    {
+                            }
 
-                      usages.map((u) => (
+                            {category}
 
-                        <option
-                          key={u}
-                          value={u}
+                          </span>
+
+                          <span
+                            className="count"
+                          >
+
+                            {
+
+                              groupedProducts[
+                                category
+                              ].length
+
+                            }
+
+                          </span>
+
+                        </button>
+
+                        <div
+
+                          className={`category-content
+
+                        ${openedCategory === category
+                              ? "show"
+                              : ""}
+
+                        `}
+
                         >
-                          {u}
-                        </option>
 
-                      ))
+                          {
 
-                    }
+                            // groupedProducts[
+                            //   category
+                            // ].map((item) => (
+                            groupedProducts[category].map((item, index) => (
 
-                  </select>
+                              <button
 
-                </div>
+                                // key={item.slug}
+                                key={`${item.slug}-${index}`}
 
-                <div className="col-lg-2">
+                                className="product-link"
 
-                  <button
+                                onClick={() =>
+                                  scrollToProduct(
+                                    item.slug,
+                                    category
+                                  )
+                                }
 
-                    className="btn-reset"
+                              >
 
-                    onClick={
-                      resetFilters
-                    }
+                                {item.title}
 
-                  >
+                              </button>
 
-                    Reset
+                            ))
 
-                  </button>
+                          }
+
+                        </div>
+
+                      </div>
+
+                    ))
+
+                  }
 
                 </div>
 
@@ -919,157 +852,282 @@ return (
 
             </div>
 
-            {/* PRODUCT LIST START */}
+            {/* ===========================
+                RIGHT SIDE
+          =========================== */}
 
-            {
+            <div className="col-lg-9">
 
-              Object.entries(
-                paginatedGroupedProducts
-              ).map(
+              {/* FILTER */}
 
-                ([category, list]) => (
+              <div className="filter-card">
 
-                  <div
+                <div className="row g-3">
 
-                    key={category}
+                  <div className="col-lg-4">
 
-                    id={category
-                      .replace(/\s+/g, "-")
-                      .toLowerCase()}
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Search..."
+                      value={search}
+                      onChange={(e) => {
 
-                    className="product-section"
+                        setSearch(
+                          e.target.value
+                        );
 
-                  >
+                      }}
+                    />
 
-                    <div className="section-title">
+                  </div>
 
-                      <h3>
+                  <div className="col-lg-3">
 
-                        {category}
-
-                      </h3>
-
-                      <span>
-
-                        {
-
-                          list.length
-
-                        }
-
-                        Products
-
-                      </span>
-
-                    </div>
-
-                                        {
-
-                      // list.map((item) => (
-                        list.map((item, index) => (
-
-                      <div
-                        id={`product-${item.slug}`}
-                        className="product-list-card"
-                        key={`${item.slug}-${index}`}
+                    <select
+                      className="form-select"
+                      value={selectedBrand}
+                      onChange={(e) =>
+                        setSelectedBrand(
+                          e.target.value
+                        )
+                      }
                     >
 
-                          <div className="row align-items-center">
+                      <option value="">
+                        Brand
+                      </option>
 
-                            {/* IMAGE */}
+                      {
 
-                            <div className="col-lg-3 col-md-4">
+                        brands.map((b) => (
 
-                              <div className="list-image">
+                          <option
+                            key={b}
+                            value={b}
+                          >
+                            {b}
+                          </option>
 
-                                <img
-                                  src={
-                                    item.image ||
-                                    "/no-image.png"
-                                  }
-                                  alt={item.title}
-                                />
+                        ))
+
+                      }
+
+                    </select>
+
+                  </div>
+
+                  <div className="col-lg-3">
+
+                    <select
+                      className="form-select"
+                      value={selectedUsage}
+                      onChange={(e) =>
+                        setSelectedUsage(
+                          e.target.value
+                        )
+                      }
+                    >
+
+                      <option value="">
+                        Usage
+                      </option>
+
+                      {
+
+                        usages.map((u) => (
+
+                          <option
+                            key={u}
+                            value={u}
+                          >
+                            {u}
+                          </option>
+
+                        ))
+
+                      }
+
+                    </select>
+
+                  </div>
+
+                  <div className="col-lg-2">
+
+                    <button
+
+                      className="btn-reset"
+
+                      onClick={
+                        resetFilters
+                      }
+
+                    >
+
+                      Reset
+
+                    </button>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* PRODUCT LIST START */}
+
+              {
+
+                Object.entries(
+                  paginatedGroupedProducts
+                ).map(
+
+                  ([category, list]) => (
+
+                    <div
+
+                      key={category}
+
+                      id={category
+                        .replace(/\s+/g, "-")
+                        .toLowerCase()}
+
+                      className="product-section"
+
+                    >
+
+                      <div className="section-title">
+
+                        <h3>
+
+                          {category}
+
+                        </h3>
+
+                        <span>
+
+                          {
+
+                            list.length
+
+                          }
+
+                          Products
+
+                        </span>
+
+                      </div>
+
+                      {
+
+                        // list.map((item) => (
+                        list.map((item, index) => (
+
+                          <div
+                            id={`product-${item.slug}`}
+                            className="product-list-card"
+                            key={`${item.slug}-${index}`}
+                          >
+
+                            <div className="row align-items-center">
+
+                              {/* IMAGE */}
+
+                              <div className="col-lg-3 col-md-4">
+
+                                <div className="list-image">
+
+                                  <img
+                                    src={
+                                      item.images?.[0] ||
+                                      item.image ||
+                                      "/no-image.png"
+                                    }
+                                    alt={item.title}
+                                  />
+
+                                </div>
 
                               </div>
 
-                            </div>
+                              {/* DETAILS */}
 
-                            {/* DETAILS */}
+                              <div className="col-lg-6 col-md-8">
 
-                            <div className="col-lg-6 col-md-8">
+                                <div className="list-content">
 
-                              <div className="list-content">
+                                  <h4>
+                                    {item.title}
+                                  </h4>
 
-                                <h4>
-                                  {item.title}
-                                </h4>
+                                  <p>
+                                    {item.desc}
+                                  </p>
 
-                                <p>
-                                  {item.desc}
-                                </p>
+                                  <div className="spec-grid">
 
-                                <div className="spec-grid">
+                                    <div>
+                                      <b>Brand</b>
 
-                                  <div>
-                                    <b>Brand</b>
+                                      <span>
 
-                                    <span>
+                                        {
+                                          item.brand ||
+                                          "-"
 
-                                      {
-                                        item.brand ||
-                                        "-"
+                                        }
 
-                                      }
+                                      </span>
 
-                                    </span>
+                                    </div>
 
-                                  </div>
+                                    <div>
 
-                                  <div>
+                                      <b>Usage</b>
 
-                                    <b>Usage</b>
+                                      <span>
 
-                                    <span>
+                                        {
+                                          item.usage ||
+                                          "-"
 
-                                      {
-                                        item.usage ||
-                                        "-"
+                                        }
 
-                                      }
+                                      </span>
 
-                                    </span>
+                                    </div>
 
-                                  </div>
+                                    <div>
 
-                                  <div>
+                                      <b>Model</b>
 
-                                    <b>Model</b>
+                                      <span>
 
-                                    <span>
+                                        {
+                                          item.model ||
+                                          "-"
 
-                                      {
-                                        item.model ||
-                                        "-"
+                                        }
 
-                                      }
+                                      </span>
 
-                                    </span>
+                                    </div>
 
-                                  </div>
+                                    <div>
 
-                                  <div>
+                                      <b>Availability</b>
 
-                                    <b>Availability</b>
+                                      <span>
 
-                                    <span>
+                                        {
+                                          item.availability ||
+                                          "-"
 
-                                      {
-                                        item.availability ||
-                                        "-"
+                                        }
 
-                                      }
+                                      </span>
 
-                                    </span>
+                                    </div>
 
                                   </div>
 
@@ -1077,29 +1135,27 @@ return (
 
                               </div>
 
-                            </div>
+                              {/* ACTION */}
 
-                            {/* ACTION */}
+                              <div className="col-lg-3">
 
-                            <div className="col-lg-3">
+                                <div className="product-action">
 
-                              <div className="product-action">
+                                  <button
 
-                                <button
+                                    className="btn-view"
 
-                                  className="btn-view"
+                                    onClick={() =>
+                                      viewDetails(item)
+                                    }
 
-                                  onClick={() =>
-                                    viewDetails(item)
-                                  }
+                                  >
 
-                                >
+                                    View Details
 
-                                  View Details
+                                  </button>
 
-                                </button>
-
-                                {/* <button
+                                  {/* <button
 
                                   className="btn-enquiry"
 
@@ -1109,146 +1165,148 @@ return (
 
                                 </button> */}
 
+                                </div>
+
                               </div>
 
                             </div>
 
                           </div>
 
-                        </div>
+                        ))
 
-                      ))
+                      }
 
-                    }
+                    </div>
 
-                  </div>
+                  )
 
                 )
 
-              )
+              }
 
-            }
+              {/* PAGINATION */}
 
-            {/* PAGINATION */}
+              <div className="pagination-card">
 
-            <div className="pagination-card">
+                <div className="pagination-wrapper">
 
-              <div className="pagination-wrapper">
+                  <div className="page-left">
 
-                <div className="page-left">
+                    <span>
 
-                  <span>
+                      Per Page
 
-                    Per Page
+                    </span>
 
-                  </span>
+                    <select
 
-                  <select
+                      className="custom-select"
 
-                    className="custom-select"
+                      value={itemsPerPage}
 
-                    value={itemsPerPage}
+                      onChange={(e) => {
 
-                    onChange={(e)=>{
+                        const value =
+                          e.target.value === "all"
+                            ? "all"
+                            : Number(
+                              e.target.value
+                            );
 
-                      const value =
-                      e.target.value==="all"
-                      ?"all"
-                      :Number(
-                        e.target.value
-                      );
+                        setItemsPerPage(
+                          value
+                        );
 
-                      setItemsPerPage(
-                        value
-                      );
+                        setCurrentPage(1);
 
-                      setCurrentPage(1);
+                      }}
 
-                    }}
+                    >
 
-                  >
+                      <option value={10}>10</option>
 
-                    <option value={10}>10</option>
+                      <option value={25}>25</option>
 
-                    <option value={25}>25</option>
+                      <option value={50}>50</option>
 
-                    <option value={50}>50</option>
+                      <option value={100}>100</option>
 
-                    <option value={100}>100</option>
+                      <option value="all">
+                        All
+                      </option>
 
-                    <option value="all">
-                      All
-                    </option>
+                    </select>
 
-                  </select>
+                  </div>
 
-                </div>
+                  <div className="page-right">
 
-                <div className="page-right">
+                    <button
 
-                  <button
+                      className="btn"
 
-                    className="btn"
+                      disabled={
+                        currentPage === 1
+                      }
 
-                    disabled={
-                      currentPage===1
-                    }
+                      onClick={() =>
 
-                    onClick={()=>
+                        setCurrentPage(
 
-                      setCurrentPage(
+                          p => p - 1
 
-                        p=>p-1
+                        )
 
-                      )
+                      }
 
-                    }
+                    >
 
-                  >
+                      ◀
 
-                    ◀
+                    </button>
 
-                  </button>
+                    <button
+                      className="btn btn-primary"
+                    >
 
-                  <button
-                    className="btn btn-primary"
-                  >
+                      {
 
-                    {
+                        currentPage
 
-                      currentPage
+                      }
 
-                    }
+                    </button>
 
-                  </button>
+                    <button
 
-                  <button
+                      className="btn"
 
-                    className="btn"
+                      disabled={
 
-                    disabled={
+                        currentPage ===
 
-                      currentPage===
+                        totalPages
 
-                      totalPages
+                      }
 
-                    }
+                      onClick={() =>
 
-                    onClick={()=>
+                        setCurrentPage(
 
-                      setCurrentPage(
+                          p => p + 1
 
-                        p=>p+1
+                        )
 
-                      )
+                      }
 
-                    }
+                    >
 
-                  >
+                      ▶
 
-                    ▶
+                    </button>
 
-                  </button>
+                  </div>
 
                 </div>
 
@@ -1260,11 +1318,9 @@ return (
 
         </div>
 
-      </div>
+      </section>
 
-    </section>
+    </>
 
-  </>
-
-);
+  );
 }
