@@ -336,15 +336,6 @@ SIDEBAR
   /* height: 100%; */
 }
 
-.category-sidebar {
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #eee;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
-  height: fit-content;
-  max-height: calc(100vh - 120px);
-  overflow: hidden;
-}
 
 .sidebar-head {
   padding: 18px;
@@ -387,13 +378,20 @@ SIDEBAR
 CATEGORY
 ==============================*/
 @media (max-width:992px) {
-  .sticky-sidebar {
-    position: static;
+
+  .category-sidebar {
+    position: relative;
+    top: 0;
+    max-height: none;
   }
+
 }
 
 .category-item {
+
   border-bottom: 1px solid #f3f3f3;
+
+  position: relative;
 }
 
 .category-btn {
@@ -419,6 +417,10 @@ CATEGORY
   transition: .35s;
 
   cursor: pointer;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #fff;
 
 }
 
@@ -451,6 +453,56 @@ CATEGORY
   background: #2563eb;
 
   color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 51;
+}
+
+.products-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 30px;
+}
+
+.category-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+
+  position: sticky;
+  top: 100px;
+
+  height: fit-content;
+  max-height: calc(100vh - 120px);
+
+  overflow: hidden;
+
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
+}
+
+.products-content {
+  flex: 1;
+}
+
+@media(max-width:992px) {
+
+  .products-layout {
+    flex-direction: column;
+  }
+
+  .category-sidebar {
+
+    width: 100%;
+
+    position: relative;
+
+    top: 0;
+
+    max-height: none;
+
+  }
 
 }
 
@@ -510,31 +562,31 @@ ACCORDION
 
   width: 100%;
 
-  border: none;
-
-  background: none;
-
-  padding: 12px 22px;
-
   text-align: left;
 
-  font-size: 14px;
+  padding: 8px 12px;
 
-  transition: .3s;
+  margin: 4px 0;
 
-  cursor: pointer;
+  border: none;
 
-  border-left: 3px solid transparent;
+  background: transparent;
+
+  border-radius: 8px;
+
+  color: #555;
+
+  transition: .2s;
 
 }
 
 .product-link:hover {
 
-  background: #fafafa;
-
-  border-left: 3px solid #2563eb;
+  background: #f5f7fb;
 
   color: #2563eb;
+
+  padding-left: 18px;
 
 }
 
@@ -1725,18 +1777,157 @@ SCROLLBAR
   align-items: flex-start;
 }
 
+
+
 .sidebar-wrapper {
+  align-self: flex-start;
+}
+
+
+.subcategory-btn {
+
+  width: calc(100% - 20px);
+
+  margin: 8px 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 10px 14px;
+
+  background: #f8f9fc;
+
+  border: 1px solid #edf0f6;
+
+  border-radius: 10px;
+
+  cursor: pointer;
+
+  color: #4a5568;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  transition: all .25s ease;
+}
+
+.subcategory-btn span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.subcategory-btn:hover {
+
+  background: #eef4ff;
+
+  border-color: #d6e4ff;
+
+  color: #2563eb;
+
+}
+
+.subcategory-btn.active {
+
+  background: #ffffff;
+
+  color: #2563eb !;
+
+  border-left: 4px solid #2563eb;
+
+  border-radius: 10px;
+
+  box-shadow: 0 5px 18px rgba(37, 99, 235, .12);
+
+}
+
+.subcategory-btn.active span {
+  color: #2563eb;
+}
+
+.subcategory-btn.active svg {
+  color: #2563eb;
+}
+
+.subcategory-btn.active .count {
+  background: #2563eb;
+  color: #fff;
+}
+
+.subcategory-btn .count {
+
+  background: #edf2ff;
+
+  color: #2563eb;
+
+  width: 28px;
+
+  height: 28px;
+
+  border-radius: 50%;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+}
+
+.subcategory-products {
+
+  margin: 0 12px 10px 30px;
+
+  padding-left: 12px;
+
+  border-left: 2px solid #edf1f7;
+
+  max-height: 220px;
+
+  overflow-y: auto;
+
   position: relative;
-  min-height: 1px;
 }
 
-.sidebar-wrapper.sticky {
-  min-height: 700px;
+.subcategory-products::-webkit-scrollbar {
+  width: 6px;
 }
 
-.sidebar-wrapper.sticky .category-sidebar {
-  position: fixed;
-  top: 100px;
-  z-index: 100;
-  will-change: transform;
+.subcategory-products::-webkit-scrollbar-track {
+  background: #f3f3f3;
+  border-radius: 20px;
+}
+
+.subcategory-products::-webkit-scrollbar-thumb {
+  background: #b8b8b8;
+  border-radius: 20px;
+}
+
+.subcategory-products::-webkit-scrollbar-thumb:hover {
+  background: #7b7b7b;
+}
+
+.category-scroll {
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.category-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.category-scroll::-webkit-scrollbar-thumb {
+  background: #c5c5c5;
+  border-radius: 20px;
+}
+
+.category-scroll::-webkit-scrollbar-track {
+  background: #f5f5f5;
 }

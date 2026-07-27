@@ -7,6 +7,8 @@ import toast, { Toaster } from "react-hot-toast";
 import {
   doc,
   getDoc,
+  collection,
+  getDocs,
 } from "firebase/firestore";
 import {
   FiFilter,
@@ -18,7 +20,6 @@ import { useRouter } from "next/navigation";
 export default function ItemsPage({ city }) {
 
   const router = useRouter();
-  const [isSticky, setIsSticky] = useState(false);
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
@@ -30,9 +31,6 @@ export default function ItemsPage({ city }) {
 
   const [showFilters, setShowFilters] = useState(false);
 
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const [itemsPerPage, setItemsPerPage] = useState(25);
 
   const currentCity = city || "";
 
@@ -150,7 +148,63 @@ export default function ItemsPage({ city }) {
 
           }));
 
-        setProducts(formatted);
+        // Normal Products
+        const normalProducts = formatted;
+
+        // Category Products
+        const categorySnap = await getDocs(
+          collection(
+            db,
+            "websites",
+            "indiandiagnostic",
+            "pages",
+            "categoryproducts",
+            "categories"
+          )
+        );
+
+        let categoryProducts = [];
+
+        for (const categoryDoc of categorySnap.docs) {
+
+          const categoryData = categoryDoc.data();
+
+          const subSnap = await getDocs(
+            collection(
+              db,
+              "websites",
+              "indiandiagnostic",
+              "pages",
+              "categoryproducts",
+              "categories",
+              categoryDoc.id,
+              "subcategories"
+            )
+          );
+
+          subSnap.forEach((subDoc) => {
+
+            const subData = subDoc.data();
+
+            (subData.products || []).forEach((item) => {
+
+              categoryProducts.push({
+                ...item,
+                category: categoryData.category,
+                subCategory: subData.subCategory,
+              });
+
+            });
+
+          });
+
+        }
+
+        // Merge Both
+        setProducts([
+          ...normalProducts,
+          ...categoryProducts,
+        ]);
 
       } catch (err) {
 
@@ -233,26 +287,29 @@ export default function ItemsPage({ city }) {
 
   /* -------------------------------- */
 
-  const groupedProducts =
-    useMemo(() => {
+  const groupedProducts = useMemo(() => {
 
-      const obj = {};
+    const obj = {};
 
-      filteredProducts.forEach((item) => {
+    filteredProducts.forEach((item) => {
 
-        if (!obj[item.category]) {
+      if (!obj[item.category]) {
+        obj[item.category] = {};
+      }
 
-          obj[item.category] = [];
+      const subCategory = item.subCategory || "Other";
 
-        }
+      if (!obj[item.category][subCategory]) {
+        obj[item.category][subCategory] = [];
+      }
 
-        obj[item.category].push(item);
+      obj[item.category][subCategory].push(item);
 
-      });
+    });
 
-      return obj;
+    return obj;
 
-    }, [filteredProducts]);
+  }, [filteredProducts]);
 
 
 
@@ -309,65 +366,27 @@ export default function ItemsPage({ city }) {
   }, [filteredProducts]);
 
 
-
-  /* ============================================================
-     PAGINATION
-  ============================================================ */
-
-  const totalItems = filteredProducts.length;
-
-  const totalPages =
-    itemsPerPage === "all"
-      ? 1
-      : Math.ceil(
-        totalItems /
-        itemsPerPage
-      );
-
-
-
-  const paginatedProducts =
-    itemsPerPage === "all"
-
-      ? filteredProducts
-
-      : filteredProducts.slice(
-
-        (currentPage - 1) *
-        itemsPerPage,
-
-        currentPage *
-        itemsPerPage
-
-      );
-
-
-
   /* ============================================================
      GROUP PAGINATION
   ============================================================ */
 
-  const paginatedGroupedProducts =
-    useMemo(() => {
+  const paginatedGroupedProducts = useMemo(() => {
 
-      const obj = {};
+    const obj = {};
 
-      paginatedProducts.forEach((item) => {
+    filteredProducts.forEach((item) => {
 
-        if (!obj[item.category]) {
+      if (!obj[item.category]) {
+        obj[item.category] = [];
+      }
 
-          obj[item.category] = [];
+      obj[item.category].push(item);
 
-        }
+    });
 
-        obj[item.category].push(item);
+    return obj;
 
-      });
-
-      return obj;
-
-    }, [paginatedProducts]);
-
+  }, [filteredProducts]);
 
 
   /* ============================================================
@@ -378,33 +397,59 @@ export default function ItemsPage({ city }) {
     setOpenedCategory] =
     useState("");
 
-
+  const [openedSubCategory, setOpenedSubCategory] = useState({});
 
   useEffect(() => {
+
     const categories = Object.keys(groupedProducts);
 
-    if (
-      categories.length > 0 &&
-      openedCategory === ""
-    ) {
-      setTimeout(() => {
-        setOpenedCategory(categories[0]);
-      }, 0);
-    }
-  }, [groupedProducts, openedCategory]);
+    if (!categories.length) return;
 
+    setOpenedCategory((prev) => {
+      return prev || categories[0];
+    });
+
+  }, [groupedProducts]);
+  useEffect(() => {
+
+    if (Object.keys(groupedProducts).length === 0) return;
+
+    const initialState = {};
+
+    Object.entries(groupedProducts).forEach(([category, subCategories]) => {
+
+      const firstSubCategory = Object.keys(subCategories)[0];
+
+      if (firstSubCategory) {
+        initialState[`${category}-${firstSubCategory}`] = true;
+      }
+
+    });
+
+    queueMicrotask(() => {
+      setOpenedSubCategory(initialState);
+    });
+
+  }, [groupedProducts]);
 
   const toggleCategory = (category) => {
-    if (openedCategory === category) {
-      setOpenedCategory("");
-      return;
-    }
-    setOpenedCategory(category);
-    setActiveCategory(category);
+
+    setOpenedCategory((prev) =>
+      prev === category ? "" : category
+    );
+
   };
 
+  const toggleSubCategory = (category, subCategory) => {
 
+    const key = `${category}-${subCategory}`;
 
+    setOpenedSubCategory((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+
+  };
   /* ============================================================
      SCROLL TO CATEGORY
   ============================================================ */
@@ -468,22 +513,8 @@ export default function ItemsPage({ city }) {
         }
 
       });
-
-      if (
-
-        current
-
-        &&
-
-        current !== activeCategory
-
-      ) {
-
+      if (current && current !== activeCategory) {
         setActiveCategory(current);
-
-        // setOpenedCategory(current);
-        setActiveCategory(current);
-
       }
 
     };
@@ -528,7 +559,6 @@ export default function ItemsPage({ city }) {
 
     setSelectedUsage("");
 
-    setCurrentPage(1);
 
   };
 
@@ -557,105 +587,9 @@ export default function ItemsPage({ city }) {
   };
 
 
-  useEffect(() => {
 
-    const section =
-      document.querySelector(".items-section");
-
-    const sidebar =
-      document.querySelector(".category-sidebar");
-
-    const wrapper =
-      document.querySelector(".sidebar-wrapper");
-
-    if (!section || !sidebar || !wrapper) return;
-
-    const handleScroll = () => {
-
-      // Mobile => No Sticky
-      if (window.innerWidth <= 992) {
-
-        sidebar.style.width = "";
-        sidebar.style.left = "";
-
-        setIsSticky(false);
-
-        return;
-      }
-
-      const rect =
-        section.getBoundingClientRect();
-
-      const shouldStick =
-        rect.top <= 100 &&
-        rect.bottom >
-        sidebar.offsetHeight + 150;
-
-      if (shouldStick) {
-
-        const wrapperRect =
-          wrapper.getBoundingClientRect();
-
-        sidebar.style.width =
-          `${Math.floor(
-            wrapperRect.width
-          )}px`;
-
-        sidebar.style.left =
-          `${Math.floor(
-            wrapperRect.left +
-            window.scrollX
-          )}px`;
-
-        setIsSticky(true);
-
-      } else {
-
-        sidebar.style.width = "";
-        sidebar.style.left = "";
-
-        setIsSticky(false);
-
-      }
-
-    };
-
-    handleScroll();
-
-    window.addEventListener(
-      "scroll",
-      handleScroll,
-      { passive: true }
-    );
-
-    window.addEventListener(
-      "resize",
-      handleScroll
-    );
-
-    return () => {
-
-      window.removeEventListener(
-        "scroll",
-        handleScroll
-      );
-
-      window.removeEventListener(
-        "resize",
-        handleScroll
-      );
-
-    };
-
-  }, []);
   return (
     <>
-      <Toaster
-        position="top-center"
-        containerStyle={{
-          zIndex: 99999,
-        }}
-      />
 
       {/* ===========================
             HERO
@@ -684,179 +618,194 @@ export default function ItemsPage({ city }) {
 
         <div className="container-fluid">
 
-          <div className="row g-4">
+          <div className="products-layout">
 
             {/* ===========================
                 LEFT SIDEBAR
           =========================== */}
-            <div
-              className={`col-lg-3 sidebar-wrapper ${isSticky ? "sticky" : ""
-                }`}
-            >
+            <aside className="category-sidebar">
 
-              <div
-                className="category-sidebar"
-                style={{
-                  maxHeight: "calc(100vh - 120px)",
-                  overflow: "hidden"
-                }}
-              >
 
-                <div className="sidebar-head">
 
-                  <h4>
-                    Categories
-                  </h4>
+              <div className="sidebar-head">
 
-                </div>
+                <h4>
+                  Categories
+                </h4>
 
-                <div className="category-search">
+              </div>
 
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Search Product..."
-                    value={search}
-                    onChange={(e) => {
+              <div className="category-search">
 
-                      setSearch(
-                        e.target.value
-                      );
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search Product..."
+                  value={search}
+                  onChange={(e) => {
 
-                    }}
-                  />
+                    setSearch(
+                      e.target.value
+                    );
 
-                </div>
+                  }}
+                />
 
-                <div className="category-list">
+              </div>
 
-                  {
+              <div className="category-list">
 
-                    Object.keys(
-                      groupedProducts
-                    ).map((category) => (
+                {
 
-                      <div
-                        className="category-item"
-                        key={category}
-                      >
+                  Object.keys(
+                    groupedProducts
+                  ).map((category) => (
 
-                        <button
+                    <div
+                      className="category-item"
+                      key={category}
+                    >
 
-                          className={`category-btn
+                      <button
+
+                        className={`category-btn
 
                         ${activeCategory === category
-                              ? "active"
-                              : ""}
+                            ? "active"
+                            : ""}
 
                         `}
 
-                          onClick={() =>
-                            toggleCategory(
-                              category
-                            )
+                        onClick={() =>
+                          toggleCategory(
+                            category
+                          )
+                        }
+
+                      >
+
+                        <span>
+
+                          {
+
+                            openedCategory === category
+
+                              ?
+
+                              <FiChevronDown />
+
+                              :
+
+                              <FiChevronRight />
+
                           }
 
+                          {category}
+
+                        </span>
+
+                        <span
+                          className="count"
                         >
 
-                          <span>
+                          {
 
-                            {
+                            Object.values(groupedProducts[category])
+                              .flat()
+                              .length
 
-                              openedCategory === category
+                          }
 
-                                ?
+                        </span>
 
-                                <FiChevronDown />
+                      </button>
 
-                                :
+                      <div
+                        className={`category-content
+  ${openedCategory === category ? "show" : ""}
+`}
+                      >
 
-                                <FiChevronRight />
-
-                            }
-
-                            {category}
-
-                          </span>
-
-                          <span
-                            className="count"
-                          >
-
-                            {
-
-                              groupedProducts[
-                                category
-                              ].length
-
-                            }
-
-                          </span>
-
-                        </button>
-
-                        <div
-
-                          className={`category-content
-
-                        ${openedCategory === category
-                              ? "show"
-                              : ""}
-
-                        `}
-
-                        >
+                        <div className="category-scroll">
 
                           {
 
                             // groupedProducts[
                             //   category
                             // ].map((item) => (
-                            groupedProducts[category].map((item, index) => (
+                            Object.entries(groupedProducts[category]).map(
+                              ([subCategory, products]) => (
+                                <div
+                                  key={subCategory}
+                                  className="subcategory-item"
+                                >
 
-                              <button
+                                  <button
+                                    className={`subcategory-btn ${openedSubCategory[`${category}-${subCategory}`]
+                                      ? "active"
+                                      : ""
+                                      }`}
+                                    onClick={() =>
+                                      toggleSubCategory(category, subCategory)
+                                    }
+                                  >
+                                    <span>
+                                      {openedSubCategory[`${category}-${subCategory}`]
+                                        ? <FiChevronDown />
+                                        : <FiChevronRight />}
+                                      {subCategory}
+                                    </span>
 
-                                // key={item.slug}
-                                key={`${item.slug}-${index}`}
+                                    <span className="count">
+                                      {products.length}
+                                    </span>
+                                  </button>
+                                  {openedSubCategory[`${category}-${subCategory}`] && (
+                                    <div className="subcategory-products">
 
-                                className="product-link"
+                                      {products.map((item, index) => (
 
-                                onClick={() =>
-                                  scrollToProduct(
-                                    item.slug,
-                                    category
-                                  )
-                                }
+                                        <button
+                                          key={`${item.slug}-${index}`}
+                                          className="product-link"
+                                          onClick={() =>
+                                            scrollToProduct(item.slug, category)
+                                          }
+                                        >
+                                          {item.title}
+                                        </button>
 
-                              >
+                                      ))}
 
-                                {item.title}
+                                    </div>
+                                  )}
 
-                              </button>
-
-                            ))
+                                </div>
+                              )
+                            )
 
                           }
 
                         </div>
 
                       </div>
+                    </div>
 
-                    ))
+                  ))
 
-                  }
-
-                </div>
+                }
 
               </div>
 
-            </div>
+
+
+            </aside>
 
             {/* ===========================
                 RIGHT SIDE
           =========================== */}
 
-            <div className="col-lg-9">
+            <div className="products-content">
 
               {/* FILTER */}
 
@@ -1185,132 +1134,7 @@ export default function ItemsPage({ city }) {
 
               }
 
-              {/* PAGINATION */}
 
-              <div className="pagination-card">
-
-                <div className="pagination-wrapper">
-
-                  <div className="page-left">
-
-                    <span>
-
-                      Per Page
-
-                    </span>
-
-                    <select
-
-                      className="custom-select"
-
-                      value={itemsPerPage}
-
-                      onChange={(e) => {
-
-                        const value =
-                          e.target.value === "all"
-                            ? "all"
-                            : Number(
-                              e.target.value
-                            );
-
-                        setItemsPerPage(
-                          value
-                        );
-
-                        setCurrentPage(1);
-
-                      }}
-
-                    >
-
-                      <option value={10}>10</option>
-
-                      <option value={25}>25</option>
-
-                      <option value={50}>50</option>
-
-                      <option value={100}>100</option>
-
-                      <option value="all">
-                        All
-                      </option>
-
-                    </select>
-
-                  </div>
-
-                  <div className="page-right">
-
-                    <button
-
-                      className="btn"
-
-                      disabled={
-                        currentPage === 1
-                      }
-
-                      onClick={() =>
-
-                        setCurrentPage(
-
-                          p => p - 1
-
-                        )
-
-                      }
-
-                    >
-
-                      ◀
-
-                    </button>
-
-                    <button
-                      className="btn btn-primary"
-                    >
-
-                      {
-
-                        currentPage
-
-                      }
-
-                    </button>
-
-                    <button
-
-                      className="btn"
-
-                      disabled={
-
-                        currentPage ===
-
-                        totalPages
-
-                      }
-
-                      onClick={() =>
-
-                        setCurrentPage(
-
-                          p => p + 1
-
-                        )
-
-                      }
-
-                    >
-
-                      ▶
-
-                    </button>
-
-                  </div>
-
-                </div>
-
-              </div>
 
             </div>
 
@@ -1318,7 +1142,7 @@ export default function ItemsPage({ city }) {
 
         </div>
 
-      </section>
+      </section >
 
     </>
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, usePathname } from "next/navigation";
-import { doc, getDoc, addDoc, collection } from "firebase/firestore";
+import { doc, getDoc, getDocs, addDoc, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import toast, { Toaster } from "react-hot-toast";
 import styles from "./page.module.css";
@@ -16,7 +16,19 @@ export default function ProductDetailPage() {
     const [selectedImage, setSelectedImage] = useState("");
     const [selectedMedia, setSelectedMedia] = useState("image");
     useEffect(() => {
+
         const fetchProduct = async () => {
+
+            const slugify = (text = "") =>
+                text
+                    .toLowerCase()
+                    .trim()
+                    .replace(/[^a-z0-9\s-]/g, "")
+                    .replace(/\s+/g, "-");
+
+            let allProducts = [];
+
+            // Normal Products
             const snap = await getDoc(
                 doc(
                     db,
@@ -27,18 +39,60 @@ export default function ProductDetailPage() {
                 )
             );
 
-            if (!snap.exists()) return;
+            if (snap.exists()) {
+                allProducts = [...(snap.data().products || [])];
+            }
 
-            const products = snap.data().products || [];
-            console.log("Total Products =", products.length);
-            const slugify = (text = "") =>
-                text
-                    .toLowerCase()
-                    .trim()
-                    .replace(/[^a-z0-9\s-]/g, "")
-                    .replace(/\s+/g, "-");
+            // Category Products
+            const categorySnap = await getDocs(
+                collection(
+                    db,
+                    "websites",
+                    "indiandiagnostic",
+                    "pages",
+                    "categoryproducts",
+                    "categories"
+                )
+            );
 
-            const found = products.find((p) => {
+            for (const categoryDoc of categorySnap.docs) {
+
+                const categoryData = categoryDoc.data();
+
+                const subSnap = await getDocs(
+                    collection(
+                        db,
+                        "websites",
+                        "indiandiagnostic",
+                        "pages",
+                        "categoryproducts",
+                        "categories",
+                        categoryDoc.id,
+                        "subcategories"
+                    )
+                );
+
+                subSnap.forEach((subDoc) => {
+
+                    const subData = subDoc.data();
+
+                    (subData.products || []).forEach((item) => {
+
+                        allProducts.push({
+                            ...item,
+                            category: categoryData.category,
+                            subCategory: subData.subCategory,
+                        });
+
+                    });
+
+                });
+
+            }
+
+            console.log("Total Products =", allProducts.length);
+
+            const found = allProducts.find((p) => {
 
                 const productSlug =
                     p.slug?.trim()
@@ -55,17 +109,17 @@ export default function ProductDetailPage() {
             });
 
             console.log("Found Product =", found);
+
             if (found) {
-                setSelectedImage(
-                    found.images?.[0] ||
-                    found.image ||
-                    ""
-                );
+                setSelectedImage(found.images?.[0] || found.image || "");
             }
+
             setProduct(found);
+
         };
 
         fetchProduct();
+
     }, [slug]);
     const pathname = usePathname();
 
