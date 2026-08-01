@@ -56,9 +56,7 @@ export default function ProductDetailPage() {
             );
 
             for (const categoryDoc of categorySnap.docs) {
-
                 const categoryData = categoryDoc.data();
-
                 const subSnap = await getDocs(
                     collection(
                         db,
