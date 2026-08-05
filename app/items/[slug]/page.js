@@ -54,105 +54,93 @@ export default function ProductDetailPage() {
                 // If not found in cache or cache is empty, fetch
                 let normalProducts = [];
 
-                // Normal Products
-                const snap = await getDoc(
-                    doc(
-                        db,
-                        "websites",
-                        "indiandiagnostic",
-                        "pages",
-                        "products"
-                    )
-                );
-
-                if (snap.exists()) {
-                    normalProducts = [...(snap.data().products || [])];
-                }
-
-                // Category Products
-                const categorySnap = await getDocs(
-                    collection(
-                        db,
-                        "websites",
-                        "indiandiagnostic",
-                        "pages",
-                        "categoryproducts",
-                        "categories"
-                    )
-                );
-
-                const subQueries = categorySnap.docs.map((categoryDoc) => {
-                    return getDocs(
+                for (const categoryDoc of categorySnap.docs) {
+                    const categoryData = categoryDoc.data();
+                    const subSnap = await getDocs(
                         collection(
                             db,
                             "websites",
                             "indiandiagnostic",
                             "pages",
                             "categoryproducts",
-                            "categories",
-                            categoryDoc.id,
-                            "subcategories"
+                            "categories"
                         )
-                    ).then((subSnap) => ({
-                        categoryDoc,
-                        subSnap
-                    }));
-                });
+                    );
 
-                const results = await Promise.all(subQueries);
-                let categoryProducts = [];
+                    const subQueries = categorySnap.docs.map((categoryDoc) => {
+                        return getDocs(
+                            collection(
+                                db,
+                                "websites",
+                                "indiandiagnostic",
+                                "pages",
+                                "categoryproducts",
+                                "categories",
+                                categoryDoc.id,
+                                "subcategories"
+                            )
+                        ).then((subSnap) => ({
+                            categoryDoc,
+                            subSnap
+                        }));
+                    });
 
-                for (const { categoryDoc, subSnap } of results) {
-                    const categoryData = categoryDoc.data();
-                    subSnap.forEach((subDoc) => {
-                        const subData = subDoc.data();
-                        (subData.products || []).forEach((item) => {
-                            categoryProducts.push({
-                                ...item,
-                                category: categoryData.category,
-                                subCategory: subData.subCategory,
+                    const results = await Promise.all(subQueries);
+                    let categoryProducts = [];
+
+                    for (const { categoryDoc, subSnap } of results) {
+                        const categoryData = categoryDoc.data();
+                        subSnap.forEach((subDoc) => {
+                            const subData = subDoc.data();
+                            (subData.products || []).forEach((item) => {
+                                categoryProducts.push({
+                                    ...item,
+                                    category: categoryData.category,
+                                    subCategory: subData.subCategory,
+                                });
                             });
                         });
+                    }
+
+                    allProducts = [
+                        ...normalProducts,
+                        ...categoryProducts,
+                    ];
+
+                    await setCache(allProducts);
+                    console.log("Total Products =", allProducts.length);
+
+                    const found = allProducts.find((p) => {
+                        const productSlug =
+                            p.slug?.trim()
+                                ? p.slug
+                                : slugify(
+                                    p.title ||
+                                    p.instrument ||
+                                    p.model ||
+                                    `product-${p.productId}`
+                                );
+                        return productSlug === slug;
                     });
+
+                    console.log("Found Product =", found);
+
+                    if (found) {
+                        setSelectedImage(found.images?.[0] || found.image || "");
+                    }
+
+                    setProduct(found);
+                } catch (err) {
+                    console.error("Error fetching product in detail page:", err);
                 }
 
-                allProducts = [
-                    ...normalProducts,
-                    ...categoryProducts,
-                ];
+            };
 
-                await setCache(allProducts);
-                console.log("Total Products =", allProducts.length);
+            fetchProduct();
 
-                const found = allProducts.find((p) => {
-                    const productSlug =
-                        p.slug?.trim()
-                            ? p.slug
-                            : slugify(
-                                p.title ||
-                                p.instrument ||
-                                p.model ||
-                                `product-${p.productId}`
-                            );
-                    return productSlug === slug;
-                });
-
-                console.log("Found Product =", found);
-
-                if (found) {
-                    setSelectedImage(found.images?.[0] || found.image || "");
-                }
-
-                setProduct(found);
-            } catch (err) {
-                console.error("Error fetching product in detail page:", err);
-            }
-
-        };
-
-        fetchProduct();
-
-    }, [slug]);
+        }, [slug]
+    }
+    );
     const pathname = usePathname();
 
     const pathParts = pathname
