@@ -1,5 +1,5 @@
 const { initializeApp } = require("firebase/app");
-const { getFirestore, doc, getDoc } = require("firebase/firestore");
+const { getFirestore, doc, getDoc, collection, getDocs } = require("firebase/firestore");
 
 const firebaseConfig = {
   apiKey: "AIzaSyDGIJXX3MR1CxmIJbJHyVzbfRa0M0Sw6FQ",
@@ -14,31 +14,60 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 async function test() {
+  const startTime = Date.now();
   try {
-    // Test pages/home
-    const homeSnap = await getDoc(doc(db, "websites", "indiandiagnostic", "pages", "home"));
-    if (homeSnap.exists()) {
-      console.log("Home data keys:", Object.keys(homeSnap.data()));
-      console.log("Home data title:", homeSnap.data().title);
-    } else {
-      console.log("Home doc does not exist");
-    }
-
-    // Test pages/services
-    const servicesSnap = await getDoc(doc(db, "websites", "indiandiagnostic", "pages", "services"));
-    if (servicesSnap.exists()) {
-      console.log("Services data keys:", Object.keys(servicesSnap.data()));
-    } else {
-      console.log("Services doc does not exist");
-    }
-
-    // Test pages/products
+    console.log("Fetching normal products...");
     const productsSnap = await getDoc(doc(db, "websites", "indiandiagnostic", "pages", "products"));
+    let normalProducts = [];
     if (productsSnap.exists()) {
-      console.log("Products data keys:", Object.keys(productsSnap.data()));
-    } else {
-      console.log("Products doc does not exist");
+      normalProducts = productsSnap.data().products || [];
+      console.log(`Normal products count: ${normalProducts.length}`);
     }
+
+    console.log("Fetching categoryproducts/categories...");
+    const categorySnap = await getDocs(
+      collection(db, "websites", "indiandiagnostic", "pages", "categoryproducts", "categories")
+    );
+    console.log(`Found ${categorySnap.docs.length} categories.`);
+
+    // Fetch all subcategories in parallel!
+    const subQueries = categorySnap.docs.map(categoryDoc => {
+      return getDocs(
+        collection(
+          db,
+          "websites",
+          "indiandiagnostic",
+          "pages",
+          "categoryproducts",
+          "categories",
+          categoryDoc.id,
+          "subcategories"
+        )
+      ).then(subSnap => ({
+        categoryDoc,
+        subSnap
+      }));
+    });
+
+    const results = await Promise.all(subQueries);
+    let categoryProducts = [];
+
+    for (const { categoryDoc, subSnap } of results) {
+      const categoryData = categoryDoc.data();
+      subSnap.forEach((subDoc) => {
+        const subData = subDoc.data();
+        (subData.products || []).forEach((item) => {
+          categoryProducts.push({
+            ...item,
+            category: categoryData.category,
+            subCategory: subData.subCategory,
+          });
+        });
+      });
+    }
+
+    console.log(`Total products from categories: ${categoryProducts.length}`);
+    console.log(`Time taken: ${Date.now() - startTime}ms`);
   } catch (error) {
     console.error("Error reading firebase docs:", error);
   }

@@ -2,7 +2,13 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import {doc, onSnapshot,getDoc} from "firebase/firestore";
+import {
+  doc,
+  onSnapshot,
+  getDoc,
+  collection,
+  getDocs,
+} from "firebase/firestore";
 import Link from "next/link";
 import "./home.css";
 
@@ -39,15 +45,91 @@ export default function Home({ city }) {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const snap = await getDoc(
-        doc(db, "websites", "indiandiagnostic", "pages", "products")
-      );
-      if (snap.exists()) {
-        const data = snap.data().products || [];
-        const filtered = data
-          .filter((item) => item.isPublished)
-          .slice(0, 4);
-        setProducts(filtered);
+      try {
+        // =========================
+        // NORMAL PRODUCTS
+        // =========================
+        const normalSnap = await getDoc(
+          doc(
+            db,
+            "websites",
+            "indiandiagnostic",
+            "pages",
+            "products"
+          )
+        );
+
+        let normalProducts = [];
+
+        if (normalSnap.exists()) {
+          normalProducts =
+            (normalSnap.data().products || []).filter(
+              (item) => item.isPublished !== false
+            );
+        }
+
+        // =========================
+        // CATEGORY PRODUCTS
+        // =========================
+        const categorySnap = await getDocs(
+          collection(
+            db,
+            "websites",
+            "indiandiagnostic",
+            "pages",
+            "categoryproducts",
+            "categories"
+          )
+        );
+
+        const categoryProducts = [];
+
+        for (const categoryDoc of categorySnap.docs) {
+          const subSnap = await getDocs(
+            collection(
+              db,
+              "websites",
+              "indiandiagnostic",
+              "pages",
+              "categoryproducts",
+              "categories",
+              categoryDoc.id,
+              "subcategories"
+            )
+          );
+
+          let added = false;
+
+          for (const subDoc of subSnap.docs) {
+            const products = subDoc.data().products || [];
+
+            const firstProduct = products.find(
+              (p) => p.isPublished !== false
+            );
+
+            if (firstProduct) {
+              categoryProducts.push(firstProduct);
+              added = true;
+            }
+
+            if (added) break;
+          }
+
+          if (categoryProducts.length >= 4) break;
+        }
+
+        // =========================
+        // FINAL RESULT
+        // =========================
+
+        if (categoryProducts.length > 0) {
+          setProducts(categoryProducts.slice(0, 4));
+        } else {
+          setProducts(normalProducts.slice(0, 4));
+        }
+
+      } catch (err) {
+        console.error(err);
       }
     };
     fetchProducts();
@@ -277,22 +359,37 @@ export default function Home({ city }) {
           <div className="row">
             {products.map((item, i) => (
               <div className="col-md-3" key={i}>
-                <div className="card shadow-sm">
+                <div className="featured-card">
 
-                  <img
-                    src={item.image || "/no-image.png"}
-                    className="card-img-top"
-                    style={{ height: "300px", objectFit: "contain", background: "#f3f4f6" }}
-                  />
-                  <div className="divider-line"></div>
-                  <div className="card-body">
-                    <h6>{item.title}</h6>
+                  <div className="featured-image">
+
+                    <img
+                      src={
+                        item.images?.[0] ||
+                        item.image ||
+                        "/no-image.png"
+                      }
+                      alt={item.title}
+                    />
+
+                  </div>
+
+                  <div className="featured-content">
+
+                    <span className="featured-category">
+                      {item.category || "Medical Equipment"}
+                    </span>
+
+                    <h5 className="featured-title">
+                      {item.title}
+                    </h5>
 
                     <Link href={makeLink("/items")}>
-                      <button className="btn btn-outline-danger btn-sm">
-                        View
+                      <button className="featured-btn">
+                        View Details
                       </button>
                     </Link>
+
                   </div>
 
                 </div>

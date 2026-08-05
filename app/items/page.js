@@ -1,8 +1,9 @@
 "use client";
-
+import { FiArrowUp } from "react-icons/fi";
 import { useState, useEffect, useMemo } from "react";
 import { db } from "@/lib/firebase";
 import "./items.css";
+import { getCache, setCache } from "@/lib/productsCache";
 import toast, { Toaster } from "react-hot-toast";
 import {
   doc,
@@ -23,14 +24,15 @@ export default function ItemsPage({ city }) {
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
-  const [search, setSearch] = useState("");
+  const [sidebarSearch, setSidebarSearch] = useState("");
+  const [productSearch, setProductSearch] = useState("");
 
   const [selectedBrand, setSelectedBrand] = useState("");
 
   const [selectedUsage, setSelectedUsage] = useState("");
 
   const [showFilters, setShowFilters] = useState(false);
-
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   const currentCity = city || "";
 
@@ -97,7 +99,12 @@ export default function ItemsPage({ city }) {
   useEffect(() => {
 
     const fetchProducts = async () => {
+      const cached = await getCache();
 
+      if (cached) {
+        setProducts(cached);
+        setLoadingProducts(false);
+      }
       try {
 
         const snap = await getDoc(
@@ -110,7 +117,10 @@ export default function ItemsPage({ city }) {
           )
         );
 
-        if (!snap.exists()) return;
+        if (!snap.exists()) {
+          setLoadingProducts(false);
+          return;
+        }
 
         const raw =
           snap.data().products || [];
@@ -163,13 +173,9 @@ export default function ItemsPage({ city }) {
           )
         );
 
-        let categoryProducts = [];
-
-        for (const categoryDoc of categorySnap.docs) {
-
-          const categoryData = categoryDoc.data();
-
-          const subSnap = await getDocs(
+        // Fetch all subcategories in parallel!
+        const subQueries = categorySnap.docs.map((categoryDoc) => {
+          return getDocs(
             collection(
               db,
               "websites",
@@ -180,35 +186,41 @@ export default function ItemsPage({ city }) {
               categoryDoc.id,
               "subcategories"
             )
-          );
+          ).then((subSnap) => ({
+            categoryDoc,
+            subSnap
+          }));
+        });
 
+        const results = await Promise.all(subQueries);
+        let categoryProducts = [];
+
+        for (const { categoryDoc, subSnap } of results) {
+          const categoryData = categoryDoc.data();
           subSnap.forEach((subDoc) => {
-
             const subData = subDoc.data();
-
             (subData.products || []).forEach((item) => {
-
               categoryProducts.push({
                 ...item,
                 category: categoryData.category,
                 subCategory: subData.subCategory,
               });
-
             });
-
           });
-
         }
 
         // Merge Both
-        setProducts([
+        const allProducts = [
           ...normalProducts,
           ...categoryProducts,
-        ]);
+        ];
+
+        setProducts(allProducts);
+        await setCache(allProducts);
 
       } catch (err) {
 
-        console.log(err);
+        console.error(err);
 
       } finally {
 
@@ -236,7 +248,7 @@ export default function ItemsPage({ city }) {
 
       return products
 
-        .filter((p) => p.isPublished)
+        .filter((p) => p.isPublished !== false)
 
         .filter((item) => {
 
@@ -248,9 +260,7 @@ export default function ItemsPage({ city }) {
 
           return (
 
-            txt.includes(
-              search.toLowerCase()
-            )
+            txt.includes(productSearch.toLowerCase())
 
             &&
 
@@ -274,13 +284,23 @@ export default function ItemsPage({ city }) {
 
     }, [
       products,
-      search,
+      productSearch,
       selectedBrand,
       selectedUsage
     ]);
 
 
+  const sidebarProducts = useMemo(() => {
+    return products.filter((item) => {
+      const txt = `
+      ${item.title}
+      ${item.category}
+      ${item.subCategory}
+    `.toLowerCase();
 
+      return txt.includes(sidebarSearch.toLowerCase());
+    });
+  }, [products, sidebarSearch]);
   /* -------------------------------- */
 
   /* GROUP CATEGORY */
@@ -291,7 +311,7 @@ export default function ItemsPage({ city }) {
 
     const obj = {};
 
-    filteredProducts.forEach((item) => {
+    sidebarProducts.forEach((item) => {
 
       if (!obj[item.category]) {
         obj[item.category] = {};
@@ -309,7 +329,7 @@ export default function ItemsPage({ city }) {
 
     return obj;
 
-  }, [filteredProducts]);
+  }, [sidebarProducts]);
 
 
 
@@ -317,6 +337,8 @@ export default function ItemsPage({ city }) {
     Object.keys(groupedProducts);
 
 
+
+  const [categoryLimits, setCategoryLimits] = useState({});
 
   const [activeCategory,
     setActiveCategory] =
@@ -343,13 +365,13 @@ export default function ItemsPage({ city }) {
 
     return [
       ...new Set(
-        filteredProducts
+        products
           .map((item) => item.brand)
           .filter(Boolean)
       )
     ];
 
-  }, [filteredProducts]);
+  }, [products]);
 
 
 
@@ -357,13 +379,13 @@ export default function ItemsPage({ city }) {
 
     return [
       ...new Set(
-        filteredProducts
+        products
           .map((item) => item.usage)
           .filter(Boolean)
       )
     ];
 
-  }, [filteredProducts]);
+  }, [products]);
 
 
   /* ============================================================
@@ -405,8 +427,10 @@ export default function ItemsPage({ city }) {
 
     if (!categories.length) return;
 
-    setOpenedCategory((prev) => {
-      return prev || categories[0];
+    queueMicrotask(() => {
+      setOpenedCategory((prev) => {
+        return prev || categories[0];
+      });
     });
 
   }, [groupedProducts]);
@@ -459,6 +483,11 @@ export default function ItemsPage({ city }) {
     setOpenedCategory(category);
     setActiveCategory(category);
 
+    setCategoryLimits((prev) => ({
+      ...prev,
+      [category]: Infinity,
+    }));
+
     setTimeout(() => {
 
       const product = document.getElementById(`product-${slug}`);
@@ -485,7 +514,7 @@ export default function ItemsPage({ city }) {
   useEffect(() => {
 
     const handleScroll = () => {
-
+      setShowBackToTop(window.scrollY > 400);
       let current = "";
 
       Object.keys(
@@ -552,13 +581,10 @@ export default function ItemsPage({ city }) {
   ============================================================ */
 
   const resetFilters = () => {
-
-    setSearch("");
-
+    setSidebarSearch("");
+    setProductSearch("");
     setSelectedBrand("");
-
     setSelectedUsage("");
-
 
   };
 
@@ -586,7 +612,12 @@ export default function ItemsPage({ city }) {
 
   };
 
-
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
 
   return (
     <>
@@ -641,13 +672,9 @@ export default function ItemsPage({ city }) {
                   type="text"
                   className="form-control"
                   placeholder="Search Product..."
-                  value={search}
+                  value={sidebarSearch}
                   onChange={(e) => {
-
-                    setSearch(
-                      e.target.value
-                    );
-
+                    setSidebarSearch(e.target.value);
                   }}
                 />
 
@@ -819,13 +846,9 @@ export default function ItemsPage({ city }) {
                       type="text"
                       className="form-control"
                       placeholder="Search..."
-                      value={search}
+                      value={productSearch}
                       onChange={(e) => {
-
-                        setSearch(
-                          e.target.value
-                        );
-
+                        setProductSearch(e.target.value);
                       }}
                     />
 
@@ -927,154 +950,269 @@ export default function ItemsPage({ city }) {
 
               {
 
-                Object.entries(
-                  paginatedGroupedProducts
-                ).map(
+                loadingProducts && products.length === 0 ? (
 
-                  ([category, list]) => (
+                  <div className="skeleton-container">
 
-                    <div
+                    {[...Array(3)].map((_, i) => (
 
-                      key={category}
+                      <div className="skeleton-card" key={i}>
 
-                      id={category
-                        .replace(/\s+/g, "-")
-                        .toLowerCase()}
+                        <div className="row align-items-center">
 
-                      className="product-section"
+                          <div className="col-lg-3 col-md-4">
 
-                    >
+                            <div className="skeleton-shimmer skeleton-img"></div>
 
-                      <div className="section-title">
+                          </div>
 
-                        <h3>
+                          <div className="col-lg-6 col-md-8">
 
-                          {category}
+                            <div className="skeleton-shimmer skeleton-title"></div>
 
-                        </h3>
+                            <div className="skeleton-shimmer skeleton-text"></div>
 
-                        <span>
+                            <div className="skeleton-shimmer skeleton-text-short"></div>
 
-                          {
+                            <div className="row">
 
-                            list.length
+                              <div className="col-6"><div className="skeleton-shimmer skeleton-meta"></div></div>
 
-                          }
+                              <div className="col-6"><div className="skeleton-shimmer skeleton-meta"></div></div>
 
-                          Products
+                            </div>
 
-                        </span>
+                          </div>
+
+                          <div className="col-lg-3">
+
+                            <div className="skeleton-shimmer skeleton-meta" style={{ height: "45px" }}></div>
+
+                          </div>
+
+                        </div>
 
                       </div>
 
-                      {
+                    ))}
 
-                        // list.map((item) => (
-                        list.map((item, index) => (
+                  </div>
 
-                          <div
-                            id={`product-${item.slug}`}
-                            className="product-list-card"
-                            key={`${item.slug}-${index}`}
-                          >
+                ) : Object.keys(paginatedGroupedProducts).length === 0 ? (
 
-                            <div className="row align-items-center">
+                  <div className="products-loading" style={{ minHeight: "250px" }}>
 
-                              {/* IMAGE */}
+                    <div className="loading-text">No Products Found</div>
 
-                              <div className="col-lg-3 col-md-4">
+                  </div>
 
-                                <div className="list-image">
+                ) : (
 
-                                  <img
-                                    src={
-                                      item.images?.[0] ||
-                                      item.image ||
-                                      "/no-image.png"
-                                    }
-                                    alt={item.title}
-                                  />
+                  Object.entries(
+                    paginatedGroupedProducts
+                  ).map(
 
-                                </div>
+                    ([category, list]) => {
+                      const limit = categoryLimits[category] || 15;
+                      const visibleList = list.slice(0, limit);
 
-                              </div>
+                      return (
 
-                              {/* DETAILS */}
+                        <div
 
-                              <div className="col-lg-6 col-md-8">
+                          key={category}
 
-                                <div className="list-content">
+                          id={category
+                            .replace(/\s+/g, "-")
+                            .toLowerCase()}
 
-                                  <h4>
-                                    {item.title}
-                                  </h4>
+                          className="product-section"
 
-                                  <p>
-                                    {item.desc}
-                                  </p>
+                        >
 
-                                  <div className="spec-grid">
+                          <div className="section-title">
 
-                                    <div>
-                                      <b>Brand</b>
+                            <h3>
 
-                                      <span>
+                              {category}
 
-                                        {
-                                          item.brand ||
-                                          "-"
+                            </h3>
+
+                            <span>
+
+                              {
+
+                                list.length
+
+                              }
+
+                              Products
+
+                            </span>
+
+                          </div>
+
+                          {
+
+                            visibleList.map((item, index) => (
+
+                              <div
+
+                                id={`product-${item.slug}`}
+
+                                className="product-list-card"
+
+                                key={`${item.slug}-${index}`}
+
+                              >
+
+                                <div className="row align-items-center">
+
+                                  {/* IMAGE */}
+
+                                  <div className="col-lg-3 col-md-4">
+
+                                    <div className="list-image">
+
+                                      <img
+
+                                        src={
+
+                                          item.images?.[0] ||
+
+                                          item.image ||
+
+                                          "/no-image.png"
 
                                         }
 
-                                      </span>
+                                        alt={item.title}
+
+                                      />
 
                                     </div>
 
-                                    <div>
+                                  </div>
 
-                                      <b>Usage</b>
+                                  {/* DETAILS */}
 
-                                      <span>
+                                  <div className="col-lg-6 col-md-8">
 
-                                        {
-                                          item.usage ||
-                                          "-"
+                                    <div className="list-content">
 
-                                        }
+                                      <h4>
 
-                                      </span>
+                                        {item.title}
+
+                                      </h4>
+
+                                      <p>
+
+                                        {item.desc}
+
+                                      </p>
+
+                                      <div className="spec-grid">
+
+                                        <div>
+
+                                          <b>Brand</b>
+
+                                          <span>
+
+                                            {
+
+                                              item.brand ||
+
+                                              "-"
+
+                                            }
+
+                                          </span>
+
+                                        </div>
+
+                                        <div>
+
+                                          <b>Usage</b>
+
+                                          <span>
+
+                                            {
+
+                                              item.usage ||
+
+                                              "-"
+
+                                            }
+
+                                          </span>
+
+                                        </div>
+
+                                        <div>
+
+                                          <b>Model</b>
+
+                                          <span>
+
+                                            {
+
+                                              item.model ||
+
+                                              "-"
+
+                                            }
+
+                                          </span>
+
+                                        </div>
+
+                                        <div>
+
+                                          <b>Availability</b>
+
+                                          <span>
+
+                                            {
+
+                                              item.availability ||
+
+                                              "-"
+
+                                            }
+
+                                          </span>
+
+                                        </div>
+
+                                      </div>
 
                                     </div>
 
-                                    <div>
+                                  </div>
 
-                                      <b>Model</b>
+                                  {/* ACTION */}
 
-                                      <span>
+                                  <div className="col-lg-3">
 
-                                        {
-                                          item.model ||
-                                          "-"
+                                    <div className="product-action">
 
-                                        }
+                                      <button
 
-                                      </span>
+                                        className="btn-view"
 
-                                    </div>
+                                        onClick={() =>
 
-                                    <div>
-
-                                      <b>Availability</b>
-
-                                      <span>
-
-                                        {
-                                          item.availability ||
-                                          "-"
+                                          viewDetails(item)
 
                                         }
 
-                                      </span>
+                                      >
+
+                                        View Details
+
+                                      </button>
 
                                     </div>
 
@@ -1084,49 +1222,32 @@ export default function ItemsPage({ city }) {
 
                               </div>
 
-                              {/* ACTION */}
+                            ))
 
-                              <div className="col-lg-3">
+                          }
 
-                                <div className="product-action">
-
-                                  <button
-
-                                    className="btn-view"
-
-                                    onClick={() =>
-                                      viewDetails(item)
-                                    }
-
-                                  >
-
-                                    View Details
-
-                                  </button>
-
-                                  {/* <button
-
-                                  className="btn-enquiry"
-
-                                >
-
-                                  Get Quote
-
-                                </button> */}
-
-                                </div>
-
-                              </div>
-
+                          {list.length > limit && (
+                            <div style={{ textAlign: "center", margin: "20px 0" }}>
+                              <button
+                                className="btn-view"
+                                style={{ maxWidth: "260px", background: "linear-gradient(135deg, #1e3c72, #2a5298)" }}
+                                onClick={() => {
+                                  setCategoryLimits(prev => ({
+                                    ...prev,
+                                    [category]: (prev[category] || 15) + 30
+                                  }));
+                                }}
+                              >
+                                Show More Products ({list.length - limit} remaining)
+                              </button>
                             </div>
+                          )}
 
-                          </div>
+                        </div>
 
-                        ))
+                      );
 
-                      }
-
-                    </div>
+                    }
 
                   )
 
@@ -1143,7 +1264,14 @@ export default function ItemsPage({ city }) {
         </div>
 
       </section >
-
+      {showBackToTop && (
+        <button
+          className="back-to-top"
+          onClick={scrollToTop}
+        >
+          <FiArrowUp />
+        </button>
+      )}
     </>
 
   );

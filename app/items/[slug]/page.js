@@ -6,6 +6,7 @@ import { doc, getDoc, getDocs, addDoc, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import toast, { Toaster } from "react-hot-toast";
 import styles from "./page.module.css";
+import { getCache, setCache } from "@/lib/productsCache";
 
 export default function ProductDetailPage() {
     const { slug } = useParams();
@@ -26,95 +27,126 @@ export default function ProductDetailPage() {
                     .replace(/[^a-z0-9\s-]/g, "")
                     .replace(/\s+/g, "-");
 
-            let allProducts = [];
+            let allProducts = await getCache();
 
-            // Normal Products
-            const snap = await getDoc(
-                doc(
-                    db,
-                    "websites",
-                    "indiandiagnostic",
-                    "pages",
-                    "products"
-                )
-            );
+            if (allProducts) {
+                const found = allProducts.find((p) => {
+                    const productSlug =
+                        p.slug?.trim()
+                            ? p.slug
+                            : slugify(
+                                p.title ||
+                                p.instrument ||
+                                p.model ||
+                                `product-${p.productId}`
+                            );
+                    return productSlug === slug;
+                });
 
-            if (snap.exists()) {
-                allProducts = [...(snap.data().products || [])];
+                if (found) {
+                    setSelectedImage(found.images?.[0] || found.image || "");
+                    setProduct(found);
+                    return;
+                }
             }
 
-            // Category Products
-            const categorySnap = await getDocs(
-                collection(
-                    db,
-                    "websites",
-                    "indiandiagnostic",
-                    "pages",
-                    "categoryproducts",
-                    "categories"
-                )
-            );
+            try {
+                // If not found in cache or cache is empty, fetch
+                let normalProducts = [];
 
-            for (const categoryDoc of categorySnap.docs) {
+                // Normal Products
+                const snap = await getDoc(
+                    doc(
+                        db,
+                        "websites",
+                        "indiandiagnostic",
+                        "pages",
+                        "products"
+                    )
+                );
 
-                const categoryData = categoryDoc.data();
+                if (snap.exists()) {
+                    normalProducts = [...(snap.data().products || [])];
+                }
 
-                const subSnap = await getDocs(
+                // Category Products
+                const categorySnap = await getDocs(
                     collection(
                         db,
                         "websites",
                         "indiandiagnostic",
                         "pages",
                         "categoryproducts",
-                        "categories",
-                        categoryDoc.id,
-                        "subcategories"
+                        "categories"
                     )
                 );
 
-                subSnap.forEach((subDoc) => {
-
-                    const subData = subDoc.data();
-
-                    (subData.products || []).forEach((item) => {
-
-                        allProducts.push({
-                            ...item,
-                            category: categoryData.category,
-                            subCategory: subData.subCategory,
-                        });
-
-                    });
-
+                const subQueries = categorySnap.docs.map((categoryDoc) => {
+                    return getDocs(
+                        collection(
+                            db,
+                            "websites",
+                            "indiandiagnostic",
+                            "pages",
+                            "categoryproducts",
+                            "categories",
+                            categoryDoc.id,
+                            "subcategories"
+                        )
+                    ).then((subSnap) => ({
+                        categoryDoc,
+                        subSnap
+                    }));
                 });
 
+                const results = await Promise.all(subQueries);
+                let categoryProducts = [];
+
+                for (const { categoryDoc, subSnap } of results) {
+                    const categoryData = categoryDoc.data();
+                    subSnap.forEach((subDoc) => {
+                        const subData = subDoc.data();
+                        (subData.products || []).forEach((item) => {
+                            categoryProducts.push({
+                                ...item,
+                                category: categoryData.category,
+                                subCategory: subData.subCategory,
+                            });
+                        });
+                    });
+                }
+
+                allProducts = [
+                    ...normalProducts,
+                    ...categoryProducts,
+                ];
+
+                await setCache(allProducts);
+                console.log("Total Products =", allProducts.length);
+
+                const found = allProducts.find((p) => {
+                    const productSlug =
+                        p.slug?.trim()
+                            ? p.slug
+                            : slugify(
+                                p.title ||
+                                p.instrument ||
+                                p.model ||
+                                `product-${p.productId}`
+                            );
+                    return productSlug === slug;
+                });
+
+                console.log("Found Product =", found);
+
+                if (found) {
+                    setSelectedImage(found.images?.[0] || found.image || "");
+                }
+
+                setProduct(found);
+            } catch (err) {
+                console.error("Error fetching product in detail page:", err);
             }
-
-            console.log("Total Products =", allProducts.length);
-
-            const found = allProducts.find((p) => {
-
-                const productSlug =
-                    p.slug?.trim()
-                        ? p.slug
-                        : slugify(
-                            p.title ||
-                            p.instrument ||
-                            p.model ||
-                            `product-${p.productId}`
-                        );
-
-                return productSlug === slug;
-
-            });
-
-            console.log("Found Product =", found);
-
-            if (found) {
-                setSelectedImage(found.images?.[0] || found.image || "");
-            }
-
-            setProduct(found);
 
         };
 
