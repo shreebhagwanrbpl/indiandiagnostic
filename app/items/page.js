@@ -846,6 +846,7 @@ export default function ItemsPage({ city }) {
                       type="text"
                       className="form-control"
                       placeholder="Search..."
+                      suppressHydrationWarning
                       value={productSearch}
                       onChange={(e) => {
                         setProductSearch(e.target.value);
@@ -858,6 +859,7 @@ export default function ItemsPage({ city }) {
 
                     <select
                       className="form-select"
+                      suppressHydrationWarning
                       value={selectedBrand}
                       onChange={(e) =>
                         setSelectedBrand(
@@ -893,6 +895,7 @@ export default function ItemsPage({ city }) {
 
                     <select
                       className="form-select"
+                      suppressHydrationWarning
                       value={selectedUsage}
                       onChange={(e) =>
                         setSelectedUsage(
@@ -929,6 +932,7 @@ export default function ItemsPage({ city }) {
                     <button
 
                       className="btn-reset"
+                      suppressHydrationWarning
 
                       onClick={
                         resetFilters

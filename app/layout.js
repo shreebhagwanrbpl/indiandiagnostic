@@ -193,9 +193,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <Navbar />
-
         {children}
-
         {/* <Toaster position="top-right" /> */}
 
         <Footer />
@@ -205,13 +203,13 @@ export default function RootLayout({ children }) {
           src="https://www.googletagmanager.com/gtag/js?id=G-9N1WZKKHW4"
           strategy="afterInteractive"
         />
+        {/* <script src="https://ai-voice-frontend-chi.vercel.app/widget/v1/loader.js" data-tenant="6a606678f8af0f7278107e5e" async></script> */}
 
         <Script id="google-analytics" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-
             gtag('config', 'G-9N1WZKKHW4');
           `}
         </Script>

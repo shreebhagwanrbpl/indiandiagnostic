@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, usePathname } from "next/navigation";
 import { doc, getDoc, getDocs, addDoc, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import toast, { Toaster } from "react-hot-toast";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import styles from "./page.module.css";
 import { getCache, setCache } from "@/lib/productsCache";
 
@@ -16,137 +18,156 @@ export default function ProductDetailPage() {
     const [phone, setPhone] = useState("");
     const [selectedImage, setSelectedImage] = useState("");
     const [selectedMedia, setSelectedMedia] = useState("image");
-    useEffect(() => {
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+    const cardRef = useRef(null);
+  useEffect(() => {
 
-        const fetchProduct = async () => {
+    const fetchProduct = async () => {
 
-            const slugify = (text = "") =>
-                text
-                    .toLowerCase()
-                    .trim()
-                    .replace(/[^a-z0-9\s-]/g, "")
-                    .replace(/\s+/g, "-");
+        const slugify = (text = "") =>
+            text
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9\s-]/g, "")
+                .replace(/\s+/g, "-");
 
-            let allProducts = await getCache();
+        let allProducts = await getCache();
 
-            if (allProducts) {
-                const found = allProducts.find((p) => {
-                    const productSlug =
-                        p.slug?.trim()
-                            ? p.slug
-                            : slugify(
-                                p.title ||
-                                p.instrument ||
-                                p.model ||
-                                `product-${p.productId}`
-                            );
-                    return productSlug === slug;
+        if (allProducts) {
+            const found = allProducts.find((p) => {
+                const productSlug =
+                    p.slug?.trim()
+                        ? p.slug
+                        : slugify(
+                            p.title ||
+                            p.instrument ||
+                            p.model ||
+                            `product-${p.productId}`
+                        );
+
+                return productSlug === slug;
+            });
+
+            if (found) {
+                setSelectedImage(found.images?.[0] || found.image || "");
+                setProduct(found);
+                return;
+            }
+        }
+
+        try {
+
+            let normalProducts = [];
+
+            // Categories
+            const categorySnap = await getDocs(
+                collection(
+                    db,
+                    "websites",
+                    "indiandiagnostic",
+                    "pages",
+                    "categoryproducts",
+                    "categories"
+                )
+            );
+
+            const subQueries = categorySnap.docs.map((categoryDoc) => {
+                return getDocs(
+                    collection(
+                        db,
+                        "websites",
+                        "indiandiagnostic",
+                        "pages",
+                        "categoryproducts",
+                        "categories",
+                        categoryDoc.id,
+                        "subcategories"
+                    )
+                ).then((subSnap) => ({
+                    categoryDoc,
+                    subSnap,
+                }));
+            });
+
+            const results = await Promise.all(subQueries);
+
+            let categoryProducts = [];
+
+            for (const { categoryDoc, subSnap } of results) {
+
+                const categoryData = categoryDoc.data();
+
+                subSnap.forEach((subDoc) => {
+
+                    const subData = subDoc.data();
+
+                    (subData.products || []).forEach((item) => {
+
+                        categoryProducts.push({
+                            ...item,
+                            category: categoryData.category,
+                            subCategory: subData.subCategory,
+                        });
+
+                    });
+
                 });
 
-                if (found) {
-                    setSelectedImage(found.images?.[0] || found.image || "");
-                    setProduct(found);
-                    return;
-                }
             }
 
-            try {
-                // If not found in cache or cache is empty, fetch
-                let normalProducts = [];
+            allProducts = [
+                ...normalProducts,
+                ...categoryProducts,
+            ];
 
-                for (const categoryDoc of categorySnap.docs) {
-                    const categoryData = categoryDoc.data();
-                    const subSnap = await getDocs(
-                        collection(
-                            db,
-                            "websites",
-                            "indiandiagnostic",
-                            "pages",
-                            "categoryproducts",
-                            "categories"
-                        )
-                    );
+            await setCache(allProducts);
 
-                    const subQueries = categorySnap.docs.map((categoryDoc) => {
-                        return getDocs(
-                            collection(
-                                db,
-                                "websites",
-                                "indiandiagnostic",
-                                "pages",
-                                "categoryproducts",
-                                "categories",
-                                categoryDoc.id,
-                                "subcategories"
-                            )
-                        ).then((subSnap) => ({
-                            categoryDoc,
-                            subSnap
-                        }));
-                    });
+            console.log("Total Products =", allProducts.length);
 
-                    const results = await Promise.all(subQueries);
-                    let categoryProducts = [];
+            const found = allProducts.find((p) => {
 
-                    for (const { categoryDoc, subSnap } of results) {
-                        const categoryData = categoryDoc.data();
-                        subSnap.forEach((subDoc) => {
-                            const subData = subDoc.data();
-                            (subData.products || []).forEach((item) => {
-                                categoryProducts.push({
-                                    ...item,
-                                    category: categoryData.category,
-                                    subCategory: subData.subCategory,
-                                });
-                            });
-                        });
-                    }
+                const productSlug =
+                    p.slug?.trim()
+                        ? p.slug
+                        : slugify(
+                            p.title ||
+                            p.instrument ||
+                            p.model ||
+                            `product-${p.productId}`
+                        );
 
-                    allProducts = [
-                        ...normalProducts,
-                        ...categoryProducts,
-                    ];
+                return productSlug === slug;
 
-                    await setCache(allProducts);
-                    console.log("Total Products =", allProducts.length);
+            });
 
-                    const found = allProducts.find((p) => {
-                        const productSlug =
-                            p.slug?.trim()
-                                ? p.slug
-                                : slugify(
-                                    p.title ||
-                                    p.instrument ||
-                                    p.model ||
-                                    `product-${p.productId}`
-                                );
-                        return productSlug === slug;
-                    });
+            console.log("Found Product =", found);
 
-                    console.log("Found Product =", found);
+            if (found) {
+                setSelectedImage(found.images?.[0] || found.image || "");
+            }
 
-                    if (found) {
-                        setSelectedImage(found.images?.[0] || found.image || "");
-                    }
+            setProduct(found);
 
-                    setProduct(found);
-                } catch (err) {
-                    console.error("Error fetching product in detail page:", err);
-                }
+        } catch (err) {
 
-            };
+            console.error(
+                "Error fetching product in detail page:",
+                err
+            );
 
-            fetchProduct();
+        }
 
-        }, [slug]
-    }
-    );
+    };
+
+    fetchProduct();
+
+}, [slug]);
+    
+    
     const pathname = usePathname();
-
     const pathParts = pathname
         .split("/")
         .filter(Boolean);
-
     const reservedRoutes = [
         "about",
         "contact",
@@ -215,6 +236,24 @@ export default function ProductDetailPage() {
         }
     };
 
+    const handleDownloadPDF = async () => {
+        if (!product || isGeneratingPDF) return;
+
+        const toastId = toast.loading("Generating product PDF brochure...");
+        setIsGeneratingPDF(true);
+
+        try {
+            const { generateProductPDF } = await import("@/lib/generateProductPDF");
+            await generateProductPDF(product, selectedImage, city);
+            toast.success("PDF Brochure Downloaded!", { id: toastId });
+        } catch (err) {
+            console.error("PDF generation error:", err);
+            toast.error("Failed to generate PDF. Please try again.", { id: toastId });
+        } finally {
+            setIsGeneratingPDF(false);
+        }
+    };
+
     if (!product) {
         return (
             <section className={styles.productDetailPage}>
@@ -254,7 +293,7 @@ export default function ProductDetailPage() {
 
             <section className={styles.productDetailPage}>
                 <div className="container">
-                    <div className={styles.productCardWrap}>
+                    <div className={styles.productCardWrap} ref={cardRef}>
 
                         <div className="row align-items-center">
 
@@ -263,7 +302,7 @@ export default function ProductDetailPage() {
                                     {selectedMedia === "image" && (
                                         <img
                                             src={selectedImage || "/no-image.png"}
-                                            alt={product.title}
+                                            alt={product.title || productName}
                                             className={styles.productDetailImage}
                                         />
                                     )}
@@ -330,9 +369,19 @@ export default function ProductDetailPage() {
                                             className={styles.mediaThumb}
                                         >
                                             📄
-                                            <span>PDF</span>
+                                            <span>Document</span>
                                         </a>
                                     )}
+
+                                    <div
+                                        className={`${styles.mediaThumb} ${styles.pdfThumbBtn}`}
+                                        onClick={handleDownloadPDF}
+                                        title="Download Product PDF"
+                                        data-html2canvas-ignore="true"
+                                    >
+                                        📥
+                                        <span>Save PDF</span>
+                                    </div>
 
                                 </div>
                             </div>
