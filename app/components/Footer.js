@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
+import { FaInstagram, FaLinkedinIn, FaFacebookF } from "react-icons/fa";
 import "./comp.css";
 
 export default function Footer() {
@@ -117,12 +118,43 @@ export default function Footer() {
 
             <p className="footer-desc">
               Trusted partner for
-              clinical instruments &
+              clinical instruments &amp;
               medical consumables.
               Delivering quality
               healthcare solutions
               since 2009.
             </p>
+
+            {/* SOCIAL MEDIA ICONS */}
+            <div className="footer-socials">
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="social-icon instagram"
+                aria-label="Instagram"
+              >
+                <FaInstagram />
+              </a>
+              <a
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="social-icon linkedin"
+                aria-label="LinkedIn"
+              >
+                <FaLinkedinIn />
+              </a>
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="social-icon facebook"
+                aria-label="Facebook"
+              >
+                <FaFacebookF />
+              </a>
+            </div>
 
           </div>
 
@@ -177,7 +209,7 @@ export default function Footer() {
 
           </div>
 
-          {/* PRODUCTS */}
+          {/* PRODUCTS CATEGORIES */}
           <div className="col-md-3">
 
             <h6>
@@ -187,19 +219,39 @@ export default function Footer() {
             <ul className="footer-links">
 
               <li>
-                Hematology Analyzer
+                <Link href={`/${citySlug}/items?search=Hematology`}>
+                  Hematology Analyzer
+                </Link>
               </li>
 
               <li>
-                Biochemistry Analyzer
+                <Link href={`/${citySlug}/items?search=Biochemistry`}>
+                  Biochemistry Analyzer
+                </Link>
               </li>
 
               <li>
-                Lab Reagents
+                <Link href={`/${citySlug}/items?search=Reagent`}>
+                  Lab Reagents
+                </Link>
               </li>
 
               <li>
-                Blood Collection Tubes
+                <Link href={`/${citySlug}/items?search=Blood`}>
+                  Blood Collection Tubes
+                </Link>
+              </li>
+
+              <li>
+                <Link href={`/${citySlug}/items?search=Rapid`}>
+                  Rapid Test Kits
+                </Link>
+              </li>
+
+              <li>
+                <Link href={`/${citySlug}/items?search=ELISA`}>
+                  ELISA Kits
+                </Link>
               </li>
 
             </ul>

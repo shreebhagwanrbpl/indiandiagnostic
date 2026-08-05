@@ -9,6 +9,7 @@ export default function AboutPage() {
       <div>
         <section className="about-banner">
           <div className="banner-content">
+            <span className="page-badge">● ABOUT US</span>
             <h1>About Raj Biosis</h1>
             <p>Trusted Partner for Diagnostic Instruments & Healthcare Equipment</p>
           </div>

@@ -25,8 +25,9 @@ export default function ServicesPage() {
 
       {/* 🔥 BANNER */}
       <section className="services-banner">
-        <div className="container text-center">
-          <h1>Our Services</h1>
+        <div className="banner-content text-center">
+          <span className="page-badge">● OUR SERVICES</span>
+          <h1>Diagnostic & Lab Services</h1>
           <p className="text-white">Reliable Healthcare & Diagnostic Solutions</p>
         </div>
       </section>

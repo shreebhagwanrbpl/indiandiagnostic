@@ -1,26 +1,53 @@
-   .contact-banner {
-     width: 100%;
-     min-height: 350px;
-     background: linear-gradient(135deg, #1e3c72, #2a5298);
-     display: flex;
-     align-items: center;
-     justify-content: center;
-     text-align: center;
-     color: #fff;
-   }
+.contact-banner {
+  width: 100%;
+  padding: 140px 20px 80px;
+  min-height: 380px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1e3a8a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
 
-   .banner-content {
-     max-width: 800px;
-   }
+.contact-banner::before {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -15%;
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.3) 0%, rgba(0, 0, 0, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
 
-   .contact-banner h1 {
-     font-size: 3rem;
-     font-weight: 800;
-   }
+.contact-banner::after {
+  content: "";
+  position: absolute;
+  bottom: -40%;
+  right: -10%;
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.22) 0%, rgba(0, 0, 0, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
 
-   .contact-banner p {
-     opacity: 0.9;
-   }
+.contact-banner h1 {
+  font-size: 3.4rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+  color: #ffffff;
+}
+
+.contact-banner p {
+  font-size: 1.15rem;
+  color: #cbd5e1;
+  opacity: 0.95;
+}
 
    .contact-box {
      background: #ffffff;

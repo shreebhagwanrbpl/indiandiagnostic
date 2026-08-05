@@ -187,6 +187,19 @@ export default function Home({ city }) {
 
     return () => unsub();
   }, []);
+  const banners = [
+    { src: "/indiansd.jpg", alt: "Indian Diagnostic Banner 1" },
+    { src: "/id.png", alt: "Indian Diagnostic Banner 2" },
+  ];
+  const [currentBanner, setCurrentBanner] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentBanner((prev) => (prev + 1) % banners.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, [banners.length]);
+
   const makeLink = (path = "") => {
     if (!city) {
       return path || "/";
@@ -197,55 +210,57 @@ export default function Home({ city }) {
   return (
     <>
 
-      {/* 🔥 SECTION 1: HERO */}
-      <section className="home-hero">
+      {/* 🔥 HERO CAROUSEL BANNER */}
+      <section className="hero-banner-section">
         <div className="container">
-          <div className="row align-items-center">
-
-            <div className="col-md-6">
-              <h1 className="hero-title">
-
-                {
-                  data.title
-                    ?.split(" in ")[0]
-                }
-
-                {city && ` in ${city}`}
-
-              </h1>
-              <p className="hero-desc">
-
-                {
-                  data.description
-                    ?.split(" available in ")[0]
-                }
-
-                {city && ` available in ${city}`}
-
-              </p>
-              <div className="mt-4">
-                <Link href={makeLink("/items")}>
-                  <button className="btn btn-light me-3 px-4">
-                    {/* Explore Items */}
-                    {data.button1Text}
-                  </button>
-                </Link>
-
-                <Link href={makeLink("/contact")}>
-                  <button className="btn btn-outline-light px-4">
-                    {/* Get Quote */}
-                    {data.button2Text}
-                  </button>
-                </Link>
+          <div className="banner-carousel-wrap">
+            {banners.map((banner, index) => (
+              <div
+                key={index}
+                className={`banner-slide ${index === currentBanner ? "active" : ""}`}
+              >
+                <img
+                  src={banner.src}
+                  alt={banner.alt}
+                  className="banner-img"
+                />
               </div>
-            </div>
+            ))}
 
-            <div className="col-md-6 text-center">
-              {animationData && (
-                <Lottie animationData={animationData} style={{ height: 350 }} />
-              )}
-            </div>
+            {/* Navigation Controls */}
+            <button
+              type="button"
+              className="carousel-btn prev-btn"
+              onClick={() =>
+                setCurrentBanner((prev) =>
+                  prev === 0 ? banners.length - 1 : prev - 1
+                )
+              }
+              aria-label="Previous Slide"
+            >
+              ❮
+            </button>
+            <button
+              type="button"
+              className="carousel-btn next-btn"
+              onClick={() =>
+                setCurrentBanner((prev) => (prev + 1) % banners.length)
+              }
+              aria-label="Next Slide"
+            >
+              ❯
+            </button>
 
+            {/* Indicators */}
+            <div className="carousel-dots">
+              {banners.map((_, index) => (
+                <span
+                  key={index}
+                  className={`dot ${index === currentBanner ? "active" : ""}`}
+                  onClick={() => setCurrentBanner(index)}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>

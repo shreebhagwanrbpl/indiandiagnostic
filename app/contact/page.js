@@ -264,6 +264,7 @@ export default function Contact({ city }) {
         <section className="contact-banner">
 
           <div className="banner-content">
+            <span className="page-badge">● GET IN TOUCH</span>
 
             <h1>
               Contact Us
