@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, usePathname } from "next/navigation";
 import {
     doc,
@@ -11,6 +11,8 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import toast, { Toaster } from "react-hot-toast";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import styles from "./page.module.css";
 import { getCache, setCache } from "@/lib/productsCache";
 
@@ -21,265 +23,158 @@ export default function ProductDetailPage() {
     const [product, setProduct] = useState(null);
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
-    const [selectedImage, setSelectedImage] =
-        useState("");
-    const [selectedMedia, setSelectedMedia] =
-        useState("image");
-    const [loadingProduct, setLoadingProduct] =
-        useState(true);
-
-    /* =====================================================
-       WEBSITE
-    ===================================================== */
-
-    const WEBSITE = "indiandiagnostic";
-
-    /* =====================================================
-       SLUGIFY
-    ===================================================== */
-
-    const slugify = (text = "") =>
-        text
-            .toLowerCase()
-            .trim()
-            .replace(
-                /[^a-z0-9\s-]/g,
-                ""
-            )
-            .replace(/\s+/g, "-");
-
-    /* =====================================================
-       LOAD PRODUCT
-    ===================================================== */
-
+    const [selectedImage, setSelectedImage] = useState("");
+    const [selectedMedia, setSelectedMedia] = useState("image");
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+    const cardRef = useRef(null);
     useEffect(() => {
-        if (!slug) return;
 
         const fetchProduct = async () => {
-            try {
-                setLoadingProduct(true);
 
-                let allProducts =
-                    await getCache();
+            const slugify = (text = "") =>
+                text
+                    .toLowerCase()
+                    .trim()
+                    .replace(/[^a-z0-9\s-]/g, "")
+                    .replace(/\s+/g, "-");
 
-                /* =========================================
-                   1. CHECK CACHE
-                ========================================= */
+            let allProducts = await getCache();
 
-                if (
-                    Array.isArray(allProducts) &&
-                    allProducts.length > 0
-                ) {
-                    const found =
-                        allProducts.find(
-                            (p) => {
-                                const productSlug =
-                                    p.slug?.trim()
-                                        ? p.slug
-                                        : slugify(
-                                            p.title ||
-                                            p.instrument ||
-                                            p.model ||
-                                            `product-${p.productId}`
-                                        );
+            if (allProducts) {
+                const found = allProducts.find((p) => {
+                    const productSlug =
+                        p.slug?.trim()
+                            ? p.slug
+                            : slugify(
+                                p.title ||
+                                p.instrument ||
+                                p.model ||
+                                `product-${p.productId}`
+                            );
 
-                                return (
-                                    productSlug ===
-                                    slug
-                                );
-                            }
-                        );
+                    return productSlug === slug;
+                });
 
-                    if (found) {
-                        setSelectedImage(
-                            found.images?.[0] ||
-                            found.image ||
-                            ""
-                        );
-
-                        setProduct(found);
-
-                        setLoadingProduct(
-                            false
-                        );
-
-                        return;
-                    }
+                if (found) {
+                    setSelectedImage(found.images?.[0] || found.image || "");
+                    setProduct(found);
+                    return;
                 }
+            }
 
-                /* =========================================
-                   2. FETCH CATEGORY PRODUCTS
-                ========================================= */
+            try {
 
-                const categoryCollection =
+                let normalProducts = [];
+
+                // Categories
+                const categorySnap = await getDocs(
                     collection(
                         db,
                         "websites",
-                        WEBSITE,
+                        "indiandiagnostic",
                         "pages",
                         "categoryproducts",
                         "categories"
-                    );
+                    )
+                );
 
-                const categorySnap =
-                    await getDocs(
-                        categoryCollection
-                    );
-
-                const allCategoryProducts =
-                    [];
-
-                /* =========================================
-                   3. LOOP CATEGORIES
-                ========================================= */
-
-                for (
-                    const categoryDoc of categorySnap.docs
-                ) {
-                    const categoryData =
-                        categoryDoc.data();
-
-                    const subCollection =
+                const subQueries = categorySnap.docs.map((categoryDoc) => {
+                    return getDocs(
                         collection(
                             db,
                             "websites",
-                            WEBSITE,
+                            "indiandiagnostic",
                             "pages",
                             "categoryproducts",
                             "categories",
                             categoryDoc.id,
                             "subcategories"
-                        );
+                        )
+                    ).then((subSnap) => ({
+                        categoryDoc,
+                        subSnap,
+                    }));
+                });
 
-                    const subSnap =
-                        await getDocs(
-                            subCollection
-                        );
+                const results = await Promise.all(subQueries);
 
-                    /* =====================================
-                       4. LOOP SUBCATEGORIES
-                    ===================================== */
+                let categoryProducts = [];
 
-                    subSnap.forEach(
-                        (subDoc) => {
-                            const subData =
-                                subDoc.data();
+                for (const { categoryDoc, subSnap } of results) {
 
-                            const products =
-                                subData.products ||
-                                [];
+                    const categoryData = categoryDoc.data();
 
-                            products.forEach(
-                                (item) => {
-                                    allCategoryProducts.push(
-                                        {
-                                            ...item,
+                    subSnap.forEach((subDoc) => {
 
-                                            category:
-                                                categoryData.category ||
-                                                "",
+                        const subData = subDoc.data();
 
-                                            subCategory:
-                                                subData.subCategory ||
-                                                "",
-                                        }
-                                    );
-                                }
-                            );
-                        }
-                    );
+                        (subData.products || []).forEach((item) => {
+
+                            categoryProducts.push({
+                                ...item,
+                                category: categoryData.category,
+                                subCategory: subData.subCategory,
+                            });
+
+                        });
+
+                    });
+
                 }
-
-                /* =========================================
-                   5. ALL PRODUCTS
-                ========================================= */
 
                 allProducts = [
-                    ...allCategoryProducts,
+                    ...normalProducts,
+                    ...categoryProducts,
                 ];
 
-                /* =========================================
-                   6. SAVE CACHE
-                ========================================= */
+                await setCache(allProducts);
 
-                await setCache(
-                    allProducts
-                );
+                console.log("Total Products =", allProducts.length);
 
-                console.log(
-                    "Total Products =",
-                    allProducts.length
-                );
+                const found = allProducts.find((p) => {
 
-                /* =========================================
-                   7. FIND PRODUCT
-                ========================================= */
-
-                const found =
-                    allProducts.find(
-                        (p) => {
-                            const productSlug =
-                                p.slug?.trim()
-                                    ? p.slug
-                                    : slugify(
-                                        p.title ||
-                                        p.instrument ||
-                                        p.model ||
-                                        `product-${p.productId}`
-                                    );
-
-                            return (
-                                productSlug ===
-                                slug
+                    const productSlug =
+                        p.slug?.trim()
+                            ? p.slug
+                            : slugify(
+                                p.title ||
+                                p.instrument ||
+                                p.model ||
+                                `product-${p.productId}`
                             );
-                        }
-                    );
 
-                console.log(
-                    "Found Product =",
-                    found
-                );
+                    return productSlug === slug;
 
-                /* =========================================
-                   8. SET PRODUCT
-                ========================================= */
+                });
+
+                console.log("Found Product =", found);
 
                 if (found) {
-                    setSelectedImage(
-                        found.images?.[0] ||
-                        found.image ||
-                        ""
-                    );
+                    setSelectedImage(found.images?.[0] || found.image || "");
                 }
 
-                setProduct(
-                    found || null
-                );
+                setProduct(found);
+
             } catch (err) {
+
                 console.error(
                     "Error fetching product in detail page:",
                     err
                 );
 
-                setProduct(null);
-            } finally {
-                setLoadingProduct(
-                    false
-                );
             }
+
         };
 
         fetchProduct();
+
     }, [slug]);
 
-    /* =====================================================
-       CITY
-    ===================================================== */
 
+    const pathname = usePathname();
     const pathParts = pathname
         .split("/")
         .filter(Boolean);
-
     const reservedRoutes = [
         "about",
         "contact",
@@ -413,11 +308,25 @@ export default function ProductDetailPage() {
         }
     };
 
-    /* =====================================================
-       LOADING
-    ===================================================== */
+    const handleDownloadPDF = async () => {
+        if (!product || isGeneratingPDF) return;
 
-    if (loadingProduct) {
+        const toastId = toast.loading("Generating product PDF brochure...");
+        setIsGeneratingPDF(true);
+
+        try {
+            const { generateProductPDF } = await import("@/lib/generateProductPDF");
+            await generateProductPDF(product, selectedImage, city);
+            toast.success("PDF Brochure Downloaded!", { id: toastId });
+        } catch (err) {
+            console.error("PDF generation error:", err);
+            toast.error("Failed to generate PDF. Please try again.", { id: toastId });
+        } finally {
+            setIsGeneratingPDF(false);
+        }
+    };
+
+    if (!product) {
         return (
             <section
                 className={
@@ -523,15 +432,7 @@ export default function ProductDetailPage() {
                 }
             >
                 <div className="container">
-                    <div
-                        className={
-                            styles.productCardWrap
-                        }
-                    >
-
-                        {/* =====================================
-                            PRODUCT MAIN
-                        ===================================== */}
+                    <div className={styles.productCardWrap} ref={cardRef}>
 
                         <div className="row align-items-center">
 
@@ -540,527 +441,543 @@ export default function ProductDetailPage() {
                             ================================= */}
 
                             <div className="col-lg-5">
-
-                                <div
-                                    className={
-                                        styles.productImageBox
-                                    }
-                                >
-
-                                    {selectedMedia ===
-                                        "image" && (
-                                            <img
-                                                src={
-                                                    selectedImage ||
-                                                    "/no-image.png"
-                                                }
-                                                alt={
-                                                    productName
-                                                }
-                                                className={
-                                                    styles.productDetailImage
-                                                }
-                                            />
-                                        )}
-
-                                    {selectedMedia ===
-                                        "video" &&
-                                        product.video && (
-                                            <video
-                                                controls
-                                                width="100%"
-                                                className={
-                                                    styles.productVideo
-                                                }
-                                            >
-                                                <source
-                                                    src={
-                                                        product.video
-                                                    }
-                                                    type="video/mp4"
-                                                />
-                                            </video>
-                                        )}
-                                </div>
-
-                                {/* =================================
-                                    THUMBNAILS
-                                ================================= */}
-
-                                <div
-                                    className={
-                                        styles.thumbnailGallery
-                                    }
-                                >
-
-                                    {(product.images
-                                        ?.length
-                                        ? product.images
-                                        : product.image
-                                            ? [
-                                                product.image,
-                                            ]
-                                            : []
-                                    ).map(
-                                        (
-                                            img,
-                                            index
-                                        ) => (
-                                            <img
-                                                key={
-                                                    index
-                                                }
-                                                src={
-                                                    img
-                                                }
-                                                alt={`thumb-${index}`}
-                                                className={`${styles.thumbnailItem}
-                                                    ${selectedImage ===
-                                                        img &&
-                                                        selectedMedia ===
-                                                        "image"
-                                                        ? styles.active
-                                                        : ""
-                                                    }`}
-                                                onClick={() => {
-                                                    setSelectedImage(
-                                                        img
-                                                    );
-
-                                                    setSelectedMedia(
-                                                        "image"
-                                                    );
-                                                }}
-                                            />
-                                        )
+                                <div className={styles.productImageBox}>
+                                    {selectedMedia === "image" && (
+                                        <img
+                                            src={selectedImage || "/no-image.png"}
+                                            alt={product.title || productName}
+                                            className={styles.productDetailImage}
+                                        />
                                     )}
-
-                                    {product.video && (
-                                        <div
-                                            className={`${styles.mediaThumb}
-                                                ${selectedMedia ===
-                                                    "video"
-                                                    ? styles.active
-                                                    : ""
-                                                }`}
-                                            onClick={() =>
-                                                setSelectedMedia(
-                                                    "video"
-                                                )
-                                            }
-                                        >
-                                            ▶
-                                            <span>
-                                                Video
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    {product.pdf && (
-                                        <a
-                                            href={
-                                                product.pdf
-                                            }
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className={
-                                                styles.mediaThumb
-                                            }
-                                        >
-                                            📄
-                                            <span>
-                                                PDF
-                                            </span>
-                                        </a>
-                                    )}
-
-                                </div>
-                            </div>
-
-                            {/* =================================
-                                PRODUCT CONTENT
-                            ================================= */}
-
-                            <div className="col-lg-7">
-
-                                <div
-                                    className={
-                                        styles.productContent
-                                    }
-                                >
-
-                                    <h1>
-                                        {
-                                            productName
-                                        }
-                                    </h1>
-
-                                    <p
-                                        className={
-                                            styles.productDesc
-                                        }
-                                    >
-                                        {
-                                            product.desc
-                                        }
-                                    </p>
 
                                     <div
                                         className={
-                                            styles.productInfoList
+                                            styles.productImageBox
                                         }
                                     >
-                                        <p>
-                                            <b>
-                                                Brand:
-                                            </b>{" "}
-                                            {
-                                                product.brand
-                                            }
-                                        </p>
 
-                                        <p>
-                                            <b>
-                                                Size:
-                                            </b>{" "}
-                                            {
-                                                product.size
-                                            }
-                                        </p>
+                                        {selectedMedia ===
+                                            "image" && (
+                                                <img
+                                                    src={
+                                                        selectedImage ||
+                                                        "/no-image.png"
+                                                    }
+                                                    alt={
+                                                        productName
+                                                    }
+                                                    className={
+                                                        styles.productDetailImage
+                                                    }
+                                                />
+                                            )}
 
-                                        <p>
-                                            <b>
-                                                Usage:
-                                            </b>{" "}
-                                            {
-                                                product.usage
-                                            }
-                                        </p>
-
-                                        <p>
-                                            <b>
-                                                Model:
-                                            </b>{" "}
-                                            {
-                                                product.model
-                                            }
-                                        </p>
-
-                                        <p>
-                                            <b>
-                                                Instrument:
-                                            </b>{" "}
-                                            {
-                                                product.instrument
-                                            }
-                                        </p>
-
-                                        <p>
-                                            <b>
-                                                Automation:
-                                            </b>{" "}
-                                            {
-                                                product.automation
-                                            }
-                                        </p>
-
-                                        <p>
-                                            <b>
-                                                Availability:
-                                            </b>{" "}
-                                            {
-                                                product.availability
-                                            }
-                                        </p>
+                                        {selectedMedia ===
+                                            "video" &&
+                                            product.video && (
+                                                <video
+                                                    controls
+                                                    width="100%"
+                                                    className={
+                                                        styles.productVideo
+                                                    }
+                                                >
+                                                    <source
+                                                        src={
+                                                            product.video
+                                                        }
+                                                        type="video/mp4"
+                                                    />
+                                                </video>
+                                            )}
                                     </div>
 
                                     {/* =================================
-                                        QUERY BOX
-                                    ================================= */}
+                                    THUMBNAILS
+                                ================================= */}
 
                                     <div
                                         className={
-                                            styles.queryBox
+                                            styles.thumbnailGallery
                                         }
                                     >
-                                        <h3>
-                                            Get Product
-                                            Details
-                                        </h3>
 
-                                        <input
-                                            type="email"
-                                            className={
-                                                styles.queryInput
-                                            }
-                                            placeholder="Enter Email Address"
-                                            value={
-                                                email
-                                            }
-                                            onChange={(
-                                                e
-                                            ) =>
-                                                setEmail(
-                                                    e
-                                                        .target
-                                                        .value
-                                                )
-                                            }
-                                        />
+                                        {(product.images
+                                            ?.length
+                                            ? product.images
+                                            : product.image
+                                                ? [
+                                                    product.image,
+                                                ]
+                                                : []
+                                        ).map(
+                                            (
+                                                img,
+                                                index
+                                            ) => (
+                                                <img
+                                                    key={
+                                                        index
+                                                    }
+                                                    src={
+                                                        img
+                                                    }
+                                                    alt={`thumb-${index}`}
+                                                    className={`${styles.thumbnailItem}
+                                                    ${selectedImage ===
+                                                            img &&
+                                                            selectedMedia ===
+                                                            "image"
+                                                            ? styles.active
+                                                            : ""
+                                                        }`}
+                                                    onClick={() => {
+                                                        setSelectedImage(
+                                                            img
+                                                        );
 
-                                        <input
-                                            type="tel"
-                                            className={
-                                                styles.queryInput
-                                            }
-                                            placeholder="Enter Mobile Number"
-                                            value={
-                                                phone
-                                            }
-                                            maxLength={
-                                                10
-                                            }
-                                            onChange={(
-                                                e
-                                            ) =>
-                                                setPhone(
-                                                    e.target.value.replace(
-                                                        /\D/g,
-                                                        ""
+                                                        setSelectedMedia(
+                                                            "image"
+                                                        );
+                                                    }}
+                                                />
+                                            )
+                                        )}
+
+                                        {product.video && (
+                                            <div
+                                                className={`${styles.mediaThumb}
+                                                ${selectedMedia ===
+                                                        "video"
+                                                        ? styles.active
+                                                        : ""
+                                                    }`}
+                                                onClick={() =>
+                                                    setSelectedMedia(
+                                                        "video"
                                                     )
-                                                )
-                                            }
-                                        />
+                                                }
+                                            >
+                                                ▶
+                                                <span>
+                                                    Video
+                                                </span>
+                                            </div>
+                                        )}
 
-                                        <button
-                                            className={
-                                                styles.queryBtn
+                                        {product.pdf && (
+                                            <a
+                                                href={
+                                                    product.pdf
+                                                }
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className={
+                                                    styles.mediaThumb
+                                                }
+                                            >
+                                                📄
+                                                <span>Document</span>
+                                            </a>
+                                        )}
+
+                                        <div
+                                            className={`${styles.mediaThumb} ${styles.pdfThumbBtn}`}
+                                            onClick={handleDownloadPDF}
+                                            title="Download Product PDF"
+                                            data-html2canvas-ignore="true"
+                                        >
+                                            📥
+                                            <span>Save PDF</span>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                {/* =================================
+                                PRODUCT CONTENT
+                            ================================= */}
+
+                                <div className="col-lg-7">
+
+                                    <div
+                                        className={
+                                            styles.productContent
+                                        }
+                                    >
+
+                                        <h1>
+                                            {
+                                                productName
                                             }
-                                            onClick={
-                                                handleSubmit
+                                        </h1>
+
+                                        <p
+                                            className={
+                                                styles.productDesc
                                             }
                                         >
-                                            Submit Query
-                                        </button>
-                                    </div>
+                                            {
+                                                product.desc
+                                            }
+                                        </p>
 
+                                        <div
+                                            className={
+                                                styles.productInfoList
+                                            }
+                                        >
+                                            <p>
+                                                <b>
+                                                    Brand:
+                                                </b>{" "}
+                                                {
+                                                    product.brand
+                                                }
+                                            </p>
+
+                                            <p>
+                                                <b>
+                                                    Size:
+                                                </b>{" "}
+                                                {
+                                                    product.size
+                                                }
+                                            </p>
+
+                                            <p>
+                                                <b>
+                                                    Usage:
+                                                </b>{" "}
+                                                {
+                                                    product.usage
+                                                }
+                                            </p>
+
+                                            <p>
+                                                <b>
+                                                    Model:
+                                                </b>{" "}
+                                                {
+                                                    product.model
+                                                }
+                                            </p>
+
+                                            <p>
+                                                <b>
+                                                    Instrument:
+                                                </b>{" "}
+                                                {
+                                                    product.instrument
+                                                }
+                                            </p>
+
+                                            <p>
+                                                <b>
+                                                    Automation:
+                                                </b>{" "}
+                                                {
+                                                    product.automation
+                                                }
+                                            </p>
+
+                                            <p>
+                                                <b>
+                                                    Availability:
+                                                </b>{" "}
+                                                {
+                                                    product.availability
+                                                }
+                                            </p>
+                                        </div>
+
+                                        {/* =================================
+                                        QUERY BOX
+                                    ================================= */}
+
+                                        <div
+                                            className={
+                                                styles.queryBox
+                                            }
+                                        >
+                                            <h3>
+                                                Get Product
+                                                Details
+                                            </h3>
+
+                                            <input
+                                                type="email"
+                                                className={
+                                                    styles.queryInput
+                                                }
+                                                placeholder="Enter Email Address"
+                                                value={
+                                                    email
+                                                }
+                                                onChange={(
+                                                    e
+                                                ) =>
+                                                    setEmail(
+                                                        e
+                                                            .target
+                                                            .value
+                                                    )
+                                                }
+                                            />
+
+                                            <input
+                                                type="tel"
+                                                className={
+                                                    styles.queryInput
+                                                }
+                                                placeholder="Enter Mobile Number"
+                                                value={
+                                                    phone
+                                                }
+                                                maxLength={
+                                                    10
+                                                }
+                                                onChange={(
+                                                    e
+                                                ) =>
+                                                    setPhone(
+                                                        e.target.value.replace(
+                                                            /\D/g,
+                                                            ""
+                                                        )
+                                                    )
+                                                }
+                                            />
+
+                                            <button
+                                                className={
+                                                    styles.queryBtn
+                                                }
+                                                onClick={
+                                                    handleSubmit
+                                                }
+                                            >
+                                                Submit Query
+                                            </button>
+                                        </div>
+
+                                    </div>
                                 </div>
+
                             </div>
 
-                        </div>
-
-                        {/* =====================================
+                            {/* =====================================
                             SEO CONTENT
                         ===================================== */}
 
-                        <div
-                            className={
-                                styles.seoContent
-                            }
-                        >
-
-                            <section
+                            <div
                                 className={
-                                    styles.seoSection
+                                    styles.seoContent
                                 }
                             >
-                                <h2>
-                                    {productName} Supplier
-                                    in {city}
-                                </h2>
 
-                                <p>
-                                    Raj Biosis is a
-                                    trusted supplier
-                                    and dealer of{" "}
-                                    <strong>
-                                        {
-                                            productName
-                                        }
-                                    </strong>{" "}
-                                    in {city}. We
-                                    provide advanced
-                                    laboratory
-                                    instruments,
-                                    pathology
-                                    equipment,
-                                    diagnostic
-                                    analyzers,
-                                    hospital
-                                    devices, blood
-                                    bank equipment
-                                    and research
-                                    laboratory
-                                    solutions for
-                                    healthcare
-                                    organizations
-                                    across {city}.
-                                </p>
-                            </section>
+                                <section
+                                    className={
+                                        styles.seoSection
+                                    }
+                                >
+                                    <h2>
+                                        {productName} Supplier
+                                        in {city}
+                                    </h2>
 
-                            <section
-                                className={
-                                    styles.seoSection
-                                }
-                            >
-                                <h2>
-                                    Leading{" "}
-                                    {productName} Dealer
-                                    in {city}
-                                </h2>
+                                    <p>
+                                        Raj Biosis is a
+                                        trusted supplier
+                                        and dealer of{" "}
+                                        <strong>
+                                            {
+                                                productName
+                                            }
+                                        </strong>{" "}
+                                        in {city}. We
+                                        provide advanced
+                                        laboratory
+                                        instruments,
+                                        pathology
+                                        equipment,
+                                        diagnostic
+                                        analyzers,
+                                        hospital
+                                        devices, blood
+                                        bank equipment
+                                        and research
+                                        laboratory
+                                        solutions for
+                                        healthcare
+                                        organizations
+                                        across {city}.
+                                    </p>
+                                </section>
 
-                                <p>
-                                    As a reputed{" "}
-                                    {productName} dealer
-                                    in {city}, we offer
-                                    premium quality
-                                    equipment from
-                                    globally recognized
-                                    manufacturers. Our
-                                    team provides
-                                    installation
-                                    support, user
-                                    training,
-                                    maintenance
-                                    guidance and
-                                    after-sales
-                                    assistance to
-                                    ensure smooth
-                                    laboratory
-                                    operations.
-                                </p>
-                            </section>
+                                <section
+                                    className={
+                                        styles.seoSection
+                                    }
+                                >
+                                    <h2>
+                                        Leading{" "}
+                                        {productName} Dealer
+                                        in {city}
+                                    </h2>
 
-                            <section
-                                className={
-                                    styles.seoSection
-                                }
-                            >
-                                <h2>
-                                    Buy {productName} in{" "}
-                                    {city} at Best Price
-                                </h2>
+                                    <p>
+                                        As a reputed{" "}
+                                        {productName} dealer
+                                        in {city}, we offer
+                                        premium quality
+                                        equipment from
+                                        globally recognized
+                                        manufacturers. Our
+                                        team provides
+                                        installation
+                                        support, user
+                                        training,
+                                        maintenance
+                                        guidance and
+                                        after-sales
+                                        assistance to
+                                        ensure smooth
+                                        laboratory
+                                        operations.
+                                    </p>
+                                </section>
 
-                                <p>
-                                    Looking to buy{" "}
-                                    {productName} in{" "}
-                                    {city}? Raj Biosis
-                                    offers genuine
-                                    products,
-                                    competitive
-                                    pricing and fast
-                                    delivery. We help
-                                    hospitals,
-                                    diagnostic
-                                    centres,
-                                    pathology
-                                    laboratories and
-                                    healthcare
-                                    institutions
-                                    choose the right
-                                    equipment according
-                                    to their workflow
-                                    and budget.
-                                </p>
-                            </section>
+                                <section
+                                    className={
+                                        styles.seoSection
+                                    }
+                                >
+                                    <h2>
+                                        Buy {productName} in{" "}
+                                        {city} at Best Price
+                                    </h2>
 
-                            <section
-                                className={
-                                    styles.seoSection
-                                }
-                            >
-                                <h2>
-                                    Applications of{" "}
-                                    {productName}
-                                </h2>
+                                    <p>
+                                        Looking to buy{" "}
+                                        {productName} in{" "}
+                                        {city}? Raj Biosis
+                                        offers genuine
+                                        products,
+                                        competitive
+                                        pricing and fast
+                                        delivery. We help
+                                        hospitals,
+                                        diagnostic
+                                        centres,
+                                        pathology
+                                        laboratories and
+                                        healthcare
+                                        institutions
+                                        choose the right
+                                        equipment according
+                                        to their workflow
+                                        and budget.
+                                    </p>
+                                </section>
 
-                                <ul>
-                                    <li>
-                                        Clinical
-                                        Diagnostics
-                                        Laboratories
-                                    </li>
+                                <section
+                                    className={
+                                        styles.seoSection
+                                    }
+                                >
+                                    <h2>
+                                        Applications of{" "}
+                                        {productName}
+                                    </h2>
 
-                                    <li>
-                                        Hospitals &
-                                        Healthcare
-                                        Centres
-                                    </li>
+                                    <ul>
+                                        <li>
+                                            Clinical
+                                            Diagnostics
+                                            Laboratories
+                                        </li>
 
-                                    <li>
-                                        Pathology
-                                        Laboratories
-                                    </li>
+                                        <li>
+                                            Hospitals &
+                                            Healthcare
+                                            Centres
+                                        </li>
 
-                                    <li>
-                                        Blood Banks
-                                    </li>
+                                        <li>
+                                            Pathology
+                                            Laboratories
+                                        </li>
 
-                                    <li>
-                                        Medical
-                                        Colleges
-                                    </li>
+                                        <li>
+                                            Blood Banks
+                                        </li>
 
-                                    <li>
-                                        Research &
-                                        Development
-                                        Laboratories
-                                    </li>
-                                </ul>
-                            </section>
+                                        <li>
+                                            Medical
+                                            Colleges
+                                        </li>
 
-                            <section
-                                className={
-                                    styles.seoSection
-                                }
-                            >
-                                <h2>
-                                    Why Choose Raj Biosis
-                                    in {city}
-                                </h2>
+                                        <li>
+                                            Research &
+                                            Development
+                                            Laboratories
+                                        </li>
+                                    </ul>
+                                </section>
 
-                                <ul>
-                                    <li>
-                                        Trusted
-                                        Biomedical
-                                        Equipment
-                                        Supplier
-                                    </li>
+                                <section
+                                    className={
+                                        styles.seoSection
+                                    }
+                                >
+                                    <h2>
+                                        Why Choose Raj Biosis
+                                        in {city}
+                                    </h2>
 
-                                    <li>
-                                        Original
-                                        Products From
-                                        Leading Brands
-                                    </li>
+                                    <ul>
+                                        <li>
+                                            Trusted
+                                            Biomedical
+                                            Equipment
+                                            Supplier
+                                        </li>
 
-                                    <li>
-                                        Competitive
-                                        Pricing
-                                    </li>
+                                        <li>
+                                            Original
+                                            Products From
+                                            Leading Brands
+                                        </li>
 
-                                    <li>
-                                        Quick Delivery
-                                        Across {city}
-                                    </li>
+                                        <li>
+                                            Competitive
+                                            Pricing
+                                        </li>
 
-                                    <li>
-                                        Technical
-                                        Support &
-                                        Service
-                                        Assistance
-                                    </li>
+                                        <li>
+                                            Quick Delivery
+                                            Across {city}
+                                        </li>
 
-                                    <li>
-                                        Experienced
-                                        Healthcare
-                                        Equipment Team
-                                    </li>
-                                </ul>
-                            </section>
+                                        <li>
+                                            Technical
+                                            Support &
+                                            Service
+                                            Assistance
+                                        </li>
 
+                                        <li>
+                                            Experienced
+                                            Healthcare
+                                            Equipment Team
+                                        </li>
+                                    </ul>
+                                </section>
+
+                            </div>
                         </div>
                     </div>
-                </div>
             </section>
         </>
     );

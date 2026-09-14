@@ -45,7 +45,7 @@ export const metadata = {
 
     url:
       "https://indiandiagnostic.com",
-  },
+  },  
 };
 
 export default function Home() {

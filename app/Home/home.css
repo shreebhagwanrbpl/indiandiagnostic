@@ -428,3 +428,130 @@ FEATURED PRODUCTS
       .featured-btn:hover {
         transform: scale(1.05);
       }
+
+      /* ==========================================
+         HERO CAROUSEL BANNER STYLING
+      ========================================== */
+      .hero-banner-section {
+        padding-top: 110px;
+        padding-bottom: 20px;
+        background: #f8fafc;
+        width: 100%;
+      }
+
+      .banner-carousel-wrap {
+        position: relative;
+        width: 100%;
+        margin: 0 auto;
+        overflow: hidden;
+        border-radius: 20px;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+        min-height: 220px;
+        background: #0f172a;
+      }
+
+      .banner-slide {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
+      }
+
+      .banner-slide.active {
+        position: relative;
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .banner-img {
+        width: 100%;
+        height: auto;
+        max-height: 520px;
+        object-fit: cover;
+        display: block;
+      }
+
+      .carousel-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.45);
+        color: #fff;
+        border: none;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 10;
+        transition: all 0.3s ease;
+      }
+
+      .carousel-btn:hover {
+        background: #2563eb;
+        transform: translateY(-50%) scale(1.1);
+      }
+
+      .prev-btn {
+        left: 20px;
+      }
+
+      .next-btn {
+        right: 20px;
+      }
+
+      .carousel-dots {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 10;
+      }
+
+      .carousel-dots .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .carousel-dots .dot.active {
+        width: 32px;
+        border-radius: 10px;
+        background: #2563eb;
+      }
+
+      @media (max-width: 768px) {
+        .hero-banner-section {
+          padding-top: 90px;
+        }
+
+        .banner-carousel-wrap {
+          border-radius: 12px;
+        }
+
+        .carousel-btn {
+          width: 36px;
+          height: 36px;
+          font-size: 14px;
+        }
+
+        .prev-btn {
+          left: 10px;
+        }
+
+        .next-btn {
+          right: 10px;
+        }
+      }

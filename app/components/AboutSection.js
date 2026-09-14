@@ -168,7 +168,6 @@ const quality = useCounter(100);
     </div>
   </div>
 </section>
-
     </section>
 
   );

@@ -40,6 +40,17 @@ export default function ItemsPage({ city }) {
     ?.toLowerCase()
     ?.replace(/\s+/g, "-");
 
+  // Sync category search from URL query parameter (e.g. ?search=Hematology)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const search = params.get("search") || params.get("category");
+      if (search) {
+        setProductSearch(search);
+      }
+    }
+  }, []);
+
 
 
   /* -------------------------------- */
@@ -628,16 +639,11 @@ export default function ItemsPage({ city }) {
 
       <section className="item-banner">
         <div className="item-content">
-
-          <h1>
-            Medical Products
-          </h1>
-
+          <span className="page-badge">● OUR CATALOGUE</span>
+          <h1>Medical Products</h1>
           <p>
-            Find Diagnostic &
-            Laboratory Products
+            Find Advanced Diagnostic &amp; Laboratory Products Across India
           </p>
-
         </div>
       </section>
 
@@ -672,6 +678,7 @@ export default function ItemsPage({ city }) {
                   type="text"
                   className="form-control"
                   placeholder="Search Product..."
+                  suppressHydrationWarning
                   value={sidebarSearch}
                   onChange={(e) => {
                     setSidebarSearch(e.target.value);
@@ -846,6 +853,7 @@ export default function ItemsPage({ city }) {
                       type="text"
                       className="form-control"
                       placeholder="Search..."
+                      suppressHydrationWarning
                       value={productSearch}
                       onChange={(e) => {
                         setProductSearch(e.target.value);
@@ -858,6 +866,7 @@ export default function ItemsPage({ city }) {
 
                     <select
                       className="form-select"
+                      suppressHydrationWarning
                       value={selectedBrand}
                       onChange={(e) =>
                         setSelectedBrand(
@@ -893,6 +902,7 @@ export default function ItemsPage({ city }) {
 
                     <select
                       className="form-select"
+                      suppressHydrationWarning
                       value={selectedUsage}
                       onChange={(e) =>
                         setSelectedUsage(
@@ -929,6 +939,7 @@ export default function ItemsPage({ city }) {
                     <button
 
                       className="btn-reset"
+                      suppressHydrationWarning
 
                       onClick={
                         resetFilters
