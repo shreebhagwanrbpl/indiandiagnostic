@@ -8,9 +8,8 @@ import { doc, getDoc } from "firebase/firestore";
 import "./comp.css";
 
 export default function Footer() {
-
-  const [stateName, setStateName] =
-    useState("");
+  const [stateName, setStateName] = useState("");
+  const [contactInfo, setContactInfo] = useState([]);
 
   const pathname = usePathname();
 
@@ -19,7 +18,10 @@ export default function Footer() {
 
   const firstPart = pathParts[0];
 
-  // reserved routes
+  // =========================================================
+  // RESERVED ROUTES
+  // =========================================================
+
   const reservedRoutes = [
     "about",
     "contact",
@@ -27,14 +29,20 @@ export default function Footer() {
     "services",
   ];
 
-  // city slug
+  // =========================================================
+  // CITY SLUG
+  // =========================================================
+
   const citySlug =
     firstPart &&
-    !reservedRoutes.includes(firstPart)
+      !reservedRoutes.includes(firstPart)
       ? firstPart
       : "jaipur";
 
-  // format city
+  // =========================================================
+  // FORMAT CITY
+  // =========================================================
+
   const formatCity = (name = "") =>
     name
       .split("-")
@@ -47,12 +55,75 @@ export default function Footer() {
 
   const city = formatCity(citySlug);
 
-  // LOAD STATE NAME
+
+  const WEBSITE = "indiandiagnostic";
+
+  // =========================================================
+  // CONTACT FIELD FINDER
+  // =========================================================
+
+  const getContactValue = (
+    label
+  ) => {
+    const field =
+      contactInfo.find(
+        (item) =>
+          item?.label
+            ?.trim()
+            ?.toLowerCase() ===
+          label
+            .trim()
+            .toLowerCase()
+      );
+
+    return field?.value ?? "";
+  };
+
+  // =========================================================
+  // LOAD CONTACT INFO
+  // =========================================================
+
   useEffect(() => {
+    const loadContact = async () => {
+      try {
+        const snap = await getDoc(
+          doc(
+            db,
+            "websites",
+            WEBSITE,
+            "pages",
+            "contact"
+          )
+        );
 
+        if (snap.exists()) {
+          setContactInfo(
+            snap.data()?.contactInfo ||
+            []
+          );
+        } else {
+          setContactInfo([]);
+        }
+      } catch (error) {
+        console.error(
+          "Footer contact load error:",
+          error
+        );
+
+        setContactInfo([]);
+      }
+    };
+
+    loadContact();
+  }, []);
+
+  // =========================================================
+  // LOAD STATE NAME
+  // =========================================================
+
+  useEffect(() => {
     const loadDistrict = async () => {
-
-      // skip jaipur
+      // Jaipur ka fixed address hai
       if (
         !citySlug ||
         citySlug === "jaipur"
@@ -61,45 +132,111 @@ export default function Footer() {
       }
 
       try {
-
         const snap = await getDoc(
           doc(
             db,
             "websites",
-            "globalbiomedicalorg",
+            WEBSITE,
             "districts",
             citySlug
           )
         );
 
         if (snap.exists()) {
-
           setStateName(
-            snap.data()?.state || ""
+            snap.data()?.state ||
+            ""
           );
-
         }
-
       } catch (err) {
-
-        console.log(err);
-
+        console.log(
+          "District load error:",
+          err
+        );
       }
-
     };
 
     loadDistrict();
-
   }, [citySlug]);
+
+  // =========================================================
+  // GET CONTACT DATA
+  // =========================================================
+
+  const address =
+    getContactValue("Address");
+
+  const phone =
+    getContactValue("Phone");
+
+  const email =
+    getContactValue("Email");
+
+  const workingHours =
+    getContactValue(
+      "Working Hours"
+    );
+
+  // =========================================================
+  // PHONE ARRAY
+  // =========================================================
+
+  const phoneNumbers = Array.isArray(
+    phone
+  )
+    ? phone.filter(Boolean)
+    : phone
+      ? [phone]
+      : [];
+
+  // =========================================================
+  // EMAIL ARRAY SUPPORT
+  // =========================================================
+
+  const emailAddresses =
+    Array.isArray(email)
+      ? email.filter(Boolean)
+      : email
+        ? [email]
+        : [];
+
+  // =========================================================
+  // ADDRESS
+  // =========================================================
+
+  const finalAddress =
+    address ||
+    (
+      citySlug === "jaipur"
+        ? "F-4, 1st Floor, Plot No. 16, D-Block Tagor Nagar, Ajmer-Delhi Bypass Rd, Jaipur, Rajasthan 302021"
+        : stateName
+          ? `${city}, ${stateName}, India`
+          : `${city}, India`
+    );
+
+  // =========================================================
+  // MAP QUERY
+  // =========================================================
+
+  const mapQuery =
+    citySlug === "jaipur"
+      ? "Raj Biosis Jaipur Rajasthan"
+      : finalAddress;
+
+  // =========================================================
+  // RENDER
+  // =========================================================
 
   return (
     <footer className="footer-main">
-
       <div className="footer-container">
 
         <div className="row">
 
+          {/* ========================================= */}
           {/* COMPANY */}
+          {/* ========================================= */}
+
           <div className="col-md-4">
 
             <div className="footer-logo">
@@ -126,7 +263,10 @@ export default function Footer() {
 
           </div>
 
+          {/* ========================================= */}
           {/* LINKS */}
+          {/* ========================================= */}
+
           <div className="col-md-2">
 
             <h6>
@@ -136,7 +276,9 @@ export default function Footer() {
             <ul className="footer-links">
 
               <li>
-                <Link href={`/${citySlug}`}>
+                <Link
+                  href={`/${citySlug}`}
+                >
                   Home
                 </Link>
               </li>
@@ -177,7 +319,10 @@ export default function Footer() {
 
           </div>
 
+          {/* ========================================= */}
           {/* PRODUCTS */}
+          {/* ========================================= */}
+
           <div className="col-md-3">
 
             <h6>
@@ -206,59 +351,136 @@ export default function Footer() {
 
           </div>
 
+          {/* ========================================= */}
           {/* CONTACT */}
+          {/* ========================================= */}
+
           <div className="col-md-3">
 
             <h6>
               Contact
             </h6>
 
-            <p>
-              📍{" "}
+            {/* ===================================== */}
+            {/* ADDRESS */}
+            {/* ===================================== */}
 
-              {citySlug === "jaipur"
-                ? "F-4, 1st Floor, Plot No. 16, D-Block Tagor Nagar, Ajmer-Delhi Bypass Rd, Jaipur, Rajasthan 302021"
-                : stateName
-                  ? `${city}, ${stateName}, India`
-                  : `${city}, India`}
-            </p>
+            {finalAddress && (
+              <p>
+                📍 {finalAddress}
+              </p>
+            )}
 
-            <p>
-              📞 +91 9876543210
-            </p>
+            {/* ===================================== */}
+            {/* MULTIPLE PHONE NUMBERS */}
+            {/* ===================================== */}
 
-            <p>
-              📧 info@rajbiosis.com
-            </p>
+            {phoneNumbers.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "8px",
+                  marginBottom: "15px",
+                }}
+              >
+                {phoneNumbers.map(
+                  (number, index) => (
+                    <a
+                      key={index}
+                      href={`tel:${number}`}
+                      style={{
+                        color: "inherit",
+                        textDecoration: "none",
+                        display: "block",
+                      }}
+                    >
+                      📞 {number}
+                    </a>
+                  )
+                )}
+              </div>
+            )}
 
+            {/* ===================================== */}
+            {/* MULTIPLE EMAILS */}
+            {/* ===================================== */}
+
+            {emailAddresses.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "8px",
+                  marginBottom: "15px",
+                }}
+              >
+                {emailAddresses.map(
+                  (mail, index) => (
+                    <a
+                      key={index}
+                      href={`mailto:${mail}`}
+                      style={{
+                        color: "inherit",
+                        textDecoration: "none",
+                        display: "block",
+                      }}
+                    >
+                      📧 {mail}
+                    </a>
+                  )
+                )}
+              </div>
+            )}
+
+            {/* ===================================== */}
+            {/* WORKING HOURS */}
+            {/* ===================================== */}
+
+            {workingHours && (
+              <p>
+                ⏰{" "}
+                {Array.isArray(workingHours)
+                  ? workingHours.join(", ")
+                  : workingHours}
+              </p>
+            )}
+
+            {/* ===================================== */}
             {/* MAP */}
+            {/* ===================================== */}
+
             <iframe
-              src={`https://maps.google.com/maps?q=${
-                citySlug === "jaipur"
-                  ? "Raj Biosis Jaipur Rajasthan"
-                  : stateName
-                    ? `${city}, ${stateName}, India`
-                    : `${city}, India`
-              }&output=embed`}
+              src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                mapQuery
+              )}&output=embed`}
               width="100%"
               height="200"
               loading="lazy"
+              style={{
+                border: 0,
+                borderRadius: "10px",
+              }}
+              title="Google Maps"
             />
 
           </div>
 
         </div>
 
+        {/* ============================================= */}
+        {/* FOOTER BOTTOM */}
+        {/* ============================================= */}
+
         <div className="footer-bottom">
 
-          © {new Date().getFullYear()}
-          {" "}
+          ©{" "}
+          {new Date().getFullYear()}{" "}
           Raj Biosis Pvt. Ltd.
 
         </div>
 
       </div>
-
     </footer>
   );
 }
