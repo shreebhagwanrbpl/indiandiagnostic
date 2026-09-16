@@ -1,41 +1,40 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { db, collection, getDocs } from "@/lib/firebase";
+
 import districts from "@/lib/districts.json";
 
+export const dynamic = "force-static";
+
 export async function GET() {
-  // Categories
-  const categorySnap = await getDocs(collection(db, "categories"));
+  let categoryText = "- Diagnostic Instruments\n- Pathology Equipment\n- Biochemistry Analyzers\n- Medical Consumables";
+  let productText = "- Auto Analyzers\n- Hematology Analyzers\n- Rapid Test Kits\n- ELISA Readers";
 
-  const categories = categorySnap.docs.map((doc) => {
-    const data = doc.data();
-    return data.name || data.categoryName || "Unknown";
-  });
+  try {
+    const categorySnap = await getDocs(
+      collection(
+        db,
+        "websites",
+        "indiandiagnostic",
+        "pages",
+        "categoryproducts",
+        "categories"
+      )
+    );
+    if (!categorySnap.empty) {
+      const categories = categorySnap.docs.map((doc) => {
+        const data = doc.data();
+        return data.category || data.name || data.categoryName || "Unknown";
+      });
+      categoryText = categories.map((cat) => `- ${cat}`).join("\n");
+    }
+  } catch (err) {
+    console.warn("llms.txt firestore fetch fallback:", err);
+  }
 
-  const categoryText = categories
-    .map((cat) => `- ${cat}`)
-    .join("\n");
 
-  // Products
-  const productSnap = await getDocs(collection(db, "products"));
-
-  const products = productSnap.docs
-    .slice(0, 100)
-    .map((doc) => {d
-      const data = doc.data();
-      return data.name || data.productName || "Unknown Product";
-    });
-
-  const productText = products
-    .map((item) => `- ${item}`)
-    .join("\n");
-
-  // Districts
   const districtText = districts
-    .map(
-      (d) =>
-        `- https://indiandiagnostic.com/${d.state}/${d.slug}`
-    )
+    .slice(0, 50)
+    .map((d) => `- https://indiandiagnostic.com/${d.slug}`)
     .join("\n");
 
   const content = `# Indian Diagnostic

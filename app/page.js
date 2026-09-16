@@ -12,7 +12,8 @@
 //   );
 // }
 
-import HomeSection from "./Home/page";
+import HomeSection from "./components/HomeSection";
+
 
 export const metadata = {
   title:

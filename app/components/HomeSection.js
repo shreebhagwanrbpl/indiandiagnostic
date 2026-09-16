@@ -1,14 +1,15 @@
 "use client";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { db } from "@/lib/firebase";
 import {
+  db,
   doc,
   onSnapshot,
   getDoc,
   collection,
   getDocs,
-} from "firebase/firestore";
+} from "@/lib/firebase";
+
 import Link from "next/link";
 import "./home.css";
 
@@ -19,7 +20,7 @@ const Lottie = dynamic(
   }
 );
 
-export default function Home({ city }) {
+export default function HomeSection({ city }) {
   const [animationData, setAnimationData] = useState(null);
   const [products, setProducts] = useState([]);
   const [data, setData] = useState({
@@ -39,16 +40,14 @@ export default function Home({ city }) {
 
   useEffect(() => {
     fetch("https://assets10.lottiefiles.com/packages/lf20_jcikwtux.json")
-      .then(res => res.json())
-      .then(data => setAnimationData(data));
+      .then((res) => res.json())
+      .then((d) => setAnimationData(d))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // =========================
-        // NORMAL PRODUCTS
-        // =========================
         const normalSnap = await getDoc(
           doc(
             db,
@@ -68,9 +67,6 @@ export default function Home({ city }) {
             );
         }
 
-        // =========================
-        // CATEGORY PRODUCTS
-        // =========================
         const categorySnap = await getDocs(
           collection(
             db,
@@ -101,9 +97,9 @@ export default function Home({ city }) {
           let added = false;
 
           for (const subDoc of subSnap.docs) {
-            const products = subDoc.data().products || [];
+            const items = subDoc.data().products || [];
 
-            const firstProduct = products.find(
+            const firstProduct = items.find(
               (p) => p.isPublished !== false
             );
 
@@ -118,23 +114,17 @@ export default function Home({ city }) {
           if (categoryProducts.length >= 4) break;
         }
 
-        // =========================
-        // FINAL RESULT
-        // =========================
-
         if (categoryProducts.length > 0) {
           setProducts(categoryProducts.slice(0, 4));
         } else {
           setProducts(normalProducts.slice(0, 4));
         }
-
       } catch (err) {
         console.error(err);
       }
     };
     fetchProducts();
   }, []);
-
 
   const useCounter = (end, duration = 2000) => {
     const [count, setCount] = useState(0);
@@ -187,6 +177,7 @@ export default function Home({ city }) {
 
     return () => unsub();
   }, []);
+
   const banners = [
     { src: "/indiansd.jpg", alt: "Indian Diagnostic Banner 1" },
     { src: "/id.png", alt: "Indian Diagnostic Banner 2" },
@@ -205,11 +196,11 @@ export default function Home({ city }) {
       return path || "/";
     }
 
-    return `/${city}${path}`;
+    return `/${city.toLowerCase().replace(/\s+/g, "-")}${path}`;
   };
+
   return (
     <>
-
       {/* 🔥 HERO CAROUSEL BANNER */}
       <section className="hero-banner-section">
         <div className="container">
@@ -265,22 +256,19 @@ export default function Home({ city }) {
         </div>
       </section>
 
-
       <section className="home-about">
         <div className="container">
           <div className="row align-items-center">
-
             {/* LEFT IMAGE */}
             <div className="col-md-6 position-relative text-center">
               <div className="img-box">
-                <img className="home-img" src="/HomeImg.png" />
+                <img className="home-img" src="/HomeImg.png" alt="Indian Diagnostic" />
               </div>
 
               <div className="float-card f1">💊</div>
               <div className="float-card f2">🧪</div>
               <div className="float-card f3">🏥</div>
               <div className="float-card f4">✔</div>
-
             </div>
 
             {/* RIGHT TEXT */}
@@ -315,7 +303,6 @@ export default function Home({ city }) {
       {/* 🔥 SECTION 3: SERVICES */}
       <section className="home-services">
         <div className="container text-center">
-          {/* <h6 className="service-tag">OUR SERVICES</h6> */}
           <h2 className="service-title">What We Offer</h2>
           <div className="row mt-5 g-3">
             {services.slice(0, 4).map((item, i) => (
@@ -327,11 +314,9 @@ export default function Home({ city }) {
 
                   <h5>{item.title}</h5>
                   <p>{item.desc}</p>
-
                 </div>
               </div>
             ))}
-
           </div>
         </div>
       </section>
@@ -375,9 +360,7 @@ export default function Home({ city }) {
             {products.map((item, i) => (
               <div className="col-md-3" key={i}>
                 <div className="featured-card">
-
                   <div className="featured-image">
-
                     <img
                       src={
                         item.images?.[0] ||
@@ -386,11 +369,9 @@ export default function Home({ city }) {
                       }
                       alt={item.title}
                     />
-
                   </div>
 
                   <div className="featured-content">
-
                     <span className="featured-category">
                       {item.category || "Medical Equipment"}
                     </span>
@@ -404,9 +385,7 @@ export default function Home({ city }) {
                         View Details
                       </button>
                     </Link>
-
                   </div>
-
                 </div>
               </div>
             ))}
@@ -414,19 +393,14 @@ export default function Home({ city }) {
         </div>
       </section>
 
-
       {/* ================= TESTIMONIALS ================= */}
       <section className="py-5" style={{ background: "#f8fafc" }}>
         <div className="container text-center">
-
-          {/* Heading */}
           <h2 className="fw-bold mb-5" style={{ fontSize: "32px" }}>
             What Clients Say
           </h2>
 
           <div className="row g-4">
-
-            {/* Card 1 */}
             <div className="col-md-4">
               <div className="testimonial-card">
                 <div className="quote-icon">❝</div>
@@ -437,7 +411,6 @@ export default function Home({ city }) {
               </div>
             </div>
 
-            {/* Card 2 */}
             <div className="col-md-4">
               <div className="testimonial-card">
                 <div className="quote-icon">❝</div>
@@ -448,7 +421,6 @@ export default function Home({ city }) {
               </div>
             </div>
 
-            {/* Card 3 */}
             <div className="col-md-4">
               <div className="testimonial-card">
                 <div className="quote-icon">❝</div>
@@ -458,7 +430,6 @@ export default function Home({ city }) {
                 <h6>- Doctor</h6>
               </div>
             </div>
-
           </div>
         </div>
       </section>
@@ -470,7 +441,6 @@ export default function Home({ city }) {
       >
         <div className="container">
           <div className="row align-items-center">
-            {/* 🔥 LEFT SIDE (CTA) */}
             <div className="col-md-6 mb-4 mb-md-0">
               <h2 className="fw-bold">
                 Need Medical Equipment?
@@ -486,17 +456,11 @@ export default function Home({ city }) {
                     Get Quote
                   </button>
                 </Link>
-
-                {/* <button className="btn btn-outline-light px-4">
-            Contact
-          </button> */}
               </div>
             </div>
 
-            {/* 🔥 RIGHT SIDE (STATS) */}
             <div className="col-md-6">
               <div className="row text-center">
-
                 <div className="col">
                   <h3 className="fw-bold">{productsCount}+</h3>
                   <p>Products</p>
@@ -516,10 +480,8 @@ export default function Home({ city }) {
                   <h3 className="fw-bold">24/7</h3>
                   <p>Support</p>
                 </div>
-
               </div>
             </div>
-
           </div>
         </div>
       </section>

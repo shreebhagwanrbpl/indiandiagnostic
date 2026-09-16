@@ -372,9 +372,10 @@ SIDEBAR
 
 
 .sidebar-head {
-  padding: 18px;
+  padding: 16px 18px;
   border-bottom: 1px solid #eee;
   background: #f8f8f8;
+  flex-shrink: 0;
 }
 
 .sidebar-head h4 {
@@ -384,19 +385,21 @@ SIDEBAR
 }
 
 .category-search {
-  padding: 15px;
+  padding: 12px 15px;
   border-bottom: 1px solid #eee;
+  flex-shrink: 0;
 }
 
 .category-search input {
-  height: 46px;
+  height: 44px;
   border-radius: 8px;
 }
 
 .category-list {
-  max-height: 75vh;
-  overflow: auto;
-  max-height: 400px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .category-list::-webkit-scrollbar {
@@ -503,16 +506,17 @@ CATEGORY
   flex-shrink: 0;
 
   position: sticky;
-  top: 100px;
+  top: 90px;
 
-  height: fit-content;
-  max-height: calc(100vh - 120px);
+  height: calc(100vh - 105px);
+  display: flex;
+  flex-direction: column;
 
   overflow: hidden;
 
   background: #fff;
   border: 1px solid #eee;
-  border-radius: 12px;
+  border-radius: 14px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
 }
 
@@ -1867,7 +1871,7 @@ SCROLLBAR
 
   background: #ffffff;
 
-  color: #2563eb !;
+  color: #2563eb !important;
 
   border-left: 4px solid #2563eb;
 
@@ -1922,7 +1926,7 @@ SCROLLBAR
 
   border-left: 2px solid #edf1f7;
 
-  max-height: 220px;
+  max-height: 300px;
 
   overflow-y: auto;
 
@@ -1948,7 +1952,7 @@ SCROLLBAR
 }
 
 .category-scroll {
-  max-height: 320px;
+  max-height: calc(100vh - 250px);
   overflow-y: auto;
   overflow-x: hidden;
 }

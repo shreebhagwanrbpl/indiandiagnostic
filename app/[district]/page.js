@@ -1,7 +1,15 @@
-import Home from "../Home/page";
+import HomeSection from "@/app/components/HomeSection";
+import districts from "@/lib/districts.json";
+
+export const dynamic = "force-static";
+
+export async function generateStaticParams() {
+  return districts.map((d) => ({
+    district: d.slug,
+  }));
+}
 
 export default async function Page({ params }) {
-
   const resolvedParams = await params;
 
   const district =
@@ -13,5 +21,6 @@ export default async function Page({ params }) {
       char.toUpperCase()
     );
 
-  return <Home city={city} />;
+  return <HomeSection city={city} />;
 }
+

@@ -1,8 +1,8 @@
 "use client";
 import "./services.css"
 import { useEffect, useState } from "react";
-import { db } from "@/lib/firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import { db, doc, onSnapshot } from "@/lib/firebase";
+
 import toast, { Toaster } from "react-hot-toast";
 export default function ServicesPage() {
   const [services, setServices] = useState([]);

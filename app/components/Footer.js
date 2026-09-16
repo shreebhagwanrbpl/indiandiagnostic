@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { db, doc, getDoc } from "@/lib/firebase";
+
 import { FaInstagram, FaLinkedinIn, FaFacebookF } from "react-icons/fa";
 import "./comp.css";
 
@@ -15,7 +15,8 @@ export default function Footer() {
   const pathname = usePathname();
 
   const pathParts =
-    pathname.split("/").filter(Boolean);
+    (pathname || "").split("/").filter(Boolean);
+
 
   const firstPart = pathParts[0];
 

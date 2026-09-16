@@ -3,14 +3,16 @@
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import "./contact.css";
-import { db } from "@/lib/firebase";
-import toast, { Toaster } from "react-hot-toast";
 import {
+  db,
   doc,
   getDoc,
   collection,
   addDoc,
-} from "firebase/firestore";
+} from "@/lib/firebase";
+import toast, { Toaster } from "react-hot-toast";
+
+
 
 export default function Contact({ city }) {
   const [form, setForm] = useState({
@@ -30,7 +32,8 @@ export default function Contact({ city }) {
   const pathname = usePathname();
 
   const pathParts =
-    pathname.split("/").filter(Boolean);
+    (pathname || "").split("/").filter(Boolean);
+
 
   const reservedRoutes = [
     "about",

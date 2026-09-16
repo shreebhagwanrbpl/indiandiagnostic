@@ -1,20 +1,20 @@
-// import ItemsPage from "@/app/items/page";
-
-// export default async function DistrictItemsPage({ params }) {
-//   const resolvedParams = await params;
-
-//   const district = resolvedParams?.district || "jaipur";
-
-//   return <ItemsPage city={district} />;
-// }
-
 import ItemsPage from "@/app/items/page";
+import districts from "@/lib/districts.json";
+
+export const dynamic = "force-static";
+
+export async function generateStaticParams() {
+  return districts.map((d) => ({
+    district: d.slug,
+  }));
+}
 
 export async function generateMetadata({
   params,
 }) {
+  const resolvedParams = await params;
   const district =
-    params?.district || "jaipur";
+    resolvedParams?.district || "jaipur";
 
   const districtName =
     district
@@ -62,8 +62,9 @@ export async function generateMetadata({
 export default async function DistrictItemsPage({
   params,
 }) {
+  const resolvedParams = await params;
   const district =
-    params?.district ||
+    resolvedParams?.district ||
     "jaipur";
 
   return (
@@ -71,4 +72,4 @@ export default async function DistrictItemsPage({
       city={district}
     />
   );
-}
+}

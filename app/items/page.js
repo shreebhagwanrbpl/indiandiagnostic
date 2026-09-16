@@ -1,22 +1,22 @@
 "use client";
 import { FiArrowUp } from "react-icons/fi";
 import { useState, useEffect, useMemo } from "react";
-import { db } from "@/lib/firebase";
-import "./items.css";
-import { getCache, setCache } from "@/lib/productsCache";
-import toast, { Toaster } from "react-hot-toast";
 import {
+  db,
   doc,
   getDoc,
   collection,
   getDocs,
-} from "firebase/firestore";
+} from "@/lib/firebase";
+
 import {
   FiFilter,
   FiChevronDown,
   FiChevronRight,
 } from "react-icons/fi";
 import { useRouter } from "next/navigation";
+import { getCache, setCache } from "@/lib/productsCache";
+import "./items.css";
 
 export default function ItemsPage({ city }) {
 
@@ -606,21 +606,7 @@ export default function ItemsPage({ city }) {
   ============================================================ */
 
   const viewDetails = (item) => {
-
-    console.log("CLICKED");
-    console.log("ITEM =", item);
-    console.log(
-      citySlug
-        ? `/${citySlug}/items/${item.slug}`
-        : `/items/${item.slug}`
-    );
-
-    router.push(
-      citySlug
-        ? `/${citySlug}/items/${item.slug}`
-        : `/items/${item.slug}`
-    );
-
+    router.push(`/items/${item.slug}`);
   };
 
   const scrollToTop = () => {

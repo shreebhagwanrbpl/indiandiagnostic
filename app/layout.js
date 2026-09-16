@@ -188,22 +188,27 @@ export const metadata = {
   },
 };
 
+import { Suspense } from "react";
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <Navbar />
-        {children}
-        {/* <Toaster position="top-right" /> */}
-
-        <Footer />
+        <Suspense fallback={null}>
+          <Navbar />
+        </Suspense>
+        <Suspense fallback={null}>
+          {children}
+        </Suspense>
+        <Suspense fallback={null}>
+          <Footer />
+        </Suspense>
 
         {/* Google Analytics */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-9N1WZKKHW4"
           strategy="afterInteractive"
         />
-        {/* <script src="https://ai-voice-frontend-chi.vercel.app/widget/v1/loader.js" data-tenant="6a606678f8af0f7278107e5e" async></script> */}
 
         <Script id="google-analytics" strategy="afterInteractive">
           {`
@@ -222,4 +227,4 @@ export default function RootLayout({ children }) {
       </body>
     </html>
   );
-}
+}

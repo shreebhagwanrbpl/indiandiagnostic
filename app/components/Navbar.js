@@ -8,9 +8,10 @@ export default function Navbar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const pathParts = pathname
+  const pathParts = (pathname || "")
     .split("/")
     .filter(Boolean);
+
 
   const reservedRoutes = [
     "about",

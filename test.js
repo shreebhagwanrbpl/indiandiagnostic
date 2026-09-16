@@ -1,17 +1,5 @@
-const { initializeApp } = require("firebase/app");
-const { getFirestore, doc, getDoc, collection, getDocs } = require("firebase/firestore");
+const { doc, getDoc, collection, getDocs, db } = require("./lib/firebase");
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDGIJXX3MR1CxmIJbJHyVzbfRa0M0Sw6FQ",
-  authDomain: "rajbiosis-central.firebaseapp.com",
-  projectId: "rajbiosis-central",
-  storageBucket: "rajbiosis-central.firebasestorage.app",
-  messagingSenderId: "190335913620",
-  appId: "1:190335913620:web:99a14edcbb528f06c1ee81"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 async function test() {
   const startTime = Date.now();
