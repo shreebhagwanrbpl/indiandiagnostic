@@ -14,21 +14,24 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import styles from "./page.module.css";
 import { getCache, setCache } from "@/lib/productsCache";
+import { fetchProductBySlug, slugify } from "@/lib/data-fetcher";
 
 const WEBSITE = "indiandiagnostic";
 
-export default function ProductDetailClient({ initialSlug, initialDistrict }) {
+export default function ProductDetailClient({ initialSlug, initialDistrict, initialProduct }) {
     const params = useParams();
     const pathname = usePathname();
 
     const slug = initialSlug || params?.slug || "";
     const districtParam = initialDistrict || params?.district || "";
 
-    const [product, setProduct] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [product, setProduct] = useState(initialProduct || null);
+    const [loading, setLoading] = useState(!initialProduct);
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
-    const [selectedImage, setSelectedImage] = useState("");
+    const [selectedImage, setSelectedImage] = useState(
+        initialProduct?.images?.[0] || initialProduct?.image || ""
+    );
     const [selectedMedia, setSelectedMedia] = useState("image");
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const cardRef = useRef(null);
@@ -49,122 +52,55 @@ export default function ProductDetailClient({ initialSlug, initialDistrict }) {
         : "India";
 
     useEffect(() => {
+        if (typeof window !== "undefined") {
+            window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+        }
+
+        if (initialProduct) {
+            setProduct(initialProduct);
+            setSelectedImage(initialProduct.images?.[0] || initialProduct.image || "");
+            setLoading(false);
+            return;
+        }
+
         if (!slug) return;
 
-        const fetchProduct = async () => {
+        const loadProduct = async () => {
             setLoading(true);
-
-            const slugify = (text = "") =>
-                text
-                    .toLowerCase()
-                    .trim()
-                    .replace(/[^a-z0-9\s-]/g, "")
-                    .replace(/\s+/g, "-");
-
             try {
-                let allProducts = await getCache();
+                const decodedSlug = decodeURIComponent(slug);
 
-                if (allProducts && allProducts.length > 0) {
-                    const found = allProducts.find((p) => {
-                        const productSlug =
-                            p.slug?.trim()
-                                ? p.slug
-                                : slugify(
-                                    p.title ||
-                                    p.instrument ||
-                                    p.model ||
-                                    `product-${p.productId}`
-                                );
-
-                        return productSlug === slug;
+                // Try cache first
+                const cached = await getCache();
+                if (cached && cached.length > 0) {
+                    const foundInCache = cached.find((p) => {
+                        const pSlug = p.slug?.trim() || slugify(p.title || p.name || "");
+                        return pSlug === decodedSlug || slugify(pSlug) === slugify(decodedSlug);
                     });
-
-                    if (found) {
-                        setSelectedImage(found.images?.[0] || found.image || "");
-                        setProduct(found);
+                    if (foundInCache) {
+                        setProduct(foundInCache);
+                        setSelectedImage(foundInCache.images?.[0] || foundInCache.image || "");
                         setLoading(false);
-                        return;
                     }
                 }
 
-                // Fetch categories and subcategories
-                const categorySnap = await getDocs(
-                    collection(
-                        db,
-                        "websites",
-                        WEBSITE,
-                        "pages",
-                        "categoryproducts",
-                        "categories"
-                    )
-                );
-
-                const subQueries = categorySnap.docs.map((categoryDoc) => {
-                    return getDocs(
-                        collection(
-                            db,
-                            "websites",
-                            WEBSITE,
-                            "pages",
-                            "categoryproducts",
-                            "categories",
-                            categoryDoc.id,
-                            "subcategories"
-                        )
-                    ).then((subSnap) => ({
-                        categoryDoc,
-                        subSnap,
-                    }));
-                });
-
-                const results = await Promise.all(subQueries);
-                let categoryProducts = [];
-
-                for (const { categoryDoc, subSnap } of results) {
-                    const categoryData = categoryDoc.data();
-                    subSnap.forEach((subDoc) => {
-                        const subData = subDoc.data();
-                        (subData.products || []).forEach((item) => {
-                            categoryProducts.push({
-                                ...item,
-                                category: categoryData.category,
-                                subCategory: subData.subCategory,
-                            });
-                        });
-                    });
-                }
-
-                allProducts = categoryProducts;
-                await setCache(allProducts);
-
-                const found = allProducts.find((p) => {
-                    const productSlug =
-                        p.slug?.trim()
-                            ? p.slug
-                            : slugify(
-                                p.title ||
-                                p.instrument ||
-                                p.model ||
-                                `product-${p.productId}`
-                            );
-
-                    return productSlug === slug;
-                });
-
+                // Fetch from catalog API
+                const found = await fetchProductBySlug(decodedSlug);
                 if (found) {
+                    setProduct(found);
                     setSelectedImage(found.images?.[0] || found.image || "");
+                } else if (!product) {
+                    setProduct(null);
                 }
-
-                setProduct(found || null);
             } catch (err) {
-                console.error("Error fetching product in detail page:", err);
+                console.error("Error fetching product detail:", err);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchProduct();
-    }, [slug]);
+        loadProduct();
+    }, [slug, initialProduct]);
 
     const productName =
         product?.title ||
@@ -371,14 +307,17 @@ export default function ProductDetailClient({ initialSlug, initialDistrict }) {
                                     )}
 
                                     <div className={styles.productInfoList}>
+                                        {product.price && (
+                                            <p><b>Price:</b> ₹{product.price}</p>
+                                        )}
                                         {product.brand && (
                                             <p><b>Brand:</b> {product.brand}</p>
                                         )}
-                                        {product.size && (
-                                            <p><b>Size:</b> {product.size}</p>
+                                        {product.category && (
+                                            <p><b>Category:</b> {product.category}</p>
                                         )}
-                                        {product.usage && (
-                                            <p><b>Usage:</b> {product.usage}</p>
+                                        {product.subCategory && (
+                                            <p><b>Subcategory:</b> {product.subCategory}</p>
                                         )}
                                         {product.model && (
                                             <p><b>Model:</b> {product.model}</p>
@@ -386,8 +325,23 @@ export default function ProductDetailClient({ initialSlug, initialDistrict }) {
                                         {product.instrument && (
                                             <p><b>Instrument:</b> {product.instrument}</p>
                                         )}
+                                        {product.capacity && (
+                                            <p><b>Capacity:</b> {product.capacity}</p>
+                                        )}
+                                        {product.throughput && (
+                                            <p><b>Throughput:</b> {product.throughput}</p>
+                                        )}
+                                        {product.parameters && (
+                                            <p><b>Parameters:</b> {product.parameters}</p>
+                                        )}
                                         {product.automation && (
                                             <p><b>Automation:</b> {product.automation}</p>
+                                        )}
+                                        {product.usage && (
+                                            <p><b>Usage:</b> {product.usage}</p>
+                                        )}
+                                        {product.size && (
+                                            <p><b>Size:</b> {product.size}</p>
                                         )}
                                         {product.availability && (
                                             <p><b>Availability:</b> {product.availability}</p>

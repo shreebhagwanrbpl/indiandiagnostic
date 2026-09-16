@@ -11,6 +11,7 @@ import {
 } from "@/lib/firebase";
 
 import Link from "next/link";
+import { slugify } from "@/lib/data-fetcher";
 import "./home.css";
 
 const Lottie = dynamic(
@@ -357,38 +358,47 @@ export default function HomeSection({ city }) {
           <h2 className="fw-bold mb-4">Featured Products</h2>
 
           <div className="row">
-            {products.map((item, i) => (
-              <div className="col-md-3" key={i}>
-                <div className="featured-card">
-                  <div className="featured-image">
-                    <img
-                      src={
-                        item.images?.[0] ||
-                        item.image ||
-                        "/no-image.png"
-                      }
-                      alt={item.title}
-                    />
-                  </div>
+            {products.map((item, i) => {
+              const itemSlug = item.slug?.trim() || slugify(item.title || item.name || item.instrument || item.model || item.id || "");
+              const targetUrl = itemSlug ? makeLink(`/items/${itemSlug}`) : makeLink("/items");
 
-                  <div className="featured-content">
-                    <span className="featured-category">
-                      {item.category || "Medical Equipment"}
-                    </span>
+              return (
+                <div className="col-md-3" key={i}>
+                  <div className="featured-card">
+                    <div className="featured-image">
+                      <Link href={targetUrl} scroll={true}>
+                        <img
+                          src={
+                            item.images?.[0] ||
+                            item.image ||
+                            "/no-image.png"
+                          }
+                          alt={item.title || "Medical Equipment"}
+                        />
+                      </Link>
+                    </div>
 
-                    <h5 className="featured-title">
-                      {item.title}
-                    </h5>
+                    <div className="featured-content">
+                      <span className="featured-category">
+                        {item.category || "Medical Equipment"}
+                      </span>
 
-                    <Link href={makeLink("/items")}>
-                      <button className="featured-btn">
-                        View Details
-                      </button>
-                    </Link>
+                      <h5 className="featured-title">
+                        <Link href={targetUrl} scroll={true} style={{ color: "inherit", textDecoration: "none" }}>
+                          {item.title}
+                        </Link>
+                      </h5>
+
+                      <Link href={targetUrl} scroll={true}>
+                        <button className="featured-btn">
+                          View Details
+                        </button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

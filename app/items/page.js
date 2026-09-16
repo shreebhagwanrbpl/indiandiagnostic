@@ -15,7 +15,9 @@ import {
   FiChevronRight,
 } from "react-icons/fi";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { getCache, setCache } from "@/lib/productsCache";
+import { fetchFullCatalog, slugify } from "@/lib/data-fetcher";
 import "./items.css";
 
 export default function ItemsPage({ city }) {
@@ -103,146 +105,48 @@ export default function ItemsPage({ city }) {
 
   /* -------------------------------- */
 
-  /* FETCH PRODUCTS */
+  /* FETCH PRODUCTS VIA CATALOG API */
 
   /* -------------------------------- */
 
   useEffect(() => {
+    let isMounted = true;
 
     const fetchProducts = async () => {
-      const cached = await getCache();
-
-      if (cached) {
-        setProducts(cached);
-        setLoadingProducts(false);
-      }
+      // 1. Instant display from IndexedDB cache if available
       try {
-
-        const snap = await getDoc(
-          doc(
-            db,
-            "websites",
-            "indiandiagnostic",
-            "pages",
-            "products"
-          )
-        );
-
-        if (!snap.exists()) {
+        const cached = await getCache();
+        if (cached && cached.length > 0 && isMounted) {
+          setProducts(cached);
           setLoadingProducts(false);
-          return;
         }
-
-        const raw =
-          snap.data().products || [];
-
-        const slugify = (text = "") =>
-          text
-            .toLowerCase()
-            .trim()
-            .replace(/[^a-z0-9\s-]/g, "")
-            .replace(/\s+/g, "-");
-
-        const formatted =
-          raw.map((item) => ({
-
-            ...item,
-
-            title:
-              item.title ||
-              item.instrument ||
-              item.model ||
-              "Medical Equipment",
-
-            slug:
-              item.slug?.trim()
-                ? item.slug
-                : slugify(
-                  item.title ||
-                  item.instrument ||
-                  item.model ||
-                  `product-${item.productId}`
-                ),
-
-            category:
-              getCategory(item),
-
-          }));
-
-        // Normal Products
-        const normalProducts = formatted;
-
-        // Category Products
-        const categorySnap = await getDocs(
-          collection(
-            db,
-            "websites",
-            "indiandiagnostic",
-            "pages",
-            "categoryproducts",
-            "categories"
-          )
-        );
-
-        // Fetch all subcategories in parallel!
-        const subQueries = categorySnap.docs.map((categoryDoc) => {
-          return getDocs(
-            collection(
-              db,
-              "websites",
-              "indiandiagnostic",
-              "pages",
-              "categoryproducts",
-              "categories",
-              categoryDoc.id,
-              "subcategories"
-            )
-          ).then((subSnap) => ({
-            categoryDoc,
-            subSnap
-          }));
-        });
-
-        const results = await Promise.all(subQueries);
-        let categoryProducts = [];
-
-        for (const { categoryDoc, subSnap } of results) {
-          const categoryData = categoryDoc.data();
-          subSnap.forEach((subDoc) => {
-            const subData = subDoc.data();
-            (subData.products || []).forEach((item) => {
-              categoryProducts.push({
-                ...item,
-                category: categoryData.category,
-                subCategory: subData.subCategory,
-              });
-            });
-          });
-        }
-
-        // Merge Both
-        const allProducts = [
-          ...normalProducts,
-          ...categoryProducts,
-        ];
-
-        setProducts(allProducts);
-        await setCache(allProducts);
-
-      } catch (err) {
-
-        console.error(err);
-
-      } finally {
-
-        setLoadingProducts(false);
-
+      } catch (e) {
+        console.warn("IndexedDB cache read skipped:", e);
       }
 
+      // 2. Fetch fresh catalog from API
+      try {
+        const catalogData = await fetchFullCatalog();
+        const allProducts = catalogData.products || [];
+
+        if (isMounted) {
+          setProducts(allProducts);
+        }
+        await setCache(allProducts);
+      } catch (err) {
+        console.error("Error fetching catalog in ItemsPage:", err);
+      } finally {
+        if (isMounted) {
+          setLoadingProducts(false);
+        }
+      }
     };
 
     fetchProducts();
 
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
 
@@ -602,11 +506,35 @@ export default function ItemsPage({ city }) {
 
 
   /* ============================================================
-     VIEW DETAILS
+     VIEW DETAILS & SLUG HELPERS
   ============================================================ */
 
+  const getProductSlug = (item) => {
+    if (!item) return "";
+    return (
+      (item.slug && item.slug.trim()) ||
+      slugify(
+        item.title ||
+        item.name ||
+        item.instrument ||
+        item.model ||
+        item.id ||
+        item.categoryProductId ||
+        item.productId ||
+        ""
+      )
+    );
+  };
+
+  const getProductUrl = (item) => {
+    const slug = getProductSlug(item);
+    if (!slug) return "/items";
+    return citySlug ? `/${citySlug}/items/${slug}` : `/items/${slug}`;
+  };
+
   const viewDetails = (item) => {
-    router.push(`/items/${item.slug}`);
+    const url = getProductUrl(item);
+    router.push(url);
   };
 
   const scrollToTop = () => {
@@ -1050,177 +978,101 @@ export default function ItemsPage({ city }) {
                           </div>
 
                           {
+                            visibleList.map((item, index) => {
+                              const itemSlug = getProductSlug(item);
+                              const productUrl = getProductUrl(item);
 
-                            visibleList.map((item, index) => (
-
-                              <div
-
-                                id={`product-${item.slug}`}
-
-                                className="product-list-card"
-
-                                key={`${item.slug}-${index}`}
-
-                              >
-
-                                <div className="row align-items-center">
-
-                                  {/* IMAGE */}
-
-                                  <div className="col-lg-3 col-md-4">
-
-                                    <div className="list-image">
-
-                                      <img
-
-                                        src={
-
-                                          item.images?.[0] ||
-
-                                          item.image ||
-
-                                          "/no-image.png"
-
-                                        }
-
-                                        alt={item.title}
-
-                                      />
-
+                              return (
+                                <div
+                                  id={`product-${itemSlug}`}
+                                  className="product-list-card"
+                                  key={`${itemSlug}-${index}`}
+                                >
+                                  <div className="row align-items-center">
+                                    {/* IMAGE */}
+                                    <div className="col-lg-3 col-md-4">
+                                      <Link href={productUrl} scroll={true} style={{ textDecoration: "none" }}>
+                                        <div className="list-image">
+                                          <img
+                                            src={
+                                              item.images?.[0] ||
+                                              item.image ||
+                                              "/no-image.png"
+                                            }
+                                            alt={item.title || item.name || "Medical Equipment"}
+                                          />
+                                        </div>
+                                      </Link>
                                     </div>
 
-                                  </div>
+                                    {/* DETAILS */}
+                                    <div className="col-lg-6 col-md-8">
+                                      <div className="list-content">
+                                        <h4>
+                                          <Link href={productUrl} scroll={true} style={{ color: "inherit", textDecoration: "none" }}>
+                                            {item.title || item.name}
+                                          </Link>
+                                        </h4>
 
-                                  {/* DETAILS */}
+                                        <p>
+                                          {item.desc || item.description || ""}
+                                        </p>
 
-                                  <div className="col-lg-6 col-md-8">
+                                        <div className="spec-grid">
+                                          <div>
+                                            <b>Brand</b>
+                                            <span>
+                                              {item.brand || "-"}
+                                            </span>
+                                          </div>
 
-                                    <div className="list-content">
+                                          <div>
+                                            <b>Usage</b>
+                                            <span>
+                                              {item.usage || "-"}
+                                            </span>
+                                          </div>
 
-                                      <h4>
+                                          <div>
+                                            <b>Model</b>
+                                            <span>
+                                              {item.model || "-"}
+                                            </span>
+                                          </div>
 
-                                        {item.title}
-
-                                      </h4>
-
-                                      <p>
-
-                                        {item.desc}
-
-                                      </p>
-
-                                      <div className="spec-grid">
-
-                                        <div>
-
-                                          <b>Brand</b>
-
-                                          <span>
-
-                                            {
-
-                                              item.brand ||
-
-                                              "-"
-
-                                            }
-
-                                          </span>
-
+                                          <div>
+                                            <b>Availability</b>
+                                            <span>
+                                              {item.availability || "-"}
+                                            </span>
+                                          </div>
                                         </div>
-
-                                        <div>
-
-                                          <b>Usage</b>
-
-                                          <span>
-
-                                            {
-
-                                              item.usage ||
-
-                                              "-"
-
-                                            }
-
-                                          </span>
-
-                                        </div>
-
-                                        <div>
-
-                                          <b>Model</b>
-
-                                          <span>
-
-                                            {
-
-                                              item.model ||
-
-                                              "-"
-
-                                            }
-
-                                          </span>
-
-                                        </div>
-
-                                        <div>
-
-                                          <b>Availability</b>
-
-                                          <span>
-
-                                            {
-
-                                              item.availability ||
-
-                                              "-"
-
-                                            }
-
-                                          </span>
-
-                                        </div>
-
                                       </div>
-
                                     </div>
 
-                                  </div>
-
-                                  {/* ACTION */}
-
-                                  <div className="col-lg-3">
-
-                                    <div className="product-action">
-
-                                      <button
-
-                                        className="btn-view"
-
-                                        onClick={() =>
-
-                                          viewDetails(item)
-
-                                        }
-
-                                      >
-
-                                        View Details
-
-                                      </button>
-
+                                    {/* ACTION */}
+                                    <div className="col-lg-3">
+                                      <div className="product-action">
+                                        <Link
+                                          href={productUrl}
+                                          scroll={true}
+                                          className="btn-view"
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            textDecoration: "none",
+                                            width: "100%",
+                                          }}
+                                        >
+                                          View Details
+                                        </Link>
+                                      </div>
                                     </div>
-
                                   </div>
-
                                 </div>
-
-                              </div>
-
-                            ))
-
+                              );
+                            })
                           }
 
                           {list.length > limit && (
