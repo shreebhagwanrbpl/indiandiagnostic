@@ -17,7 +17,7 @@ import {
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCache, setCache } from "@/lib/productsCache";
-import { fetchFullCatalog, slugify } from "@/lib/data-fetcher";
+import { fetchFullCatalog, slugify, isProductVisibleOnCurrentSite } from "@/lib/data-fetcher";
 import "./items.css";
 
 export default function ItemsPage({ city }) {
@@ -55,51 +55,7 @@ export default function ItemsPage({ city }) {
 
 
 
-  /* -------------------------------- */
 
-  /* TEMP CATEGORY GENERATOR */
-
-  /* -------------------------------- */
-
-  const getCategory = (item) => {
-
-    const title = (item.title || "").toLowerCase();
-
-    const usage = (item.usage || "").toLowerCase();
-
-    if (
-      title.includes("rapid") ||
-      usage.includes("rapid")
-    )
-      return "Rapid Test Kits";
-
-    if (
-      title.includes("elisa")
-    )
-      return "ELISA Kits";
-
-    if (
-      title.includes("electrolyte")
-    )
-      return "Electrolyte Reagents";
-
-    if (
-      title.includes("hematology")
-    )
-      return "Hematology";
-
-    if (
-      title.includes("biochemistry")
-    )
-      return "Biochemistry";
-
-    if (
-      title.includes("urine")
-    )
-      return "Urine Test";
-
-    return "Other Products";
-  };
 
 
 
@@ -115,19 +71,22 @@ export default function ItemsPage({ city }) {
     const fetchProducts = async () => {
       // 1. Instant display from IndexedDB cache if available
       try {
-        const cached = await getCache();
-        if (cached && cached.length > 0 && isMounted) {
-          setProducts(cached);
-          setLoadingProducts(false);
+        const rawCached = await getCache();
+        if (Array.isArray(rawCached) && rawCached.length > 0 && isMounted) {
+          const validCached = rawCached.filter((p) => isProductVisibleOnCurrentSite(p));
+          if (validCached.length > 0) {
+            setProducts(validCached);
+            setLoadingProducts(false);
+          }
         }
       } catch (e) {
         console.warn("IndexedDB cache read skipped:", e);
       }
 
-      // 2. Fetch fresh catalog from API
+      // 2. Fetch fresh catalog from API (Real-time sync)
       try {
-        const catalogData = await fetchFullCatalog();
-        const allProducts = catalogData.products || [];
+        const catalogData = await fetchFullCatalog(true);
+        const allProducts = (catalogData.products || []).filter((p) => isProductVisibleOnCurrentSite(p));
 
         if (isMounted) {
           setProducts(allProducts);
@@ -153,97 +112,70 @@ export default function ItemsPage({ city }) {
 
 
   /* -------------------------------- */
-
   /* FILTER PRODUCTS */
-
   /* -------------------------------- */
+  const filteredProducts = useMemo(() => {
+    const searchLow = productSearch.toLowerCase().trim();
+    return products
+      .filter((p) => p.isPublished !== false)
+      .filter((item) => {
+        const txt = `
+          ${item.title || ""}
+          ${item.name || ""}
+          ${item.brand || ""}
+          ${item.usage || ""}
+          ${item.model || ""}
+          ${item.instrument || ""}
+          ${item.category || ""}
+          ${item.subCategory || ""}
+        `.toLowerCase();
 
-  const filteredProducts =
-    useMemo(() => {
-
-      return products
-
-        .filter((p) => p.isPublished !== false)
-
-        .filter((item) => {
-
-          const txt =
-            `${item.title}
-             ${item.brand}
-             ${item.usage}`
-              .toLowerCase();
-
-          return (
-
-            txt.includes(productSearch.toLowerCase())
-
-            &&
-
-            (
-              selectedBrand
-                ? item.brand === selectedBrand
-                : true
-            )
-
-            &&
-
-            (
-              selectedUsage
-                ? item.usage === selectedUsage
-                : true
-            )
-
-          );
-
-        });
-
-    }, [
-      products,
-      productSearch,
-      selectedBrand,
-      selectedUsage
-    ]);
-
+        return (
+          (!searchLow || txt.includes(searchLow)) &&
+          (selectedBrand ? item.brand === selectedBrand : true) &&
+          (selectedUsage ? item.usage === selectedUsage : true)
+        );
+      });
+  }, [products, productSearch, selectedBrand, selectedUsage]);
 
   const sidebarProducts = useMemo(() => {
+    const sideLow = sidebarSearch.toLowerCase().trim();
     return products.filter((item) => {
+      if (!sideLow) return true;
       const txt = `
-      ${item.title}
-      ${item.category}
-      ${item.subCategory}
-    `.toLowerCase();
+        ${item.title || ""}
+        ${item.name || ""}
+        ${item.category || ""}
+        ${item.subCategory || ""}
+        ${item.brand || ""}
+      `.toLowerCase();
 
-      return txt.includes(sidebarSearch.toLowerCase());
+      return txt.includes(sideLow);
     });
   }, [products, sidebarSearch]);
-  /* -------------------------------- */
-
-  /* GROUP CATEGORY */
 
   /* -------------------------------- */
-
+  /* GROUP CATEGORY & SUBCATEGORY */
+  /* -------------------------------- */
   const groupedProducts = useMemo(() => {
-
     const obj = {};
 
     sidebarProducts.forEach((item) => {
-
-      if (!obj[item.category]) {
-        obj[item.category] = {};
+      const cat = item.category || (item.type === "normal" ? "Normal Products" : "General Products");
+      if (!obj[cat]) {
+        obj[cat] = {};
       }
 
-      const subCategory = item.subCategory || "Other";
+      const subCategory = item.subCategory || "General";
 
-      if (!obj[item.category][subCategory]) {
-        obj[item.category][subCategory] = [];
+      if (!obj[cat][subCategory]) {
+        obj[cat][subCategory] = [];
       }
 
-      obj[item.category][subCategory].push(item);
-
+      obj[cat][subCategory].push(item);
     });
 
     return obj;
-
   }, [sidebarProducts]);
 
 
@@ -308,21 +240,18 @@ export default function ItemsPage({ city }) {
   ============================================================ */
 
   const paginatedGroupedProducts = useMemo(() => {
-
     const obj = {};
 
     filteredProducts.forEach((item) => {
-
-      if (!obj[item.category]) {
-        obj[item.category] = [];
+      const cat = item.category || (item.type === "normal" ? "Normal Products" : "General Products");
+      if (!obj[cat]) {
+        obj[cat] = [];
       }
 
-      obj[item.category].push(item);
-
+      obj[cat].push(item);
     });
 
     return obj;
-
   }, [filteredProducts]);
 
 

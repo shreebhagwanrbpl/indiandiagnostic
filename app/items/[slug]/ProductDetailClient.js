@@ -14,7 +14,7 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import styles from "./page.module.css";
 import { getCache, setCache } from "@/lib/productsCache";
-import { fetchProductBySlug, slugify } from "@/lib/data-fetcher";
+import { fetchProductBySlug, slugify, isProductVisibleOnCurrentSite } from "@/lib/data-fetcher";
 
 const WEBSITE = "indiandiagnostic";
 
@@ -56,7 +56,7 @@ export default function ProductDetailClient({ initialSlug, initialDistrict, init
             window.scrollTo({ top: 0, left: 0, behavior: "instant" });
         }
 
-        if (initialProduct) {
+        if (initialProduct && isProductVisibleOnCurrentSite(initialProduct)) {
             setProduct(initialProduct);
             setSelectedImage(initialProduct.images?.[0] || initialProduct.image || "");
             setLoading(false);
@@ -77,7 +77,7 @@ export default function ProductDetailClient({ initialSlug, initialDistrict, init
                         const pSlug = p.slug?.trim() || slugify(p.title || p.name || "");
                         return pSlug === decodedSlug || slugify(pSlug) === slugify(decodedSlug);
                     });
-                    if (foundInCache) {
+                    if (foundInCache && isProductVisibleOnCurrentSite(foundInCache)) {
                         setProduct(foundInCache);
                         setSelectedImage(foundInCache.images?.[0] || foundInCache.image || "");
                         setLoading(false);
@@ -85,11 +85,11 @@ export default function ProductDetailClient({ initialSlug, initialDistrict, init
                 }
 
                 // Fetch from catalog API
-                const found = await fetchProductBySlug(decodedSlug);
-                if (found) {
+                const found = await fetchProductBySlug(decodedSlug, true);
+                if (found && isProductVisibleOnCurrentSite(found)) {
                     setProduct(found);
                     setSelectedImage(found.images?.[0] || found.image || "");
-                } else if (!product) {
+                } else {
                     setProduct(null);
                 }
             } catch (err) {

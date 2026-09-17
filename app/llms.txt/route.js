@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, collection, getDocs } from "@/lib/firebase";
-
+import { fetchCategories, fetchFullCatalog } from "@/lib/data-fetcher";
 import districts from "@/lib/districts.json";
 
 export const dynamic = "force-static";
@@ -10,25 +9,17 @@ export async function GET() {
   let productText = "- Auto Analyzers\n- Hematology Analyzers\n- Rapid Test Kits\n- ELISA Readers";
 
   try {
-    const categorySnap = await getDocs(
-      collection(
-        db,
-        "websites",
-        "indiandiagnostic",
-        "pages",
-        "categoryproducts",
-        "categories"
-      )
-    );
-    if (!categorySnap.empty) {
-      const categories = categorySnap.docs.map((doc) => {
-        const data = doc.data();
-        return data.category || data.name || data.categoryName || "Unknown";
-      });
-      categoryText = categories.map((cat) => `- ${cat}`).join("\n");
+    const categories = await fetchCategories();
+    if (categories && categories.length > 0) {
+      categoryText = categories.map((cat) => `- ${cat.name || cat.category}`).join("\n");
+    }
+
+    const catalog = await fetchFullCatalog();
+    if (catalog && catalog.products && catalog.products.length > 0) {
+      productText = catalog.products.slice(0, 15).map((p) => `- ${p.title || p.name}`).join("\n");
     }
   } catch (err) {
-    console.warn("llms.txt firestore fetch fallback:", err);
+    console.warn("llms.txt catalog fetch fallback:", err);
   }
 
 

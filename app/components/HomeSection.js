@@ -11,7 +11,7 @@ import {
 } from "@/lib/firebase";
 
 import Link from "next/link";
-import { slugify } from "@/lib/data-fetcher";
+import { slugify, fetchFullCatalog } from "@/lib/data-fetcher";
 import "./home.css";
 
 const Lottie = dynamic(
@@ -47,84 +47,28 @@ export default function HomeSection({ city }) {
   }, []);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    let isMounted = true;
+    const loadFeaturedProducts = async () => {
       try {
-        const normalSnap = await getDoc(
-          doc(
-            db,
-            "websites",
-            "indiandiagnostic",
-            "pages",
-            "products"
-          )
-        );
+        const catalog = await fetchFullCatalog();
+        const allProds = catalog.products || [];
 
-        let normalProducts = [];
+        // Prioritize products with valid images and titles
+        const withImages = allProds.filter((p) => (p.images?.length > 0 || p.image));
+        const featured = withImages.length >= 4 ? withImages.slice(0, 8) : allProds.slice(0, 8);
 
-        if (normalSnap.exists()) {
-          normalProducts =
-            (normalSnap.data().products || []).filter(
-              (item) => item.isPublished !== false
-            );
-        }
-
-        const categorySnap = await getDocs(
-          collection(
-            db,
-            "websites",
-            "indiandiagnostic",
-            "pages",
-            "categoryproducts",
-            "categories"
-          )
-        );
-
-        const categoryProducts = [];
-
-        for (const categoryDoc of categorySnap.docs) {
-          const subSnap = await getDocs(
-            collection(
-              db,
-              "websites",
-              "indiandiagnostic",
-              "pages",
-              "categoryproducts",
-              "categories",
-              categoryDoc.id,
-              "subcategories"
-            )
-          );
-
-          let added = false;
-
-          for (const subDoc of subSnap.docs) {
-            const items = subDoc.data().products || [];
-
-            const firstProduct = items.find(
-              (p) => p.isPublished !== false
-            );
-
-            if (firstProduct) {
-              categoryProducts.push(firstProduct);
-              added = true;
-            }
-
-            if (added) break;
-          }
-
-          if (categoryProducts.length >= 4) break;
-        }
-
-        if (categoryProducts.length > 0) {
-          setProducts(categoryProducts.slice(0, 4));
-        } else {
-          setProducts(normalProducts.slice(0, 4));
+        if (isMounted) {
+          setProducts(featured);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error loading featured products in HomeSection:", err);
       }
     };
-    fetchProducts();
+    loadFeaturedProducts();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const useCounter = (end, duration = 2000) => {
