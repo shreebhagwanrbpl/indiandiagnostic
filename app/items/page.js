@@ -67,44 +67,76 @@ export default function ItemsPage({ city }) {
 
   useEffect(() => {
     let isMounted = true;
+    let isFetching = false;
 
-    const fetchProducts = async () => {
-      // 1. Instant display from IndexedDB cache if available
-      try {
-        const rawCached = await getCache();
-        if (Array.isArray(rawCached) && rawCached.length > 0 && isMounted) {
-          const validCached = rawCached.filter((p) => isProductVisibleOnCurrentSite(p));
-          if (validCached.length > 0) {
-            setProducts(validCached);
-            setLoadingProducts(false);
+    const fetchProducts = async (isBackground = false) => {
+      if (isFetching) return;
+      isFetching = true;
+
+      // 1. Instant display from IndexedDB cache if available on initial load
+      if (!isBackground) {
+        try {
+          const rawCached = await getCache();
+          if (Array.isArray(rawCached) && rawCached.length > 0 && isMounted) {
+            const validCached = rawCached.filter((p) => isProductVisibleOnCurrentSite(p));
+            if (validCached.length > 0) {
+              setProducts(validCached);
+              setLoadingProducts(false);
+            }
           }
+        } catch (e) {
+          console.warn("IndexedDB cache read skipped:", e);
         }
-      } catch (e) {
-        console.warn("IndexedDB cache read skipped:", e);
       }
 
-      // 2. Fetch fresh catalog from API (Real-time sync)
+      // 2. Fetch catalog from API (Instant from server cache on refresh, fresh on tab-switch)
       try {
-        const catalogData = await fetchFullCatalog(true);
+        const catalogData = await fetchFullCatalog(isBackground);
         const allProducts = (catalogData.products || []).filter((p) => isProductVisibleOnCurrentSite(p));
 
-        if (isMounted) {
+        if (isMounted && allProducts.length > 0) {
           setProducts(allProducts);
         }
         await setCache(allProducts);
       } catch (err) {
         console.error("Error fetching catalog in ItemsPage:", err);
       } finally {
+        isFetching = false;
         if (isMounted) {
           setLoadingProducts(false);
         }
       }
     };
 
-    fetchProducts();
+    // Initial load
+    fetchProducts(false);
+
+    // Auto-sync when user returns to this tab from SuperAdmin or any other window
+    const handleFocus = () => {
+      fetchProducts(true);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchProducts(true);
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Periodic auto-sync every 25 seconds
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchProducts(true);
+      }
+    }, 25000);
 
     return () => {
       isMounted = false;
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      clearInterval(interval);
     };
   }, []);
 

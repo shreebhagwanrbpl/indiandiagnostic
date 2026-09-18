@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAggregatedCatalogServer, WEBSITE_ID, COMPANY_ID } from "@/lib/data-fetcher";
+import { fetchFullCatalog, WEBSITE_ID, COMPANY_ID } from "@/lib/data-fetcher";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -7,17 +7,14 @@ export const revalidate = 0;
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const websiteId = searchParams.get("websiteId") || WEBSITE_ID;
-    const companyId = searchParams.get("companyId") || COMPANY_ID;
+    const forceRefresh = searchParams.get("refresh") === "true";
 
-    const catalogData = await getAggregatedCatalogServer(websiteId, companyId);
+    const catalogData = await fetchFullCatalog(forceRefresh);
 
     return NextResponse.json(catalogData, {
       status: 200,
       headers: {
-        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
-        "CDN-Cache-Control": "no-store",
-        "Surrogate-Control": "no-store",
+        "Cache-Control": "public, s-maxage=5, stale-while-revalidate=10",
       },
     });
   } catch (error) {

@@ -48,26 +48,41 @@ export default function HomeSection({ city }) {
 
   useEffect(() => {
     let isMounted = true;
+    let isFetching = false;
+
     const loadFeaturedProducts = async () => {
+      if (isFetching) return;
+      isFetching = true;
+
       try {
-        const catalog = await fetchFullCatalog();
-        const allProds = catalog.products || [];
+        const catalog = await fetchFullCatalog(true);
+        const allProds = (catalog.products || []).filter((p) => isProductVisibleOnCurrentSite(p));
 
         // Prioritize products with valid images and titles
         const withImages = allProds.filter((p) => (p.images?.length > 0 || p.image));
         const featured = withImages.length >= 4 ? withImages.slice(0, 8) : allProds.slice(0, 8);
 
-        if (isMounted) {
+        if (isMounted && featured.length > 0) {
           setProducts(featured);
         }
       } catch (err) {
         console.error("Error loading featured products in HomeSection:", err);
+      } finally {
+        isFetching = false;
       }
     };
+
     loadFeaturedProducts();
+
+    const handleFocus = () => {
+      loadFeaturedProducts();
+    };
+
+    window.addEventListener("focus", handleFocus);
 
     return () => {
       isMounted = false;
+      window.removeEventListener("focus", handleFocus);
     };
   }, []);
 
