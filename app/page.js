@@ -37,7 +37,7 @@ export default async function Home() {
 
   const rawProds = catalog?.products || [];
   const withImages = rawProds.filter((p) => (p.images?.length > 0 || p.image));
-  const featured = withImages.length >= 4 ? withImages.slice(0, 8) : rawProds.slice(0, 8);
+  const featured = withImages.length >= 4 ? withImages.slice(0, 4) : rawProds.slice(0, 4);
 
   return (
     <HomeSection

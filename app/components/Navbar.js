@@ -8,53 +8,49 @@ export default function Navbar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const pathParts = (pathname || "")
-    .split("/")
-    .filter(Boolean);
-
-
-  const reservedRoutes = [
-    "about",
-    "contact",
-    "items",
-    "services",
-  ];
+  const pathParts = (pathname || "").split("/").filter(Boolean);
+  const reservedRoutes = ["about", "contact", "items", "services"];
 
   const district =
-    pathParts[0] &&
-      !reservedRoutes.includes(pathParts[0])
+    pathParts[0] && !reservedRoutes.includes(pathParts[0])
       ? pathParts[0]
       : "";
 
+  const homeUrl = district ? `/${district}` : "/";
+
   const makeLink = (path = "") => {
-    if (!district) {
-      return path || "/";
+    if (!path || path === "/") {
+      return homeUrl;
     }
-
-    if (!path) {
-      return `/${district}`;
-    }
-
-    return `/${district}${path}`;
+    return district ? `/${district}${path}` : path;
   };
 
   return (
     <>
       <nav className="nav-main">
         <div className="nav-container">
-
           <div className="logo-box">
-            <Link href={makeLink("")}>
+            <Link
+              href={homeUrl}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                textDecoration: "none",
+                cursor: "pointer",
+                zIndex: 10,
+              }}
+            >
               <img
                 src="/logo.png"
-                alt="logo"
+                alt="Indian Diagnostic Logo"
+                style={{ height: "45px", width: "auto", display: "block" }}
               />
             </Link>
           </div>
 
           {/* Desktop Menu */}
           <div className="desktop-links">
-            <Link href={makeLink("")}>Home</Link>
+            <Link href={homeUrl}>Home</Link>
             <Link href={makeLink("/about")}>About</Link>
             <Link href={makeLink("/services")}>Services</Link>
             <Link href={makeLink("/items")}>Items</Link>
@@ -65,63 +61,46 @@ export default function Navbar() {
           <button
             className="menu-btn"
             onClick={() => setMenuOpen(true)}
+            aria-label="Open menu"
           >
             ☰
           </button>
-
         </div>
       </nav>
 
       {/* Mobile Drawer */}
-      <div
-        className={`mobile-drawer ${menuOpen ? "show-menu" : ""}`}
-      >
+      <div className={`mobile-drawer ${menuOpen ? "show-menu" : ""}`}>
         <div className="drawer-header">
-          <img
-            src="/logo.png"
-            alt="logo"
-          />
+          <Link
+            href={homeUrl}
+            onClick={() => setMenuOpen(false)}
+            style={{ display: "inline-block" }}
+          >
+            <img src="/logo.png" alt="Indian Diagnostic Logo" />
+          </Link>
 
           <button
             className="close-btn"
             onClick={() => setMenuOpen(false)}
+            aria-label="Close menu"
           >
             ✕
           </button>
         </div>
 
-        <Link
-          href={makeLink("")}
-          onClick={() => setMenuOpen(false)}
-        >
+        <Link href={homeUrl} onClick={() => setMenuOpen(false)}>
           Home
         </Link>
-
-        <Link
-          href={makeLink("/about")}
-          onClick={() => setMenuOpen(false)}
-        >
+        <Link href={makeLink("/about")} onClick={() => setMenuOpen(false)}>
           About
         </Link>
-
-        <Link
-          href={makeLink("/services")}
-          onClick={() => setMenuOpen(false)}
-        >
+        <Link href={makeLink("/services")} onClick={() => setMenuOpen(false)}>
           Services
         </Link>
-
-        <Link
-          href={makeLink("/items")}
-          onClick={() => setMenuOpen(false)}
-        >
+        <Link href={makeLink("/items")} onClick={() => setMenuOpen(false)}>
           Items
         </Link>
-
-        <Link
-          href={makeLink("/contact")}
-          onClick={() => setMenuOpen(false)}
-        >
+        <Link href={makeLink("/contact")} onClick={() => setMenuOpen(false)}>
           Contact
         </Link>
       </div>
@@ -163,7 +142,6 @@ export default function Navbar() {
   }
 
   @media(max-width:768px){
-
     .desktop-links{
       display:none;
     }
@@ -178,27 +156,18 @@ export default function Navbar() {
       position:fixed;
       top:0;
       left:0;
-
       transform:translateX(-100%);
-
       width:280px;
       max-width:80%;
       height:100vh;
-
       background:#fff;
-
       display:flex;
       flex-direction:column;
-
       padding:20px;
       gap:8px;
-
       transition:transform .3s ease;
-
       z-index:10001;
-
-      box-shadow:
-        0 0 40px rgba(0,0,0,.15);
+      box-shadow: 0 0 40px rgba(0,0,0,.15);
     }
 
     .mobile-drawer.show-menu{
@@ -209,10 +178,8 @@ export default function Navbar() {
       display:flex;
       align-items:center;
       justify-content:space-between;
-
       padding-bottom:15px;
       margin-bottom:10px;
-
       border-bottom:1px solid #eee;
     }
 
@@ -224,10 +191,8 @@ export default function Navbar() {
     .close-btn{
       width:36px;
       height:36px;
-
       border:none;
       border-radius:50%;
-
       background:#f3f4f6;
       cursor:pointer;
     }
@@ -235,11 +200,8 @@ export default function Navbar() {
     .mobile-drawer a{
       text-decoration:none;
       color:#111;
-
       padding:12px 14px;
-
       border-radius:10px;
-
       font-weight:500;
     }
 

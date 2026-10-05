@@ -113,7 +113,7 @@ export default function HomeSection({ city, initialProducts = [], initialHomeDat
 
         // Prioritize products with valid images and titles
         const withImages = allProds.filter((p) => (p.images?.length > 0 || p.image));
-        const featured = withImages.length >= 4 ? withImages.slice(0, 8) : allProds.slice(0, 8);
+        const featured = withImages.length >= 4 ? withImages.slice(0, 4) : allProds.slice(0, 4);
 
         if (isMounted && featured.length > 0) {
           setProducts(featured);
@@ -367,20 +367,20 @@ export default function HomeSection({ city, initialProducts = [], initialHomeDat
         </div>
       </section>
 
-      {/* ================= PRODUCTS PREVIEW ================= */}
+      {/* ================= PRODUCTS PREVIEW (ONLY 4 FEATURED PRODUCTS) ================= */}
       {products.length > 0 && (
         <section className="py-5 bg-light">
           <div className="container text-center">
             <h2 className="fw-bold mb-4">Featured Products</h2>
 
-            <div className="row">
-              {products.map((item, i) => {
+            <div className="row g-4 justify-content-center">
+              {products.slice(0, 4).map((item, i) => {
                 const itemSlug = item.slug?.trim() || slugify(item.title || item.name || item.instrument || item.model || item.id || "");
                 const targetUrl = itemSlug ? makeLink(`/items/${itemSlug}`) : makeLink("/items");
 
                 return (
-                  <div className="col-md-3" key={i}>
-                    <div className="featured-card">
+                  <div className="col-12 col-sm-6 col-lg-3" key={i}>
+                    <div className="featured-card h-100">
                       <div className="featured-image">
                         <Link href={targetUrl} scroll={true}>
                           <img
@@ -415,6 +415,30 @@ export default function HomeSection({ city, initialProducts = [], initialHomeDat
                   </div>
                 );
               })}
+            </div>
+
+            {/* View All Products Button */}
+            <div className="text-center mt-5">
+              <Link href={makeLink("/items")}>
+                <button
+                  style={{
+                    background: "linear-gradient(135deg, #1e3c72, #2a5298)",
+                    color: "#ffffff",
+                    padding: "12px 36px",
+                    borderRadius: "30px",
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    border: "none",
+                    cursor: "pointer",
+                    boxShadow: "0 6px 20px rgba(30, 60, 114, 0.25)",
+                    transition: "all 0.3s ease",
+                  }}
+                  onMouseOver={(e) => (e.currentTarget.style.transform = "translateY(-2px)")}
+                  onMouseOut={(e) => (e.currentTarget.style.transform = "translateY(0)")}
+                >
+                  View All Products →
+                </button>
+              </Link>
             </div>
           </div>
         </section>
