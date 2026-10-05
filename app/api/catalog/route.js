@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCatalogFromSQLite } from "@/lib/sqliteDb";
+import { fetchFullCatalogData } from "@/lib/db-server";
 import { WEBSITE_ID, COMPANY_ID } from "@/lib/catalog-utils";
 
 export const dynamic = "force-dynamic";
@@ -10,10 +10,8 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const targetSite = searchParams.get("websiteId") || WEBSITE_ID;
-    const targetCompany = searchParams.get("companyId") || COMPANY_ID;
 
-    // Direct Zero-Delay SQLite Read (<2ms)
-    const catalogData = getCatalogFromSQLite(targetSite, targetCompany);
+    const catalogData = await fetchFullCatalogData(targetSite);
 
     return NextResponse.json(
       {

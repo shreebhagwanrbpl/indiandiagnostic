@@ -108,7 +108,8 @@ export default function HomeSection({ city }) {
 
       try {
         const catalog = await fetchFullCatalog(true);
-        const allProds = (catalog.products || []).filter((p) => isProductVisibleOnCurrentSite(p));
+        const rawProds = Array.isArray(catalog) ? catalog : (catalog?.products || catalog?.categoryProducts || []);
+        const allProds = rawProds.filter((p) => isProductVisibleOnCurrentSite(p));
 
         // Prioritize products with valid images and titles
         const withImages = allProds.filter((p) => (p.images?.length > 0 || p.image));

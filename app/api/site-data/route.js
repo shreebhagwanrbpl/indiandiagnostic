@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getWebsitePageData } from "@/lib/sqliteDb";
+import { fetchSiteDataFromAdmin } from "@/lib/admin-api";
 import { WEBSITE_ID, COMPANY_ID } from "@/lib/catalog-utils";
 
 export const dynamic = "force-dynamic";
@@ -14,11 +14,7 @@ export async function GET(request) {
     const websiteId = searchParams.get("websiteId") || WEBSITE_ID;
     const companyId = searchParams.get("companyId") || COMPANY_ID;
 
-    // Direct SQLite Read (<2ms)
-    let pageData = getWebsitePageData(type, websiteId, companyId);
-    if (!pageData && page) {
-      pageData = getWebsitePageData(page, websiteId, companyId);
-    }
+    const pageData = await fetchSiteDataFromAdmin(websiteId, type, page, companyId);
 
     return NextResponse.json(
       {

@@ -84,7 +84,8 @@ export default function ItemsPage({ city }) {
       // 2. Fetch catalog from API (Instant from server cache on refresh, fresh on tab-switch)
       try {
         const catalogData = await fetchFullCatalog(isBackground);
-        const allProducts = (catalogData.products || []).filter((p) => isProductVisibleOnCurrentSite(p));
+        const rawList = Array.isArray(catalogData) ? catalogData : (catalogData?.products || catalogData?.categoryProducts || []);
+        const allProducts = rawList.filter((p) => isProductVisibleOnCurrentSite(p));
 
         if (isMounted && allProducts.length > 0) {
           setProducts(allProducts);
