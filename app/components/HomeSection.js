@@ -13,16 +13,16 @@ const Lottie = dynamic(
   }
 );
 
-export default function HomeSection({ city }) {
+export default function HomeSection({ city, initialProducts = [], initialHomeData = null, initialServices = [] }) {
   const [animationData, setAnimationData] = useState(null);
-  const [products, setProducts] = useState([]);
-  const [data, setData] = useState({
+  const [products, setProducts] = useState(initialProducts || []);
+  const [data, setData] = useState(initialHomeData || {
     title: "",
     description: "",
     button1Text: "",
     button2Text: "",
   });
-  const [services, setServices] = useState([]);
+  const [services, setServices] = useState(initialServices || []);
 
   const formatCity = (name = "") =>
     name
