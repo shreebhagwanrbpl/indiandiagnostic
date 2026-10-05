@@ -2,14 +2,6 @@
 import { FiArrowUp } from "react-icons/fi";
 import { useState, useEffect, useMemo } from "react";
 import {
-  db,
-  doc,
-  getDoc,
-  collection,
-  getDocs,
-} from "@/lib/firebase";
-
-import {
   FiFilter,
   FiChevronDown,
   FiChevronRight,

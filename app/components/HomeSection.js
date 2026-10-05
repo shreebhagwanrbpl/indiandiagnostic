@@ -1,17 +1,9 @@
 "use client";
+
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import {
-  db,
-  doc,
-  onSnapshot,
-  getDoc,
-  collection,
-  getDocs,
-} from "@/lib/firebase";
-
 import Link from "next/link";
-import { slugify, fetchFullCatalog } from "@/lib/data-fetcher";
+import { slugify, fetchFullCatalog, isProductVisibleOnCurrentSite } from "@/lib/data-fetcher";
 import "./home.css";
 
 const Lottie = dynamic(
@@ -25,11 +17,12 @@ export default function HomeSection({ city }) {
   const [animationData, setAnimationData] = useState(null);
   const [products, setProducts] = useState([]);
   const [data, setData] = useState({
-    title: "Advanced Diagnostic & Laboratory Equipment",
-    description: "Reliable medical devices and innovative lab technology for modern healthcare",
-    button1Text: "Explore Items",
-    button2Text: "Get Quote",
+    title: "",
+    description: "",
+    button1Text: "",
+    button2Text: "",
   });
+  const [services, setServices] = useState([]);
 
   const formatCity = (name = "") =>
     name
@@ -46,6 +39,65 @@ export default function HomeSection({ city }) {
       .catch(() => {});
   }, []);
 
+  /* =====================================================
+     LOAD HOME PAGE DATA VIA SQLITE ADMIN API
+  ===================================================== */
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadHomeData = async () => {
+      try {
+        const res = await fetch("/api/site-data?type=page&page=home");
+        if (res.ok) {
+          const json = await res.json();
+          const pageData = json?.data || null;
+          if (isMounted && pageData) {
+            setData(pageData);
+          }
+        }
+      } catch (err) {
+        console.warn("Home page data load error:", err);
+      }
+    };
+
+    loadHomeData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  /* =====================================================
+     LOAD SERVICES VIA SQLITE ADMIN API
+  ===================================================== */
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadServices = async () => {
+      try {
+        const res = await fetch("/api/site-data?type=services");
+        if (res.ok) {
+          const json = await res.json();
+          const list = json?.data?.services || json?.services || (Array.isArray(json?.data) ? json.data : []);
+          if (isMounted && Array.isArray(list)) {
+            setServices(list);
+          }
+        }
+      } catch (err) {
+        console.warn("Services load error:", err);
+      }
+    };
+
+    loadServices();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  /* =====================================================
+     LOAD FEATURED PRODUCTS VIA CATALOG API
+  ===================================================== */
   useEffect(() => {
     let isMounted = true;
     let isFetching = false;
@@ -109,34 +161,8 @@ export default function HomeSection({ city }) {
   const productsCount = useCounter(500);
   const clientsCount = useCounter(200);
   const yearsCount = useCounter(15);
-  const [services, setServices] = useState([]);
 
   const icons = ["🧪", "💊", "⚙️", "🔧", "🌍", "📊"];
-
-  useEffect(() => {
-    const unsub = onSnapshot(
-      doc(db, "websites", "indiandiagnostic", "pages", "services"),
-      (snap) => {
-        if (snap.exists()) {
-          setServices(snap.data().services || []);
-        }
-      }
-    );
-    return () => unsub();
-  }, []);
-
-  useEffect(() => {
-    const unsub = onSnapshot(
-      doc(db, "websites", "indiandiagnostic", "pages", "home"),
-      (docSnap) => {
-        if (docSnap.exists()) {
-          setData(docSnap.data());
-        }
-      }
-    );
-
-    return () => unsub();
-  }, []);
 
   const banners = [
     { src: "/indiansd.jpg", alt: "Indian Diagnostic Banner 1" },
@@ -216,6 +242,7 @@ export default function HomeSection({ city }) {
         </div>
       </section>
 
+      {/* 🔥 HERO / ABOUT SECTION */}
       <section className="home-about">
         <div className="container">
           <div className="row align-items-center">
@@ -234,15 +261,20 @@ export default function HomeSection({ city }) {
             {/* RIGHT TEXT */}
             <div className="col-md-6">
               <h6 className="about-tag">ABOUT COMPANY</h6>
-              <h2 className="about-title">
-                Trusted Partner for Clinical <br /> Instruments & Medical Solutions
-              </h2>
 
-              <p className="about-desc">
-                Raj Biosis Pvt. Ltd., established in 2009, is a trusted name in the healthcare industry in {city || "India"}.
-                We provide high-quality diagnostic instruments, reagents, and medical consumables
-                used in hospitals, laboratories, and clinics.
-              </p>
+              {/* DYNAMIC TITLE (No static text fallback) */}
+              {data.title && (
+                <h2 className="about-title">
+                  {data.title}
+                </h2>
+              )}
+
+              {/* DYNAMIC DESCRIPTION (No static text fallback) */}
+              {data.description && (
+                <p className="about-desc">
+                  {data.description}
+                </p>
+              )}
 
               <div className="about-points">
                 <span>✔ Advanced Laboratory Instruments</span>
@@ -250,36 +282,59 @@ export default function HomeSection({ city }) {
                 <span>✔ Global Distribution Network</span>
               </div>
 
-              <Link href={makeLink("/about")}>
-                <button className="about-btn">
-                  Learn More →
-                </button>
-              </Link>
+              {/* HERO BUTTONS: 100% DYNAMIC TEXT, STATIC LINKS */}
+              <div className="mt-4 d-flex gap-3 flex-wrap">
+                {data.button1Text && (
+                  <Link href={makeLink("/items")}>
+                    <button className="about-btn">
+                      {data.button1Text}
+                    </button>
+                  </Link>
+                )}
+
+                {data.button2Text && (
+                  <Link href={makeLink("/contact")}>
+                    <button className="about-btn" style={{ background: "#2a5298" }}>
+                      {data.button2Text}
+                    </button>
+                  </Link>
+                )}
+
+                {!data.button1Text && !data.button2Text && (
+                  <Link href={makeLink("/about")}>
+                    <button className="about-btn">
+                      Learn More →
+                    </button>
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* 🔥 SECTION 3: SERVICES */}
-      <section className="home-services">
-        <div className="container text-center">
-          <h2 className="service-title">What We Offer</h2>
-          <div className="row mt-5 g-3">
-            {services.slice(0, 4).map((item, i) => (
-              <div className="col-12 col-md-3" key={i}>
-                <div className="service-card">
-                  <div className="icon">
-                    {icons[i] || "⚙️"}
-                  </div>
+      {services.length > 0 && (
+        <section className="home-services">
+          <div className="container text-center">
+            <h2 className="service-title">What We Offer</h2>
+            <div className="row mt-5 g-3">
+              {services.slice(0, 4).map((item, i) => (
+                <div className="col-12 col-md-3" key={i}>
+                  <div className="service-card">
+                    <div className="icon">
+                      {icons[i] || "⚙️"}
+                    </div>
 
-                  <h5>{item.title}</h5>
-                  <p>{item.desc}</p>
+                    <h5>{item.title}</h5>
+                    <p>{item.desc}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ================= WHY CHOOSE US ================= */}
       <section className="py-5 bg-white">
@@ -304,7 +359,7 @@ export default function HomeSection({ city }) {
             <div className="col-md-4">
               <div className="p-4 shadow-sm rounded">
                 <h5>🛠 Support</h5>
-                <p>24/7 installation & maintenance support</p>
+                <p>24/7 installation &amp; maintenance support</p>
               </div>
             </div>
           </div>
@@ -312,55 +367,57 @@ export default function HomeSection({ city }) {
       </section>
 
       {/* ================= PRODUCTS PREVIEW ================= */}
-      <section className="py-5 bg-light">
-        <div className="container text-center">
-          <h2 className="fw-bold mb-4">Featured Products</h2>
+      {products.length > 0 && (
+        <section className="py-5 bg-light">
+          <div className="container text-center">
+            <h2 className="fw-bold mb-4">Featured Products</h2>
 
-          <div className="row">
-            {products.map((item, i) => {
-              const itemSlug = item.slug?.trim() || slugify(item.title || item.name || item.instrument || item.model || item.id || "");
-              const targetUrl = itemSlug ? makeLink(`/items/${itemSlug}`) : makeLink("/items");
+            <div className="row">
+              {products.map((item, i) => {
+                const itemSlug = item.slug?.trim() || slugify(item.title || item.name || item.instrument || item.model || item.id || "");
+                const targetUrl = itemSlug ? makeLink(`/items/${itemSlug}`) : makeLink("/items");
 
-              return (
-                <div className="col-md-3" key={i}>
-                  <div className="featured-card">
-                    <div className="featured-image">
-                      <Link href={targetUrl} scroll={true}>
-                        <img
-                          src={
-                            item.images?.[0] ||
-                            item.image ||
-                            "/no-image.png"
-                          }
-                          alt={item.title || "Medical Equipment"}
-                        />
-                      </Link>
-                    </div>
-
-                    <div className="featured-content">
-                      <span className="featured-category">
-                        {item.category || "Medical Equipment"}
-                      </span>
-
-                      <h5 className="featured-title">
-                        <Link href={targetUrl} scroll={true} style={{ color: "inherit", textDecoration: "none" }}>
-                          {item.title}
+                return (
+                  <div className="col-md-3" key={i}>
+                    <div className="featured-card">
+                      <div className="featured-image">
+                        <Link href={targetUrl} scroll={true}>
+                          <img
+                            src={
+                              item.images?.[0] ||
+                              item.image ||
+                              "/no-image.png"
+                            }
+                            alt={item.title || "Medical Equipment"}
+                          />
                         </Link>
-                      </h5>
+                      </div>
 
-                      <Link href={targetUrl} scroll={true}>
-                        <button className="featured-btn">
-                          View Details
-                        </button>
-                      </Link>
+                      <div className="featured-content">
+                        <span className="featured-category">
+                          {item.category || "Medical Equipment"}
+                        </span>
+
+                        <h5 className="featured-title">
+                          <Link href={targetUrl} scroll={true} style={{ color: "inherit", textDecoration: "none" }}>
+                            {item.title}
+                          </Link>
+                        </h5>
+
+                        <Link href={targetUrl} scroll={true}>
+                          <button className="featured-btn">
+                            View Details
+                          </button>
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ================= TESTIMONIALS ================= */}
       <section className="py-5" style={{ background: "#f8fafc" }}>
@@ -384,7 +441,7 @@ export default function HomeSection({ city }) {
               <div className="testimonial-card">
                 <div className="quote-icon">❝</div>
                 <p>
-                  Fast delivery & great service. Always on time support.
+                  Fast delivery &amp; great service. Always on time support.
                 </p>
                 <h6>- Lab Technician</h6>
               </div>
@@ -416,7 +473,7 @@ export default function HomeSection({ city }) {
               </h2>
 
               <p className="mt-3">
-                Contact us today for best pricing & support
+                Contact us today for best pricing &amp; support
               </p>
 
               <div className="mt-4">

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCatalogFromSQLite } from "@/lib/sqliteDb";
+import { getWebsitePageData } from "@/lib/sqliteDb";
 import { WEBSITE_ID, COMPANY_ID } from "@/lib/catalog-utils";
 
 export const dynamic = "force-dynamic";
@@ -9,16 +9,24 @@ export const fetchCache = "force-no-store";
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const targetSite = searchParams.get("websiteId") || WEBSITE_ID;
-    const targetCompany = searchParams.get("companyId") || COMPANY_ID;
+    const type = searchParams.get("type") || searchParams.get("page") || "home";
+    const page = searchParams.get("page") || "";
+    const websiteId = searchParams.get("websiteId") || WEBSITE_ID;
+    const companyId = searchParams.get("companyId") || COMPANY_ID;
 
-    // Direct Zero-Delay SQLite Read (<2ms)
-    const catalogData = getCatalogFromSQLite(targetSite, targetCompany);
+    // Direct SQLite Read (<2ms)
+    let pageData = getWebsitePageData(type, websiteId, companyId);
+    if (!pageData && page) {
+      pageData = getWebsitePageData(page, websiteId, companyId);
+    }
 
     return NextResponse.json(
       {
         success: true,
-        ...catalogData,
+        type,
+        websiteId,
+        companyId,
+        data: pageData || null,
       },
       {
         status: 200,
@@ -29,16 +37,12 @@ export async function GET(request) {
       }
     );
   } catch (error) {
-    console.error("API /api/catalog error:", error);
+    console.error("API /api/site-data error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to fetch catalog",
-        message: error?.message || "Internal Server Error",
-        products: [],
-        categories: [],
-        total: 0,
-        websiteId: WEBSITE_ID,
+        error: error?.message || "Internal Server Error",
+        data: null,
       },
       {
         status: 500,

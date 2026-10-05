@@ -1,4 +1,4 @@
-import Services from "@/app/services/page";
+import ServicesSection from "@/app/components/ServicesSection";
 import districts from "@/lib/districts.json";
 
 export const dynamic = "force-static";
@@ -11,8 +11,7 @@ export async function generateStaticParams() {
 
 export default async function DistrictServicesPage({ params }) {
   const resolvedParams = await params;
-
   const district = resolvedParams?.district || "jaipur";
 
-  return <Services city={district} />;
-}
+  return <ServicesSection city={district} />;
+}

@@ -2,21 +2,10 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, usePathname } from "next/navigation";
-import {
-    db,
-    doc,
-    getDoc,
-    getDocs,
-    addDoc,
-    collection,
-} from "@/lib/firebase";
-
 import toast, { Toaster } from "react-hot-toast";
 import styles from "./page.module.css";
-import { getCache, setCache } from "@/lib/productsCache";
+import { getCache } from "@/lib/productsCache";
 import { fetchProductBySlug, slugify, isProductVisibleOnCurrentSite } from "@/lib/data-fetcher";
-
-const WEBSITE = "indiandiagnostic";
 
 export default function ProductDetailClient({ initialSlug, initialDistrict, initialProduct }) {
     const params = useParams();
@@ -27,6 +16,7 @@ export default function ProductDetailClient({ initialSlug, initialDistrict, init
 
     const [product, setProduct] = useState(initialProduct || null);
     const [loading, setLoading] = useState(!initialProduct);
+    const [submitting, setSubmitting] = useState(false);
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
     const [selectedImage, setSelectedImage] = useState(
@@ -70,7 +60,7 @@ export default function ProductDetailClient({ initialSlug, initialDistrict, init
             try {
                 const decodedSlug = decodeURIComponent(slug);
 
-                // Try cache first
+                // Try IndexedDB cache first
                 const cached = await getCache();
                 if (cached && cached.length > 0) {
                     const foundInCache = cached.find((p) => {
@@ -104,10 +94,14 @@ export default function ProductDetailClient({ initialSlug, initialDistrict, init
 
     const productName =
         product?.title ||
+        product?.name ||
         product?.instrument ||
         product?.model ||
         "Laboratory Equipment";
 
+    /* =====================================================
+       SUBMIT ENQUIRY VIA INTERNAL /api/product-query
+    ===================================================== */
     const handleSubmit = async () => {
         if (!email.trim() || !phone.trim()) {
             toast.error("Please fill all fields");
@@ -126,19 +120,28 @@ export default function ProductDetailClient({ initialSlug, initialDistrict, init
             return;
         }
 
-        const loadingToast = toast.loading("Submitting...");
+        setSubmitting(true);
+        const loadingToast = toast.loading("Submitting query...");
 
         try {
-            await addDoc(
-                collection(db, "websitesQueries", WEBSITE, "productQueries"),
-                {
+            const res = await fetch("/api/product-query", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
                     productName,
-                    email,
-                    phone,
+                    email: email.trim(),
+                    phone: phone.trim(),
                     city,
-                    createdAt: new Date(),
-                }
-            );
+                }),
+            });
+
+            const result = await res.json();
+
+            if (!res.ok || !result.success) {
+                throw new Error(result.error || "Failed to submit enquiry");
+            }
 
             toast.success("Query submitted successfully", {
                 id: loadingToast,
@@ -148,9 +151,11 @@ export default function ProductDetailClient({ initialSlug, initialDistrict, init
             setPhone("");
         } catch (error) {
             console.error("Query submit error:", error);
-            toast.error("Something went wrong", {
+            toast.error(error.message || "Something went wrong", {
                 id: loadingToast,
             });
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -371,8 +376,9 @@ export default function ProductDetailClient({ initialSlug, initialDistrict, init
                                         <button
                                             className={styles.queryBtn}
                                             onClick={handleSubmit}
+                                            disabled={submitting}
                                         >
-                                            Submit Query
+                                            {submitting ? "Submitting..." : "Submit Query"}
                                         </button>
                                     </div>
                                 </div>

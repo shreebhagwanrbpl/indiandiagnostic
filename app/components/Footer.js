@@ -3,26 +3,16 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { db, doc, getDoc } from "@/lib/firebase";
-
-import { FaInstagram, FaLinkedinIn, FaFacebookF } from "react-icons/fa";
+import { FaInstagram, FaLinkedinIn, FaFacebookF, FaWhatsapp } from "react-icons/fa";
+import { parsePhoneNumbers, parseEmails, cleanPhoneForWhatsApp, getContactValue } from "@/lib/admin-api";
 import "./comp.css";
 
 export default function Footer() {
-  const [stateName, setStateName] = useState("");
   const [contactInfo, setContactInfo] = useState([]);
-
   const pathname = usePathname();
 
-  const pathParts =
-    (pathname || "").split("/").filter(Boolean);
-
-
+  const pathParts = (pathname || "").split("/").filter(Boolean);
   const firstPart = pathParts[0];
-
-  // =========================================================
-  // RESERVED ROUTES
-  // =========================================================
 
   const reservedRoutes = [
     "about",
@@ -31,19 +21,10 @@ export default function Footer() {
     "services",
   ];
 
-  // =========================================================
-  // CITY SLUG
-  // =========================================================
-
   const citySlug =
-    firstPart &&
-      !reservedRoutes.includes(firstPart)
+    firstPart && !reservedRoutes.includes(firstPart)
       ? firstPart
       : "jaipur";
-
-  // =========================================================
-  // FORMAT CITY
-  // =========================================================
 
   const formatCity = (name = "") =>
     name
@@ -57,214 +38,95 @@ export default function Footer() {
 
   const city = formatCity(citySlug);
 
-
-  const WEBSITE = "indiandiagnostic";
-
-  // =========================================================
-  // CONTACT FIELD FINDER
-  // =========================================================
-
-  const getContactValue = (
-    label
-  ) => {
-    const field =
-      contactInfo.find(
-        (item) =>
-          item?.label
-            ?.trim()
-            ?.toLowerCase() ===
-          label
-            .trim()
-            .toLowerCase()
-      );
-
-    return field?.value ?? "";
-  };
-
-  // =========================================================
-  // LOAD CONTACT INFO
-  // =========================================================
-
+  /* =========================================================
+     LOAD CONTACT INFO VIA SQLITE ADMIN API
+  ========================================================= */
   useEffect(() => {
+    let isMounted = true;
+
     const loadContact = async () => {
       try {
-        const snap = await getDoc(
-          doc(
-            db,
-            "websites",
-            WEBSITE,
-            "pages",
-            "contact"
-          )
-        );
+        const res = await fetch("/api/site-data?type=contact");
+        if (res.ok) {
+          const json = await res.json();
+          const info = json?.data?.contactInfo || json?.contactInfo || (Array.isArray(json?.data) ? json.data : []);
+          if (isMounted && Array.isArray(info) && info.length > 0) {
+            setContactInfo(info);
+            return;
+          }
+        }
 
-        if (snap.exists()) {
-          setContactInfo(
-            snap.data()?.contactInfo ||
-            []
-          );
-        } else {
-          setContactInfo([]);
+        const pageRes = await fetch("/api/site-data?type=page&page=contact");
+        if (pageRes.ok) {
+          const pageJson = await pageRes.json();
+          const pageInfo = pageJson?.data?.contactInfo || (Array.isArray(pageJson?.data) ? pageJson.data : []);
+          if (isMounted && Array.isArray(pageInfo) && pageInfo.length > 0) {
+            setContactInfo(pageInfo);
+            return;
+          }
         }
       } catch (error) {
-        console.error(
-          "Footer contact load error:",
-          error
-        );
-
-        setContactInfo([]);
+        console.error("Footer contact load error:", error);
       }
     };
 
     loadContact();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // =========================================================
-  // LOAD STATE NAME
-  // =========================================================
+  /* =========================================================
+     GET CONTACT DATA
+  ========================================================= */
+  const address = getContactValue(contactInfo, "Address");
+  const rawPhone = getContactValue(contactInfo, "Phone");
+  const rawEmail = getContactValue(contactInfo, "Email");
+  const workingHours = getContactValue(contactInfo, "Working Hours");
 
-  useEffect(() => {
-    const loadDistrict = async () => {
-      // Jaipur ka fixed address hai
-      if (
-        !citySlug ||
-        citySlug === "jaipur"
-      ) {
-        return;
-      }
+  const phoneNumbers = parsePhoneNumbers(rawPhone);
+  const emailAddresses = parseEmails(rawEmail);
+  const whatsappNumber = cleanPhoneForWhatsApp(phoneNumbers);
 
-      try {
-        const snap = await getDoc(
-          doc(
-            db,
-            "websites",
-            WEBSITE,
-            "districts",
-            citySlug
-          )
-        );
-
-        if (snap.exists()) {
-          setStateName(
-            snap.data()?.state ||
-            ""
-          );
-        }
-      } catch (err) {
-        console.log(
-          "District load error:",
-          err
-        );
-      }
-    };
-
-    loadDistrict();
-  }, [citySlug]);
-
-  // =========================================================
-  // GET CONTACT DATA
-  // =========================================================
-
-  const address =
-    getContactValue("Address");
-
-  const phone =
-    getContactValue("Phone");
-
-  const email =
-    getContactValue("Email");
-
-  const workingHours =
-    getContactValue(
-      "Working Hours"
-    );
-
-  // =========================================================
-  // PHONE ARRAY
-  // =========================================================
-
-  const phoneNumbers = Array.isArray(
-    phone
-  )
-    ? phone.filter(Boolean)
-    : phone
-      ? [phone]
-      : [];
-
-  // =========================================================
-  // EMAIL ARRAY SUPPORT
-  // =========================================================
-
-  const emailAddresses =
-    Array.isArray(email)
-      ? email.filter(Boolean)
-      : email
-        ? [email]
-        : [];
-
-  // =========================================================
-  // ADDRESS
-  // =========================================================
-
-  const finalAddress =
-    address ||
-    (
-      citySlug === "jaipur"
-        ? "F-4, 1st Floor, Plot No. 16, D-Block Tagor Nagar, Ajmer-Delhi Bypass Rd, Jaipur, Rajasthan 302021"
-        : stateName
-          ? `${city}, ${stateName}, India`
-          : `${city}, India`
-    );
-
-  // =========================================================
-  // MAP QUERY
-  // =========================================================
-
-  const mapQuery =
-    citySlug === "jaipur"
-      ? "Raj Biosis Jaipur Rajasthan"
-      : finalAddress;
-
-  // =========================================================
-  // RENDER
-  // =========================================================
+  const finalAddress = address || (city ? `${city}, India` : "");
+  const mapQuery = address || (citySlug === "jaipur" ? "Raj Biosis Jaipur Rajasthan" : `${city}, India`);
 
   return (
     <footer className="footer-main">
       <div className="footer-container">
-
         <div className="row">
-
           {/* ========================================= */}
           {/* COMPANY */}
           {/* ========================================= */}
-
           <div className="col-md-4">
-
             <div className="footer-logo">
-
               <img
                 src="/logo.png"
                 alt="logo"
               />
-
-              <h5>
-                Raj Biosis
-              </h5>
-
+              <h5>Raj Biosis</h5>
             </div>
 
             <p className="footer-desc">
-              Trusted partner for
-              clinical instruments &amp;
-              medical consumables.
-              Delivering quality
-              healthcare solutions
-              since 2009.
+              Trusted partner for clinical instruments &amp; medical consumables.
+              Delivering quality healthcare solutions across India.
             </p>
 
-            {/* SOCIAL MEDIA ICONS */}
+            {/* SOCIAL MEDIA ICONS & WHATSAPP */}
             <div className="footer-socials">
+              {whatsappNumber && (
+                <a
+                  href={`https://wa.me/${whatsappNumber}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="social-icon whatsapp"
+                  style={{ background: "#25D366", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                  aria-label="WhatsApp"
+                >
+                  <FaWhatsapp />
+                </a>
+              )}
               <a
                 href="https://instagram.com"
                 target="_blank"
@@ -293,74 +155,52 @@ export default function Footer() {
                 <FaFacebookF />
               </a>
             </div>
-
           </div>
 
           {/* ========================================= */}
           {/* LINKS */}
           {/* ========================================= */}
-
           <div className="col-md-2">
-
-            <h6>
-              Quick Links
-            </h6>
+            <h6>Quick Links</h6>
 
             <ul className="footer-links">
-
               <li>
-                <Link
-                  href={`/${citySlug}`}
-                >
+                <Link href={`/${citySlug}`}>
                   Home
                 </Link>
               </li>
 
               <li>
-                <Link
-                  href={`/${citySlug}/about`}
-                >
+                <Link href={`/${citySlug}/about`}>
                   About
                 </Link>
               </li>
 
               <li>
-                <Link
-                  href={`/${citySlug}/services`}
-                >
+                <Link href={`/${citySlug}/services`}>
                   Services
                 </Link>
               </li>
 
               <li>
-                <Link
-                  href={`/${citySlug}/items`}
-                >
+                <Link href={`/${citySlug}/items`}>
                   Products
                 </Link>
               </li>
 
               <li>
-                <Link
-                  href={`/${citySlug}/contact`}
-                >
+                <Link href={`/${citySlug}/contact`}>
                   Contact
                 </Link>
               </li>
-
             </ul>
-
           </div>
 
           {/* PRODUCTS CATEGORIES */}
           <div className="col-md-3">
-
-            <h6>
-              Products
-            </h6>
+            <h6>Products</h6>
 
             <ul className="footer-links">
-
               <li>
                 <Link href={`/${citySlug}/items?search=Hematology`}>
                   Hematology Analyzer
@@ -396,35 +236,21 @@ export default function Footer() {
                   ELISA Kits
                 </Link>
               </li>
-
             </ul>
-
           </div>
 
           {/* ========================================= */}
           {/* CONTACT */}
           {/* ========================================= */}
-
           <div className="col-md-3">
+            <h6>Contact</h6>
 
-            <h6>
-              Contact
-            </h6>
-
-            {/* ===================================== */}
-            {/* ADDRESS */}
-            {/* ===================================== */}
-
+            {/* DYNAMIC ADDRESS */}
             {finalAddress && (
-              <p>
-                📍 {finalAddress}
-              </p>
+              <p>📍 {finalAddress}</p>
             )}
 
-            {/* ===================================== */}
-            {/* MULTIPLE PHONE NUMBERS */}
-            {/* ===================================== */}
-
+            {/* MULTIPLE DYNAMIC PHONE NUMBERS */}
             {phoneNumbers.length > 0 && (
               <div
                 style={{
@@ -434,28 +260,23 @@ export default function Footer() {
                   marginBottom: "15px",
                 }}
               >
-                {phoneNumbers.map(
-                  (number, index) => (
-                    <a
-                      key={index}
-                      href={`tel:${number}`}
-                      style={{
-                        color: "inherit",
-                        textDecoration: "none",
-                        display: "block",
-                      }}
-                    >
-                      📞 {number}
-                    </a>
-                  )
-                )}
+                {phoneNumbers.map((number, index) => (
+                  <a
+                    key={index}
+                    href={`tel:${number}`}
+                    style={{
+                      color: "inherit",
+                      textDecoration: "none",
+                      display: "block",
+                    }}
+                  >
+                    📞 {number}
+                  </a>
+                ))}
               </div>
             )}
 
-            {/* ===================================== */}
-            {/* MULTIPLE EMAILS */}
-            {/* ===================================== */}
-
+            {/* MULTIPLE DYNAMIC EMAILS */}
             {emailAddresses.length > 0 && (
               <div
                 style={{
@@ -465,28 +286,23 @@ export default function Footer() {
                   marginBottom: "15px",
                 }}
               >
-                {emailAddresses.map(
-                  (mail, index) => (
-                    <a
-                      key={index}
-                      href={`mailto:${mail}`}
-                      style={{
-                        color: "inherit",
-                        textDecoration: "none",
-                        display: "block",
-                      }}
-                    >
-                      📧 {mail}
-                    </a>
-                  )
-                )}
+                {emailAddresses.map((mail, index) => (
+                  <a
+                    key={index}
+                    href={`mailto:${mail}`}
+                    style={{
+                      color: "inherit",
+                      textDecoration: "none",
+                      display: "block",
+                    }}
+                  >
+                    📧 {mail}
+                  </a>
+                ))}
               </div>
             )}
 
-            {/* ===================================== */}
             {/* WORKING HOURS */}
-            {/* ===================================== */}
-
             {workingHours && (
               <p>
                 ⏰{" "}
@@ -496,40 +312,31 @@ export default function Footer() {
               </p>
             )}
 
-            {/* ===================================== */}
             {/* MAP */}
-            {/* ===================================== */}
-
-            <iframe
-              src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                mapQuery
-              )}&output=embed`}
-              width="100%"
-              height="200"
-              loading="lazy"
-              style={{
-                border: 0,
-                borderRadius: "10px",
-              }}
-              title="Google Maps"
-            />
-
+            {mapQuery && (
+              <iframe
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                  mapQuery
+                )}&output=embed`}
+                width="100%"
+                height="200"
+                loading="lazy"
+                style={{
+                  border: 0,
+                  borderRadius: "10px",
+                }}
+                title="Google Maps"
+              />
+            )}
           </div>
-
         </div>
 
         {/* ============================================= */}
         {/* FOOTER BOTTOM */}
         {/* ============================================= */}
-
         <div className="footer-bottom">
-
-          ©{" "}
-          {new Date().getFullYear()}{" "}
-          Raj Biosis Pvt. Ltd.
-
+          © {new Date().getFullYear()} Raj Biosis Pvt. Ltd.
         </div>
-
       </div>
     </footer>
   );

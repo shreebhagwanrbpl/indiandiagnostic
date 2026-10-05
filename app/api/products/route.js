@@ -12,13 +12,14 @@ export async function GET(request) {
     const targetSite = searchParams.get("websiteId") || WEBSITE_ID;
     const targetCompany = searchParams.get("companyId") || COMPANY_ID;
 
-    // Direct Zero-Delay SQLite Read (<2ms)
     const catalogData = getCatalogFromSQLite(targetSite, targetCompany);
 
     return NextResponse.json(
       {
         success: true,
-        ...catalogData,
+        products: catalogData.products || [],
+        total: catalogData.total || 0,
+        websiteId: targetSite,
       },
       {
         status: 200,
@@ -29,16 +30,13 @@ export async function GET(request) {
       }
     );
   } catch (error) {
-    console.error("API /api/catalog error:", error);
+    console.error("API /api/products error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to fetch catalog",
-        message: error?.message || "Internal Server Error",
         products: [],
-        categories: [],
         total: 0,
-        websiteId: WEBSITE_ID,
+        error: error?.message || "Internal Server Error",
       },
       {
         status: 500,
