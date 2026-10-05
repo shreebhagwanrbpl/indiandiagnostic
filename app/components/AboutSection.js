@@ -1,5 +1,5 @@
 "use client";
-import Lottie from "lottie-react";
+import LottiePlayer from "./LottiePlayer";
 import "./comp.css"
 import { useEffect, useState } from "react";
 
@@ -43,9 +43,7 @@ const quality = useCounter(100);
       <div className="container">
         <div className="row align-items-center">
           <div className="col-md-6 position-relative text-center">
-          {animationData && (
-            <Lottie animationData={animationData} style={{ height: 420 }} />
-        )}
+          <LottiePlayer src="https://assets2.lottiefiles.com/packages/lf20_jcikwtux.json" style={{ height: 420 }} />
             <div className="floating a1">💊</div>
             <div className="floating a2">🧪</div>
             <div className="floating a3">🏥</div>

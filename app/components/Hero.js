@@ -1,5 +1,5 @@
 "use client";
-import Lottie from "lottie-react";
+import LottiePlayer from "./LottiePlayer";
 import { useEffect, useState } from "react";
 
 export default function Hero() {
@@ -45,9 +45,7 @@ export default function Hero() {
 
           {/* RIGHT ANIMATION */}
           <div className="col-md-6 text-center">
-            {animationData && (
-              <Lottie animationData={animationData} style={{ height: 380 }} />
-            )}
+            <LottiePlayer src="https://assets10.lottiefiles.com/packages/lf20_tutvdkg0.json" style={{ height: 380 }} />
           </div>
 
         </div>

@@ -6,15 +6,9 @@ import Link from "next/link";
 import { slugify, fetchFullCatalog, isProductVisibleOnCurrentSite } from "@/lib/data-fetcher";
 import "./home.css";
 
-const Lottie = dynamic(
-  () => import("lottie-react"),
-  {
-    ssr: false,
-  }
-);
+
 
 export default function HomeSection({ city, initialProducts = [], initialHomeData = null, initialServices = [] }) {
-  const [animationData, setAnimationData] = useState(null);
   const [products, setProducts] = useState(initialProducts || []);
   const [data, setData] = useState(initialHomeData || {
     title: "",
@@ -32,12 +26,7 @@ export default function HomeSection({ city, initialProducts = [], initialHomeDat
       )
       .join(" ");
 
-  useEffect(() => {
-    fetch("https://assets10.lottiefiles.com/packages/lf20_jcikwtux.json")
-      .then((res) => res.json())
-      .then((d) => setAnimationData(d))
-      .catch(() => {});
-  }, []);
+  
 
   /* =====================================================
      LOAD HOME PAGE DATA VIA SQLITE ADMIN API
