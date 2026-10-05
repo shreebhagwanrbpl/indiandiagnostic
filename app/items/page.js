@@ -52,45 +52,26 @@ export default function ItemsPage({ city }) {
 
 
   /* -------------------------------- */
-
-  /* FETCH PRODUCTS VIA CATALOG API */
-
+  /* FETCH PRODUCTS VIA CATALOG API (100% REAL-TIME LIVE) */
   /* -------------------------------- */
-
   useEffect(() => {
     let isMounted = true;
     let isFetching = false;
 
-    const fetchProducts = async (isBackground = false) => {
+    const fetchProducts = async () => {
       if (isFetching) return;
       isFetching = true;
 
-      // 1. Instant display from IndexedDB cache if available on initial load
-      if (!isBackground) {
-        try {
-          const rawCached = await getCache();
-          if (Array.isArray(rawCached) && rawCached.length > 0 && isMounted) {
-            const validCached = rawCached.filter((p) => isProductVisibleOnCurrentSite(p));
-            if (validCached.length > 0) {
-              setProducts(validCached);
-              setLoadingProducts(false);
-            }
-          }
-        } catch (e) {
-          console.warn("IndexedDB cache read skipped:", e);
-        }
-      }
-
-      // 2. Fetch catalog from API (Instant from server cache on refresh, fresh on tab-switch)
       try {
-        const catalogData = await fetchFullCatalog(isBackground);
-        const rawList = Array.isArray(catalogData) ? catalogData : (catalogData?.products || catalogData?.categoryProducts || []);
+        const catalogData = await fetchFullCatalog(true);
+        const rawList = Array.isArray(catalogData)
+          ? catalogData
+          : catalogData?.products || catalogData?.categoryProducts || [];
         const allProducts = rawList.filter((p) => isProductVisibleOnCurrentSite(p));
 
-        if (isMounted && allProducts.length > 0) {
+        if (isMounted) {
           setProducts(allProducts);
         }
-        await setCache(allProducts);
       } catch (err) {
         console.error("Error fetching catalog in ItemsPage:", err);
       } finally {
@@ -101,40 +82,27 @@ export default function ItemsPage({ city }) {
       }
     };
 
-    // Initial load
-    fetchProducts(false);
+    fetchProducts();
 
-    // Auto-sync when user returns to this tab from SuperAdmin or any other window
     const handleFocus = () => {
-      fetchProducts(true);
+      fetchProducts();
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        fetchProducts(true);
+        fetchProducts();
       }
     };
 
     window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // Periodic auto-sync every 25 seconds
-    const interval = setInterval(() => {
-      if (document.visibilityState === "visible") {
-        fetchProducts(true);
-      }
-    }, 25000);
-
     return () => {
       isMounted = false;
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      clearInterval(interval);
     };
   }, []);
-
-
-
 
   /* -------------------------------- */
   /* FILTER PRODUCTS */
